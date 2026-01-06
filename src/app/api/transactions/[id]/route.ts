@@ -5,27 +5,32 @@ import mongoose from "mongoose";
 
 export const runtime = "nodejs";
 
+import { unstable_noStore as noStore } from 'next/cache';
+
 export async function GET(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-
-    const rawId = params.id;
+    
+    // Unwrap the params promise
+    const unwrappedParams = await params;
+    const rawId = unwrappedParams.id;
 
     console.log("➡️ Transaction ID received:", rawId);
 
     let bill = null;
 
-
+    console.log("Raw ID received:", rawId, "Length:", rawId.length);
+    
     if (mongoose.Types.ObjectId.isValid(rawId)) {
+      console.log("Valid ObjectId, searching in DB...");
       bill = await Bill.findById(rawId).lean();
-    }
-
- 
-    if (!bill) {
-      bill = await Bill.findOne({ _id: rawId }).lean();
+    } else {
+      console.log("Invalid ObjectId format, trying alternative search:", rawId);
+      // If the ID might be truncated or have an issue, we can try to pad it
+      // or search for similar IDs if needed
     }
 
     if (!bill) {

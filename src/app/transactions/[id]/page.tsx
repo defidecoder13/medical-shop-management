@@ -31,12 +31,21 @@ export default function TransactionDetailsPage() {
 
   return (
     <div className="p-6 max-w-4xl mx-auto space-y-6">
-      <button
-        onClick={() => router.back()}
-        className="text-blue-600 underline"
-      >
-        ← Back
-      </button>
+      <div className="flex justify-between items-center">
+        <button
+          onClick={() => router.back()}
+          className="text-blue-600 underline"
+        >
+          ← Back
+        </button>
+        <button
+          type="button"
+          onClick={() => window.open(`/print/${id}`, '_blank')}
+          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+        >
+          Print Invoice
+        </button>
+      </div>
 
       <h1 className="text-2xl font-bold">Transaction Details</h1>
 

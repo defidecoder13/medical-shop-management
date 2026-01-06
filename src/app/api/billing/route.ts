@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const { items = [], printInvoice = false } = await req.json();
+    const { items = [], printInvoice = false, discountPercent = 0 } = await req.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json(
@@ -78,15 +78,26 @@ export async function POST(req: Request) {
       });
     }
 
-    const gstAmount = gstEnabled ? Math.round(subTotal * 0.05) : 0;
-    const grandTotal = subTotal + gstAmount;
+    // Calculate discount (preserve decimals)
+    const discountAmount = subTotal * (discountPercent / 100);
+    const subTotalAfterDiscount = subTotal - discountAmount;
+    
+    const gstAmount = gstEnabled ? subTotalAfterDiscount * 0.05 : 0;
+    const grandTotal = subTotalAfterDiscount + gstAmount;
+    
+    // Round only the final totals for storage
+    const roundedDiscountAmount = Math.round(discountAmount * 100) / 100;
+    const roundedGstAmount = Math.round(gstAmount * 100) / 100;
+    const roundedGrandTotal = Math.round(grandTotal * 100) / 100;
 
     // 💾 CREATE BILL (THIS WAS FAILING BEFORE)
     const bill = await Bill.create({
       items: billItems,
       subTotal,
-      gstAmount,
-      grandTotal,
+      discountPercent,
+      discountAmount: roundedDiscountAmount,
+      gstAmount: roundedGstAmount,
+      grandTotal: roundedGrandTotal,
       gstEnabled,
       printInvoice,
     });

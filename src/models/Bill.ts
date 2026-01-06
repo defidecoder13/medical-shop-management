@@ -16,6 +16,8 @@ const BillSchema = new Schema(
   {
     items: [BillItemSchema],
     subTotal: Number,
+    discountPercent: Number,
+    discountAmount: Number,
     gstAmount: Number,
     grandTotal: Number,
     gstEnabled: Boolean,
