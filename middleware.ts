@@ -61,17 +61,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    {
-      source: '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(svg|png|jpg|jpeg|gif|webp)$).*)',
-      has: [
-        {
-          type: 'host',
-          value: 'localhost',
-        },
-      ],
-    },
-    {
-      source: '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(svg|png|jpg|jpeg|gif|webp)$).*)',
-    },
+    '/(.*)',
   ],
 };
