@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import * as XLSX from "xlsx";
 
@@ -37,6 +38,22 @@ type SalesReportData = {
 };
 
 export default function SalesReportPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check');
+        if (!res.ok) {
+          router.push('/login');
+        }
+      } catch (error) {
+        router.push('/login');
+      }
+    };
+    checkAuth();
+  }, [router]);
+
   const [reportData, setReportData] = useState<SalesReportData | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"1d" | "7d" | "1m">("7d");
@@ -94,14 +111,14 @@ export default function SalesReportPage() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-6xl mx-auto">
+      <div className="p-6 max-w-6xl mx-auto dark:bg-gray-900 dark:text-white">
         <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-6"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="border rounded-lg p-4">
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+              <div key={i} className="border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-700">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
               </div>
             ))}
           </div>
@@ -188,9 +205,9 @@ export default function SalesReportPage() {
   };
   
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="p-6 max-w-6xl mx-auto space-y-6 dark:bg-gray-900 dark:text-white" suppressHydrationWarning={true}>
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold">Sales Report</h1>
+        <h1 className="text-2xl font-bold dark:text-white">Sales Report</h1>
         
         <div className="flex items-center space-x-2">
           <button
@@ -203,8 +220,8 @@ export default function SalesReportPage() {
             Export to Excel
           </button>
           
-          <span>Filter:</span>
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg">
+          <span className="dark:text-white">Filter:</span>
+          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg dark:bg-gray-800">
             {(["1d", "7d", "1m"] as const).map((option) => (
               <button
                 key={option}
@@ -212,7 +229,7 @@ export default function SalesReportPage() {
                 className={`px-3 py-1 rounded-md text-sm ${
                   filter === option
                     ? "bg-blue-600 text-white"
-                    : "text-gray-600 hover:bg-gray-200"
+                    : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
                 }`}
               >
                 {option}
@@ -224,36 +241,36 @@ export default function SalesReportPage() {
 
       {reportData && dateRange && (
         <>
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-gray-600 dark:text-gray-300">
             Showing data from {formatDate(dateRange.start)} to {formatDate(dateRange.end)}
           </div>
 
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="border rounded-lg p-4 bg-white shadow-sm">
-              <div className="text-gray-600 text-sm">Total Sales</div>
-              <div className="text-2xl font-bold text-green-600">
+            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+              <div className="text-gray-600 text-sm dark:text-gray-300">Total Sales</div>
+              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
                 ₹{reportData.totalSales.toFixed(2)}
               </div>
             </div>
             
-            <div className="border rounded-lg p-4 bg-white shadow-sm">
-              <div className="text-gray-600 text-sm">Total Profit</div>
-              <div className="text-2xl font-bold text-blue-600">
+            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+              <div className="text-gray-600 text-sm dark:text-gray-300">Total Profit</div>
+              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                 ₹{reportData.totalProfit.toFixed(2)}
               </div>
             </div>
             
-            <div className="border rounded-lg p-4 bg-white shadow-sm">
-              <div className="text-gray-600 text-sm">Transactions</div>
-              <div className="text-2xl font-bold text-purple-600">
+            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+              <div className="text-gray-600 text-sm dark:text-gray-300">Transactions</div>
+              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                 {reportData.totalTransactions}
               </div>
             </div>
             
-            <div className="border rounded-lg p-4 bg-white shadow-sm">
-              <div className="text-gray-600 text-sm">Avg. Transaction</div>
-              <div className="text-2xl font-bold text-orange-600">
+            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+              <div className="text-gray-600 text-sm dark:text-gray-300">Avg. Transaction</div>
+              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
                 ₹{reportData.totalTransactions > 0 
                   ? (reportData.totalSales / reportData.totalTransactions).toFixed(2) 
                   : '0.00'}
@@ -263,43 +280,43 @@ export default function SalesReportPage() {
 
           {/* Most & Least Sold Medicines */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="border rounded-lg p-4 bg-white shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">Most Sold Medicine</h2>
+            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+              <h2 className="text-lg font-semibold mb-4 dark:text-white">Most Sold Medicine</h2>
               {reportData.mostSoldMedicine ? (
                 <div className="text-center">
-                  <div className="text-xl font-bold text-green-600">
+                  <div className="text-xl font-bold text-green-600 dark:text-green-400">
                     {reportData.mostSoldMedicine.name}
                   </div>
-                  <div className="text-gray-600">
+                  <div className="text-gray-600 dark:text-gray-300">
                     Quantity: {reportData.mostSoldMedicine.quantity}
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-gray-500">No data available</div>
+                <div className="text-center text-gray-500 dark:text-gray-400">No data available</div>
               )}
             </div>
             
-            <div className="border rounded-lg p-4 bg-white shadow-sm">
-              <h2 className="text-lg font-semibold mb-4">Least Sold Medicine</h2>
+            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+              <h2 className="text-lg font-semibold mb-4 dark:text-white">Least Sold Medicine</h2>
               {reportData.leastSoldMedicine ? (
                 <div className="text-center">
-                  <div className="text-xl font-bold text-red-600">
+                  <div className="text-xl font-bold text-red-600 dark:text-red-400">
                     {reportData.leastSoldMedicine.name}
                   </div>
-                  <div className="text-gray-600">
+                  <div className="text-gray-600 dark:text-gray-300">
                     Quantity: {reportData.leastSoldMedicine.quantity}
                   </div>
                 </div>
               ) : (
-                <div className="text-center text-gray-500">No data available</div>
+                <div className="text-center text-gray-500 dark:text-gray-400">No data available</div>
               )}
             </div>
           </div>
 
           {/* Daily Sales Chart Placeholder */}
-          <div className="border rounded-lg p-4 bg-white shadow-sm">
-            <h2 className="text-lg font-semibold mb-4">Daily Sales Trend</h2>
-            <div className="h-64 flex items-center justify-center text-gray-500">
+          <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
+            <h2 className="text-lg font-semibold mb-4 dark:text-white">Daily Sales Trend</h2>
+            <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
               Daily sales chart would appear here
             </div>
           </div>

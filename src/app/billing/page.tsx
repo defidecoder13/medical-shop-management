@@ -23,6 +23,20 @@ type CartItem = {
 export default function BillingPage() {
   const router = useRouter();
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check');
+        if (!res.ok) {
+          router.push('/login');
+        }
+      } catch (error) {
+        router.push('/login');
+      }
+    };
+    checkAuth();
+  }, [router]);
+
   const [search, setSearch] = useState("");
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 
 type BillItem = {
   name: string;
@@ -26,6 +26,21 @@ type Bill = {
 
 export default function PrintInvoicePage() {
   const { id } = useParams();
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check');
+        if (!res.ok) {
+          router.push('/login');
+        }
+      } catch (error) {
+        router.push('/login');
+      }
+    };
+    checkAuth();
+  }, [router]);
   const [bill, setBill] = useState<Bill | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

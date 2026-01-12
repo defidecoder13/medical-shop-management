@@ -3,37 +3,52 @@ import { verify } from "jsonwebtoken";
 
 // Define protected paths
 const protectedPaths = [
+  /^\/$/,
   /^\/billing/,
   /^\/inventory/,
-  /^\/transactions/,
+  /^\/medicine/,
+  /^\/print/,
   /^\/sales-report/,
   /^\/settings/,
-  /^\/$/,
+  /^\/transactions/,
+  /^\/api\/billing/,
+  /^\/api\/inventory/,
+  /^\/api\/sales-report/,
+  /^\/api\/settings/,
+  /^\/api\/transactions/,
 ];
 
 export function middleware(request: NextRequest) {
   // Check if the current path is protected
   const isProtected = protectedPaths.some((path) => path.test(request.nextUrl.pathname));
-  
+
   if (isProtected) {
     // Check for auth token in cookies
     const token = request.cookies.get("auth_token")?.value;
-    
+
     if (!token) {
+      // If API route, return 401
+      if (request.nextUrl.pathname.startsWith("/api")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       // Redirect to login if not authenticated
       return NextResponse.redirect(new URL("/login", request.url));
     }
-    
+
     try {
       // Verify the token
       verify(token, process.env.JWT_SECRET || "fallback_secret_key");
       // Token is valid, allow access
     } catch (error) {
+      // If API route, return 401
+      if (request.nextUrl.pathname.startsWith("/api")) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
       // Token is invalid, redirect to login
       return NextResponse.redirect(new URL("/login", request.url));
     }
   }
-  
+
   // If accessing login page while authenticated, redirect to dashboard
   if (request.nextUrl.pathname === "/login") {
     const token = request.cookies.get("auth_token")?.value;
@@ -47,7 +62,7 @@ export function middleware(request: NextRequest) {
       }
     }
   }
-  
+
   return NextResponse.next();
 }
 

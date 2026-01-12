@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
 
 type Transaction = {
@@ -23,6 +25,22 @@ type Transaction = {
 };
 
 export default function TransactionsPage() {
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check');
+        if (!res.ok) {
+          router.push('/login');
+        }
+      } catch (error) {
+        router.push('/login');
+      }
+    };
+    checkAuth();
+  }, [router]);
+
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -118,12 +136,12 @@ export default function TransactionsPage() {
 
                   <td className="border p-2">
                     <div className="flex space-x-2">
-                      <a
+                      <Link
                         href={`/transactions/${t._id}`}
                         className="text-blue-600 underline"
                       >
                         View
-                      </a>
+                      </Link>
                       <button
                         type="button"
                         onClick={(e) => {

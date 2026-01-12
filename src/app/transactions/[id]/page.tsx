@@ -7,6 +7,20 @@ export default function TransactionDetailsPage() {
   const params = useParams();
   const router = useRouter();
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const res = await fetch('/api/auth/check');
+        if (!res.ok) {
+          router.push('/login');
+        }
+      } catch (error) {
+        router.push('/login');
+      }
+    };
+    checkAuth();
+  }, [router]);
+
   const rawId = params.id;
   const id = Array.isArray(rawId) ? rawId[0] : rawId;
 
