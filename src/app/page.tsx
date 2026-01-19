@@ -200,16 +200,16 @@ export default function Home() {
             </div>
           </Link>
                   
-          <Link href="/expiry" className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/10 p-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 border border-amber-200 dark:border-amber-800 group">
+          <Link href="/transactions" className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-900/10 p-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 border border-teal-200 dark:border-teal-800 group">
             <div className="flex items-center">
-              <div className="p-3 bg-amber-500 rounded-full mr-4 shadow-inner transition-transform duration-300 group-hover:scale-110">
+              <div className="p-3 bg-teal-500 rounded-full mr-4 shadow-inner transition-transform duration-300 group-hover:scale-110">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
               <div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 transition-transform duration-300 group-hover:translate-x-1">Expiry Summary</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-white transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">Soon: {expiringThisMonth} | Expired: {expiredItems}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-300 transition-transform duration-300 group-hover:translate-x-1">Transactions</p>
+                <p className="text-2xl font-bold text-gray-800 dark:text-white transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">View All</p>
               </div>
             </div>
           </Link>
