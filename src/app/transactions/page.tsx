@@ -77,7 +77,7 @@ export default function TransactionsPage() {
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold">Transactions</h1>
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Transactions</h1>
         <button
           onClick={exportToExcel}
           className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center"
@@ -90,55 +90,55 @@ export default function TransactionsPage() {
       </div>
 
       {loading ? (
-        <p>Loading...</p>
+        <p className="text-gray-800 dark:text-white">Loading...</p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full border text-sm">
-            <thead className="bg-gray-100">
+          <table className="w-full border text-sm dark:border-gray-700">
+            <thead className="bg-gray-100 dark:bg-gray-800 dark:text-white">
               <tr>
-                <th className="border p-2">Date</th>
-                <th className="border p-2">Bill ID</th>
-                <th className="border p-2">Subtotal</th>
-                <th className="border p-2">GST</th>
-                <th className="border p-2">Total</th>
-                <th className="border p-2">Profit</th>
-                <th className="border p-2">Type</th>
-                <th className="border p-2">Action</th>
+                <th className="border p-2 dark:border-gray-700 dark:text-white">Date</th>
+                <th className="border p-2 dark:border-gray-700 dark:text-white">Bill ID</th>
+                <th className="border p-2 dark:border-gray-700 dark:text-white">Subtotal</th>
+                <th className="border p-2 dark:border-gray-700 dark:text-white">GST</th>
+                <th className="border p-2 dark:border-gray-700 dark:text-white">Total</th>
+                <th className="border p-2 dark:border-gray-700 dark:text-white">Profit</th>
+                <th className="border p-2 dark:border-gray-700 dark:text-white">Type</th>
+                <th className="border p-2 dark:border-gray-700 dark:text-white">Action</th>
               </tr>
             </thead>
 
             <tbody>
               {transactions.map((t) => (
                 <tr key={t._id}>
-                  <td className="border p-2">
+                  <td className="border p-2 dark:border-gray-700 dark:text-white">
                     {new Date(t.createdAt).toLocaleString()}
                   </td>
 
-                  <td className="border p-2 font-mono text-xs">
+                  <td className="border p-2 font-mono text-xs dark:border-gray-700 dark:text-white">
                     {t._id.slice(-6)}
                   </td>
 
-                  <td className="border p-2">₹{t.subTotal ?? 0}</td>
+                  <td className="border p-2 dark:border-gray-700 dark:text-white">₹{t.subTotal ?? 0}</td>
 
-                  <td className="border p-2">₹{t.gstAmount ?? 0}</td>
+                  <td className="border p-2 dark:border-gray-700 dark:text-white">₹{t.gstAmount ?? 0}</td>
 
-                  <td className="border p-2 font-semibold">
+                  <td className="border p-2 font-semibold dark:border-gray-700 dark:text-white">
                     ₹{t.grandTotal ?? 0}
                   </td>
 
-                  <td className="border p-2 font-semibold text-green-600">
+                  <td className="border p-2 font-semibold text-green-600 dark:border-gray-700 dark:text-green-400">
                     ₹{t.profit?.toFixed(2) ?? '0.00'}
                   </td>
 
-                  <td className="border p-2">
+                  <td className="border p-2 dark:border-gray-700 dark:text-white">
                     {t.printInvoice ? "Printed" : "Saved"}
                   </td>
 
-                  <td className="border p-2">
+                  <td className="border p-2 dark:border-gray-700">
                     <div className="flex space-x-2">
                       <Link
                         href={`/transactions/${t._id}`}
-                        className="text-blue-600 underline"
+                        className="text-blue-600 underline dark:text-blue-400"
                       >
                         View
                       </Link>
@@ -148,7 +148,7 @@ export default function TransactionsPage() {
                           e.preventDefault();
                           window.open(`/print/${t._id}`, '_blank');
                         }}
-                        className="text-green-600 underline"
+                        className="text-green-600 underline dark:text-green-400"
                       >
                         Print
                       </button>
@@ -159,7 +159,7 @@ export default function TransactionsPage() {
 
               {transactions.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="p-4 text-center">
+                  <td colSpan={7} className="p-4 text-center dark:text-white">
                     No transactions found
                   </td>
                 </tr>
