@@ -4,6 +4,27 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import * as XLSX from "xlsx";
+import { 
+  TrendingUp, 
+  BarChart3, 
+  FileSpreadsheet, 
+  Download, 
+  ChevronLeft, 
+  CreditCard, 
+  Wallet, 
+  PieChart,
+  Calendar,
+  Medal,
+  Activity,
+  ArrowUpRight,
+  ArrowDownRight,
+  Filter,
+  Package,
+  Clock,
+  CheckCircle2,
+  TrendingDown
+} from "lucide-react";
+import Link from "next/link";
 
 type BillItem = {
   name: string;
@@ -12,18 +33,6 @@ type BillItem = {
   qty: number;
   sellingPrice: number;
   total: number;
-};
-
-type Bill = {
-  _id: string;
-  items: BillItem[];
-  subTotal: number;
-  discountPercent: number;
-  discountAmount: number;
-  gstAmount: number;
-  grandTotal: number;
-  gstEnabled: boolean;
-  createdAt: string;
 };
 
 type SalesReportData = {
@@ -107,25 +116,7 @@ export default function SalesReportPage() {
   }, [dateRange]);
 
   // Format date for display
-  const formatDate = (date: Date) => format(date, "MMM dd, yyyy");
-
-  if (loading) {
-    return (
-      <div className="p-6 max-w-6xl mx-auto dark:bg-gray-900 dark:text-white">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-700">
-                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2 mb-2"></div>
-                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const formatDateDisplay = (date: Date) => format(date, "MMM dd, yyyy");
 
   // Function to export sales report to Excel
   const exportToExcel = () => {
@@ -203,125 +194,331 @@ export default function SalesReportPage() {
     const endDate = format(dateRange.end, "yyyy-MM-dd");
     XLSX.writeFile(wb, `Sales_Report_${startDate}_to_${endDate}.xlsx`);
   };
-  
-  return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6 dark:bg-gray-900 dark:text-white" suppressHydrationWarning={true}>
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <h1 className="text-2xl font-bold dark:text-white">Sales Report</h1>
-        
-        <div className="flex items-center space-x-2">
-          <button
-            onClick={exportToExcel}
-            className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition-colors duration-200 flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-            </svg>
-            Export to Excel
-          </button>
-          
-          <span className="dark:text-white">Filter:</span>
-          <div className="flex space-x-1 bg-gray-100 p-1 rounded-lg dark:bg-gray-800">
-            {(["1d", "7d", "1m"] as const).map((option) => (
-              <button
-                key={option}
-                onClick={() => setFilter(option)}
-                className={`px-3 py-1 rounded-md text-sm ${
-                  filter === option
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-700"
-                }`}
-              >
-                {option}
-              </button>
-            ))}
-          </div>
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
+        <div className="max-w-7xl mx-auto px-4 space-y-8">
+           <div className="animate-pulse space-y-8">
+              <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded-xl w-48"></div>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-32 bg-gray-200 dark:bg-gray-800 rounded-3xl"></div>
+                ))}
+              </div>
+              <div className="h-96 bg-gray-200 dark:bg-gray-800 rounded-3xl"></div>
+           </div>
         </div>
       </div>
+    );
+  }
 
-      {reportData && dateRange && (
-        <>
-          <div className="text-sm text-gray-600 dark:text-gray-300">
-            Showing data from {formatDate(dateRange.start)} to {formatDate(dateRange.end)}
-          </div>
-
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
-              <div className="text-gray-600 text-sm dark:text-gray-300">Total Sales</div>
-              <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-                ₹{reportData.totalSales.toFixed(2)}
-              </div>
-            </div>
-            
-            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
-              <div className="text-gray-600 text-sm dark:text-gray-300">Total Profit</div>
-              <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                ₹{reportData.totalProfit.toFixed(2)}
-              </div>
-            </div>
-            
-            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
-              <div className="text-gray-600 text-sm dark:text-gray-300">Transactions</div>
-              <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-                {reportData.totalTransactions}
-              </div>
-            </div>
-            
-            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
-              <div className="text-gray-600 text-sm dark:text-gray-300">Avg. Transaction</div>
-              <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                ₹{reportData.totalTransactions > 0 
-                  ? (reportData.totalSales / reportData.totalTransactions).toFixed(2) 
-                  : '0.00'}
-              </div>
+  return (
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
+      <div className="max-w-7xl mx-auto px-4 space-y-8">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/"
+              className="p-2 bg-white dark:bg-gray-900 rounded-xl glass-card border border-gray-100 dark:border-gray-800 hover:text-indigo-600 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <BarChart3 className="text-indigo-600 w-8 h-8" />
+                Sales Intelligence
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-1">
+                {dateRange && (
+                  <span className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4" />
+                    Insights from {formatDateDisplay(dateRange.start)} to {formatDateDisplay(dateRange.end)}
+                  </span>
+                )}
+              </p>
             </div>
           </div>
 
-          {/* Most & Least Sold Medicines */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
-              <h2 className="text-lg font-semibold mb-4 dark:text-white">Most Sold Medicine</h2>
-              {reportData.mostSoldMedicine ? (
-                <div className="text-center">
-                  <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                    {reportData.mostSoldMedicine.name}
+          <div className="flex items-center gap-3 self-end md:self-center">
+            <div className="p-1 bg-white/50 dark:bg-gray-900/50 rounded-2xl glass-card border border-gray-100 dark:border-gray-800 flex shadow-sm">
+              {(["1d", "7d", "1m"] as const).map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setFilter(option)}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                    filter === option
+                      ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/20"
+                      : "text-gray-500 hover:text-indigo-600"
+                  }`}
+                >
+                  {option === '1d' ? 'Today' : option === '7d' ? 'Week' : 'Month'}
+                </button>
+              ))}
+            </div>
+
+            <button
+               onClick={exportToExcel}
+               className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-emerald-500/20 active:scale-95 group"
+            >
+              <FileSpreadsheet className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+              <span className="hidden sm:inline">Export Excel</span>
+              <Download className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {reportData && (
+          <>
+            {/* Top Row: Key Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              
+              {/* Total Revenue */}
+              <div className="glass-panel p-6 rounded-3xl border border-white/20 shadow-xl relative overflow-hidden bg-gradient-to-br from-indigo-50 to-white dark:from-indigo-950/20 dark:to-gray-900 group">
+                <div className="absolute -top-6 -right-6 p-6 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                  <TrendingUp className="w-24 h-24 text-indigo-600" />
+                </div>
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-indigo-800/60 dark:text-indigo-300/60 font-bold text-[10px] uppercase tracking-widest mb-1">
+                      <TrendingUp className="w-3 h-3" />
+                      Total Revenue
+                    </div>
+                    <div className="text-4xl font-black text-indigo-600 dark:text-indigo-400 tabular-nums">
+                      ₹{reportData.totalSales.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </div>
                   </div>
-                  <div className="text-gray-600 dark:text-gray-300">
-                    Quantity: {reportData.mostSoldMedicine.quantity}
+                  <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-1 rounded-lg w-fit">
+                    <ArrowUpRight className="w-3.5 h-3.5" />
+                    Growth Sync
                   </div>
                 </div>
-              ) : (
-                <div className="text-center text-gray-500 dark:text-gray-400">No data available</div>
-              )}
-            </div>
-            
-            <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
-              <h2 className="text-lg font-semibold mb-4 dark:text-white">Least Sold Medicine</h2>
-              {reportData.leastSoldMedicine ? (
-                <div className="text-center">
-                  <div className="text-xl font-bold text-red-600 dark:text-red-400">
-                    {reportData.leastSoldMedicine.name}
+              </div>
+
+              {/* Net Profit */}
+              <div className="glass-panel p-6 rounded-3xl border border-white/20 shadow-xl relative overflow-hidden bg-gradient-to-br from-emerald-50 to-white dark:from-emerald-950/20 dark:to-gray-900 group">
+                <div className="absolute -top-6 -right-6 p-6 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                  <Wallet className="w-24 h-24 text-emerald-600" />
+                </div>
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-emerald-800/60 dark:text-emerald-300/60 font-bold text-[10px] uppercase tracking-widest mb-1">
+                      <Wallet className="w-3 h-3" />
+                      Net Profit
+                    </div>
+                    <div className="text-4xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+                      ₹{reportData.totalProfit.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                    </div>
                   </div>
-                  <div className="text-gray-600 dark:text-gray-300">
-                    Quantity: {reportData.leastSoldMedicine.quantity}
+                  <div className="mt-4 text-[10px] font-bold text-emerald-700/60 dark:text-emerald-400/60 uppercase">
+                    After GST & Costs
                   </div>
                 </div>
-              ) : (
-                <div className="text-center text-gray-500 dark:text-gray-400">No data available</div>
-              )}
-            </div>
-          </div>
+              </div>
 
-          {/* Daily Sales Chart Placeholder */}
-          <div className="border rounded-lg p-4 bg-white shadow-sm dark:bg-gray-800 dark:border-gray-700">
-            <h2 className="text-lg font-semibold mb-4 dark:text-white">Daily Sales Trend</h2>
-            <div className="h-64 flex items-center justify-center text-gray-500 dark:text-gray-400">
-              Daily sales chart would appear here
+              {/* Transactions */}
+              <div className="glass-panel p-6 rounded-3xl border border-white/20 shadow-xl relative overflow-hidden bg-gradient-to-br from-violet-50 to-white dark:from-violet-950/20 dark:to-gray-900 group">
+                <div className="absolute -top-6 -right-6 p-6 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                  <CreditCard className="w-24 h-24 text-violet-600" />
+                </div>
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-violet-800/60 dark:text-violet-300/60 font-bold text-[10px] uppercase tracking-widest mb-1">
+                      <Activity className="w-3 h-3" />
+                      Invoices
+                    </div>
+                    <div className="text-4xl font-black text-violet-600 dark:text-violet-400 tabular-nums">
+                      {reportData.totalTransactions}
+                    </div>
+                  </div>
+                  <div className="mt-4 text-[10px] font-bold text-violet-600/60 dark:text-violet-400/60 uppercase">
+                    Verified Sales
+                  </div>
+                </div>
+              </div>
+
+              {/* Average Order */}
+              <div className="glass-panel p-6 rounded-3xl border border-white/20 shadow-xl relative overflow-hidden bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-gray-900 group">
+                <div className="absolute -top-6 -right-6 p-6 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                  <PieChart className="w-24 h-24 text-amber-600" />
+                </div>
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 text-amber-800/60 dark:text-amber-300/60 font-bold text-[10px] uppercase tracking-widest mb-1">
+                      <PieChart className="w-3 h-3" />
+                      Avg. Invoice
+                    </div>
+                    <div className="text-4xl font-black text-amber-600 dark:text-amber-400 tabular-nums">
+                      ₹{reportData.totalTransactions > 0 
+                        ? (reportData.totalSales / reportData.totalTransactions).toLocaleString('en-IN', { maximumFractionDigits: 0 }) 
+                        : '0'}
+                    </div>
+                  </div>
+                  <div className="mt-4 text-[10px] font-bold text-amber-700/60 dark:text-amber-400/60 uppercase">
+                    Value Per Client
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </>
-      )}
+
+            {/* Middle Row: Product Rankings */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              {/* Best Performers */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <Medal className="text-emerald-500 w-5 h-5" />
+                    Top Performance
+                  </h2>
+                </div>
+                
+                <div className="glass-panel rounded-3xl p-6 border border-white/20 shadow-xl space-y-4 overflow-hidden relative">
+                  <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                     <Medal className="w-32 h-32" />
+                  </div>
+                  {reportData.topSellingMedicines.length > 0 ? (
+                    <div className="space-y-4">
+                      {reportData.topSellingMedicines.slice(0, 5).map((med, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-white/40 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-800 hover:scale-[1.01] transition-transform group">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-xs font-black text-emerald-600">
+                              {idx + 1}
+                            </div>
+                            <div>
+                               <div className="font-bold text-gray-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-600 transition-colors">{med.name}</div>
+                               <div className="text-[10px] font-bold text-gray-400 flex items-center gap-1 mt-0.5">
+                                 <Package className="w-3 h-3" />
+                                 {med.quantity} Units Sold
+                               </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                             <div className="font-black text-emerald-600 dark:text-emerald-400">₹{med.revenue.toLocaleString('en-IN')}</div>
+                             <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Gross Revenue</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-20 text-center opacity-30">
+                      <Medal className="w-12 h-12 mb-3 mx-auto" />
+                      <p className="font-bold">No Top Performers</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+
+              {/* Underperformers */}
+              <section className="space-y-4">
+                <div className="flex items-center justify-between px-2">
+                  <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <TrendingDown className="text-rose-500 w-5 h-5" />
+                    Lowest Traction
+                  </h2>
+                </div>
+
+                <div className="glass-panel rounded-3xl p-6 border border-white/20 shadow-xl space-y-4 overflow-hidden relative">
+                  <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                     <TrendingDown className="w-32 h-32" />
+                  </div>
+                  {reportData.leastSellingMedicines.length > 0 ? (
+                    <div className="space-y-4">
+                      {reportData.leastSellingMedicines.slice(0, 5).map((med, idx) => (
+                        <div key={idx} className="flex items-center justify-between p-4 bg-white/40 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-800 group">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 rounded-full bg-rose-50 dark:bg-rose-950 flex items-center justify-center text-xs font-black text-rose-600">
+                              {idx + 1}
+                            </div>
+                            <div>
+                               <div className="font-bold text-gray-900 dark:text-white uppercase tracking-tight line-through opacity-50">{med.name}</div>
+                               <div className="text-[10px] font-bold text-rose-400 flex items-center gap-1 mt-0.5">
+                                 <Clock className="w-3 h-3" />
+                                 {med.quantity} Units Sold
+                               </div>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                             <div className="font-black text-rose-600 dark:text-rose-400">₹{med.revenue.toLocaleString('en-IN')}</div>
+                             <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Stale Revenue</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-20 text-center opacity-30">
+                      <TrendingDown className="w-12 h-12 mb-3 mx-auto" />
+                      <p className="font-bold">Consistent Performance</p>
+                    </div>
+                  )}
+                </div>
+              </section>
+            </div>
+
+            {/* Bottom Row: Insights Chart */}
+            <div className="glass-panel p-8 rounded-3xl border border-white/20 shadow-xl relative overflow-hidden group">
+               <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
+                  <Activity className="w-64 h-64 text-indigo-600" />
+               </div>
+               
+               <div className="flex items-center justify-between mb-8">
+                  <div>
+                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                       <Activity className="text-indigo-600" />
+                       Market Trends
+                    </h2>
+                    <p className="text-sm text-gray-500 font-medium">Daily sales and profit fluctuation analysis</p>
+                  </div>
+                  <div className="flex gap-4">
+                     <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-indigo-600" />
+                        <span className="text-xs font-bold text-gray-500 uppercase">Sales</span>
+                     </div>
+                     <div className="flex items-center gap-2">
+                        <div className="w-3 h-3 rounded-full bg-emerald-600" />
+                        <span className="text-xs font-bold text-gray-500 uppercase">Profit</span>
+                     </div>
+                  </div>
+               </div>
+
+               {reportData.dailySales.length > 0 ? (
+                 <div className="grid grid-cols-1 md:grid-cols-7 lg:grid-cols-14 gap-px bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800">
+                    {reportData.dailySales.map((day, i) => (
+                      <div key={i} className="bg-white/50 dark:bg-gray-900/50 p-4 hover:bg-white dark:hover:bg-gray-800 transition-colors group/day">
+                        <div className="text-[10px] font-black text-gray-400 uppercase mb-3 text-center">
+                          {format(new Date(day.date), "EEE dd")}
+                        </div>
+                        <div className="flex flex-col gap-2">
+                           <div className="relative h-20 w-full bg-gray-50 dark:bg-gray-950 rounded-lg overflow-hidden flex flex-col justify-end">
+                              <div 
+                                className="bg-indigo-600/20 group-hover/day:bg-indigo-600 transition-all duration-500 rounded-t-sm"
+                                style={{ height: `${Math.min(100, (day.sales / Math.max(...reportData.dailySales.map(d => d.sales || 1))) * 100)}%` }}
+                              />
+                           </div>
+                           <div className="text-[10px] font-black text-center text-indigo-600">₹{day.sales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
+                        </div>
+                      </div>
+                    ))}
+                 </div>
+               ) : (
+                 <div className="h-64 flex flex-col items-center justify-center text-gray-400 opacity-30 gap-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl">
+                    <PieChart className="w-12 h-12" />
+                    <p className="font-bold">No sequential data available for this range</p>
+                 </div>
+               )}
+               
+               <div className="mt-8 flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
+                  <TrendingUp className="text-indigo-600 w-5 h-5 flex-shrink-0" />
+                  <p className="text-xs text-indigo-800 dark:text-indigo-300 font-medium">
+                    Analysis suggests a {filter === '7d' ? 'weekly' : 'monthly'} transaction volume of <strong>{reportData.totalTransactions}</strong> invoices with a net margin of <strong>{((reportData.totalProfit / reportData.totalSales) * 100 || 0).toFixed(1)}%</strong>.
+                  </p>
+               </div>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

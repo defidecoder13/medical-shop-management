@@ -2,6 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { 
+  AlertTriangle, 
+  PackageOpen, 
+  ChevronLeft, 
+  ArrowRight, 
+  Package, 
+  Tag, 
+  Hash, 
+  Calendar,
+  Layers,
+  Search,
+  CheckCircle2,
+  AlertCircle,
+  Truck
+} from "lucide-react";
+import Link from "next/link";
 
 interface Medicine {
   _id: string;
@@ -10,10 +26,6 @@ interface Medicine {
   batchNumber: string;
   expiryDate: string;
   stock: number;
-  tabletsPerStrip: number;
-  totalTabletsInStock: number;
-  buyingPricePerStrip: number;
-  gstPercent: number;
 }
 
 export default function LowStockPage() {
@@ -58,17 +70,16 @@ export default function LowStockPage() {
 
   if (loading) {
     return (
-      <div className="p-6 max-w-6xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Low Stock Medicines</h1>
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {[...Array(2)].map((_, i) => (
-              <div key={i} className="border rounded-lg p-4">
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-                <div className="h-6 bg-gray-200 rounded w-1/3"></div>
-              </div>
-            ))}
+      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
+        <div className="max-w-6xl mx-auto px-4 space-y-8">
+          <div className="animate-pulse space-y-8">
+            <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded-xl w-48"></div>
+            <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-3xl w-full"></div>
+            <div className="space-y-4">
+               {[...Array(5)].map((_, i) => (
+                 <div key={i} className="h-16 bg-gray-200 dark:bg-gray-800 rounded-2xl w-full"></div>
+               ))}
+            </div>
           </div>
         </div>
       </div>
@@ -76,49 +87,191 @@ export default function LowStockPage() {
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-8 dark:bg-gray-900 dark:text-white">
-      <h1 className="text-2xl font-bold dark:text-white">Low Stock Medicines</h1>
-
-      {/* Summary Card */}
-      <div className="border rounded-lg p-4 bg-orange-50 dark:bg-orange-900/20 dark:border-orange-800 dark:text-white">
-        <h2 className="font-semibold text-lg text-orange-800 dark:text-orange-200 mb-2">Low Stock Summary</h2>
-        <p className="text-sm text-orange-600 dark:text-orange-400">Medicines with stock level of 10 or less</p>
-        <p className="text-xl font-bold mt-2 dark:text-white">{lowStockMedicines.length} items</p>
-      </div>
-
-      {/* Low Stock Medicines Table */}
-      <div className="border rounded-lg p-4 dark:bg-gray-800 dark:border-gray-700">
-        <h2 className="text-xl font-semibold mb-4 text-orange-700 dark:text-orange-400">Low Stock Items</h2>
-        {lowStockMedicines.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full border text-sm dark:border-gray-700">
-              <thead className="bg-gray-100 dark:bg-gray-700 dark:text-white">
-                <tr>
-                  <th className="border p-2 dark:border-gray-600 dark:text-white">Name</th>
-                  <th className="border p-2 dark:border-gray-600 dark:text-white">Brand</th>
-                  <th className="border p-2 dark:border-gray-600 dark:text-white">Batch</th>
-                  <th className="border p-2 dark:border-gray-600 dark:text-white">Expiry Date</th>
-                  <th className="border p-2 dark:border-gray-600 dark:text-white">Stock</th>
-                  <th className="border p-2 dark:border-gray-600 dark:text-white">Tablets/Strip</th>
-                </tr>
-              </thead>
-              <tbody>
-                {lowStockMedicines.map((med) => (
-                  <tr key={med._id} className="bg-orange-50 dark:bg-gray-800">
-                    <td className="border p-2 font-medium dark:border-gray-600 dark:text-white">{med.name}</td>
-                    <td className="border p-2 dark:border-gray-600 dark:text-white">{med.brand}</td>
-                    <td className="border p-2 dark:border-gray-600 dark:text-white">{med.batchNumber}</td>
-                    <td className="border p-2 dark:border-gray-600 dark:text-white">{new Date(med.expiryDate).toLocaleDateString()}</td>
-                    <td className="border p-2 dark:border-gray-600 dark:text-white">{med.stock}</td>
-                    <td className="border p-2 dark:border-gray-600 dark:text-white">{med.tabletsPerStrip}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
+      <div className="max-w-6xl mx-auto px-4 space-y-8">
+        
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/"
+              className="p-2 bg-white dark:bg-gray-900 rounded-xl glass-card border border-gray-100 dark:border-gray-800 hover:text-amber-600 transition-colors"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <PackageOpen className="text-amber-600 w-8 h-8" />
+                Stock Alerts
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-1">Monitor items nearing depletion</p>
+            </div>
           </div>
-        ) : (
-          <p className="text-gray-500 text-center py-4 dark:text-gray-400">No low stock medicines</p>
-        )}
+          
+          <div className="flex gap-3">
+             <Link 
+               href="/inventory"
+               className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl font-bold transition-all border border-gray-100 dark:border-gray-800 hover:border-amber-200 dark:hover:border-amber-900/50 shadow-sm"
+             >
+                <Layers className="w-4 h-4 text-amber-600" />
+                Inventory Manager
+             </Link>
+          </div>
+        </div>
+
+        {/* Big Alert Hero */}
+        <div className={`relative glass-panel p-8 md:p-12 rounded-[2.5rem] border border-white/20 shadow-2xl overflow-hidden bg-gradient-to-br transition-all duration-700 ${
+          lowStockMedicines.length > 0 
+          ? 'from-amber-600 to-amber-700 text-white' 
+          : 'from-emerald-600 to-emerald-700 text-white'
+        }`}>
+          <div className="absolute -top-12 -right-12 p-12 opacity-10 pointer-events-none rotate-12">
+            {lowStockMedicines.length > 0 ? <AlertTriangle className="w-64 h-64" /> : <CheckCircle2 className="w-64 h-64" />}
+          </div>
+          
+          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+            <div className="space-y-2">
+               <div className="flex items-center gap-2 text-white/70 font-bold text-[10px] uppercase tracking-[0.2em] mb-2">
+                 {lowStockMedicines.length > 0 ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
+                 System Health Status
+               </div>
+               <h2 className="text-4xl md:text-5xl font-black tracking-tight">
+                 {lowStockMedicines.length > 0 
+                  ? `${lowStockMedicines.length} Items Low on Stock` 
+                  : "All Units Optimized"}
+               </h2>
+               <p className="text-lg text-white/80 font-medium max-w-xl">
+                 {lowStockMedicines.length > 0 
+                  ? "Immediate restock recommended for these critical items to avoid service disruption." 
+                  : "Inventory levels are currently within safe operational thresholds. No action needed."}
+               </p>
+            </div>
+            
+            {lowStockMedicines.length > 0 && (
+              <div className="bg-white/20 backdrop-blur-md rounded-3xl p-6 border border-white/20 min-w-[200px] text-center">
+                 <div className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1">Restock Priority</div>
+                 <div className="text-4xl font-black">HIGH</div>
+                 <div className="mt-3 flex items-center justify-center gap-1.5 text-xs font-bold text-white/80">
+                    <Truck className="w-4 h-4" />
+                    Pending Shipments: 0
+                 </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Low Stock Medicines List */}
+        <div className="space-y-6">
+          <div className="flex items-center justify-between px-2">
+             <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+                <AlertTriangle className="text-amber-500 w-6 h-6" />
+                Critical Stock List
+             </h2>
+             <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input 
+                  placeholder="Filter alerts..."
+                  className="pl-10 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                />
+             </div>
+          </div>
+
+          {lowStockMedicines.length > 0 ? (
+            <div className="glass-panel rounded-3xl border border-white/20 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left">
+                  <thead>
+                    <tr className="bg-amber-50/50 dark:bg-amber-900/10 border-b border-amber-100/50 dark:border-amber-800/30">
+                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest">Medicine & Batch</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest">Catalog</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest text-center">Status</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest text-right">Current Units</th>
+                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
+                    {lowStockMedicines.map((med, idx) => (
+                      <tr 
+                        key={med._id} 
+                        className="hover:bg-amber-50/30 dark:hover:bg-amber-900/10 transition-all group animate-in fade-in slide-in-from-bottom-2 duration-300"
+                        style={{ animationDelay: `${idx * 50}ms` }}
+                      >
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-4">
+                            <div className="w-10 h-10 bg-amber-100/50 dark:bg-amber-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                              <Package className="w-5 h-5 text-amber-600" />
+                            </div>
+                            <div>
+                               <div className="font-bold text-gray-900 dark:text-white uppercase tracking-tight">{med.name}</div>
+                               <div className="text-[10px] font-bold text-gray-400 mt-1 flex items-center gap-1.5 leading-none">
+                                 <Hash className="w-3 h-3" />
+                                 {med.batchNumber}
+                               </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5 text-sm font-semibold text-gray-600 dark:text-gray-400">
+                           <div className="flex flex-col">
+                              <span>{med.brand || "Generics"}</span>
+                              <span className="text-[10px] font-medium text-gray-400 flex items-center gap-1 mt-0.5">
+                                <Calendar className="w-3 h-3" />
+                                Exp: {new Date(med.expiryDate).toLocaleDateString()}
+                              </span>
+                           </div>
+                        </td>
+                        <td className="px-6 py-5 text-center">
+                           <div className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">
+                             {med.stock <= 5 ? "Critical" : "Warning"}
+                           </div>
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                           <div className="flex flex-col items-end">
+                              <span className={`text-xl font-black leading-none ${med.stock <= 5 ? 'text-rose-600 animate-pulse' : 'text-amber-600'}`}>
+                                {med.stock}
+                              </span>
+                              <span className="text-[10px] font-bold text-gray-400 uppercase mt-1">Strips LEFT</span>
+                           </div>
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                           <Link 
+                             href="/inventory"
+                             className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors"
+                           >
+                             Manage
+                             <ArrowRight className="w-3.5 h-3.5" />
+                           </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ) : (
+            <div className="glass-panel rounded-[2.5rem] p-20 text-center border border-white/20 shadow-xl flex flex-col items-center">
+               <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-950 rounded-full flex items-center justify-center mb-6">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+               </div>
+               <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Inventory Healthy</h3>
+               <p className="text-gray-500 font-medium max-w-sm mt-2">All medicines are currently above the low stock threshold.</p>
+               <Link 
+                 href="/inventory"
+                 className="mt-8 px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all"
+               >
+                 View All Inventory
+               </Link>
+            </div>
+          )}
+        </div>
+
+        {/* Action Footnote */}
+        <div className="flex justify-center pt-4 pb-12">
+           <p className="text-xs text-gray-400 font-medium flex items-center gap-2">
+             <AlertCircle className="w-3.5 h-3.5" />
+             Threshold is currently set to 10 strips. Adjust in settings if required.
+           </p>
+        </div>
+
       </div>
     </div>
   );

@@ -1,13 +1,32 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ThemeToggle } from "@/src/components/theme-toggle";
+import { 
+  LayoutDashboard, 
+  LogOut, 
+  Settings, 
+  CreditCard, 
+  Package, 
+  AlertTriangle, 
+  TrendingUp, 
+  Pill, 
+  AlertCircle,
+  ArrowRight,
+  History,
+  Receipt
+} from "lucide-react";
 
 export default function Home() {
   const router = useRouter();
+  const [medicinesCount, setMedicinesCount] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
+  const [expiringThisMonth, setExpiringThisMonth] = useState(0);
+  const [expiredItems, setExpiredItems] = useState(0);
+  const [transactionsCount, setTransactionsCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -32,13 +51,10 @@ export default function Home() {
       console.error("Logout error:", error);
     }
   };
-  const [medicinesCount, setMedicinesCount] = useState(0);
-  const [lowStockCount, setLowStockCount] = useState(0);
-  const [expiringThisMonth, setExpiringThisMonth] = useState(0);
-  const [expiredItems, setExpiredItems] = useState(0);
   
   useEffect(() => {
     const fetchDashboardData = async () => {
+      setIsLoading(true);
       try {
         // Fetch medicines data
         const medicineResponse = await fetch('/api/inventory');
@@ -58,162 +74,225 @@ export default function Home() {
           setExpiringThisMonth(expiryData.expiringThisMonth);
           setExpiredItems(expiryData.expiredItems);
         }
+
+        // Fetch transactions data
+        const transactionsResponse = await fetch('/api/transactions');
+        if (transactionsResponse.ok) {
+          const transactions = await transactionsResponse.json();
+          setTransactionsCount(transactions.length);
+        }
+
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
     
     fetchDashboardData();
   }, []);
+
+  const totalExpiryIssues = expiringThisMonth + expiredItems;
   
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900" suppressHydrationWarning={true}>
+    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-100/20 via-gray-50/0 to-gray-50/0 dark:from-blue-900/20 dark:via-gray-950/0 dark:to-gray-950/0" suppressHydrationWarning={true}>
       {/* Header */}
-      <header className="bg-white dark:bg-gray-800 shadow">
-        <div className="max-w-7xl mx-auto px-4 py-6 sm:px-6 lg:px-8 flex justify-between items-center">
-          <div className="flex items-center">
-            <div className="bg-blue-600 text-white p-3 rounded-lg mr-4">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
-              </svg>
+      <header className="sticky top-0 z-50 glass border-b border-gray-200/50 dark:border-gray-800/50">
+        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-2.5 rounded-xl shadow-lg shadow-blue-500/20">
+              <LayoutDashboard className="h-6 w-6" />
             </div>
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white">MediShop Admin</h1>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight">
+              Medi<span className="text-blue-600 dark:text-blue-400">Shop</span>
+            </h1>
           </div>
-          <div className="flex items-center space-x-2 gap-5">
+          <div className="flex items-center space-x-4">
             <Link
               href="/settings"
-              className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center gap"
+              className="p-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
+              <Settings className="h-5 w-5" />
             </Link>
-            <div className="flex items-center">
-              <div>
-                <button
-                  onClick={handleLogout}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 flex items-center"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
-                  Logout
-                </button>
-              </div>
-            </div>
-            <div>
-              <ThemeToggle />
-            </div>
+            <div className="h-6 w-px bg-gray-200 dark:bg-gray-800"></div>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+            >
+              <LogOut className="h-4 w-4" />
+              <span>Logout</span>
+            </button>
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h2>
-          <p className="text-gray-600">Manage your pharmacy operations efficiently</p>
-        </div>
-
-        {/* Quick Actions - Now at the top */}
-        <div className="mb-8">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Quick Actions</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <Link
-              href="/billing"
-              className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/30 dark:to-blue-900/10 p-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 border border-blue-200 dark:border-blue-800 flex flex-col items-center justify-center group"
-            >
-              <div className="bg-blue-500 p-3 rounded-full mb-3 shadow-inner transition-transform duration-300 group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <span className="font-medium text-gray-800 dark:text-white transition-transform duration-300 group-hover:translate-y-1">Billing</span>
-            </Link>
-                    
-            <Link
-              href="/inventory"
-              className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/30 dark:to-green-900/10 p-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 border border-green-200 dark:border-green-800 flex flex-col items-center justify-center group"
-            >
-              <div className="bg-green-500 p-3 rounded-full mb-3 shadow-inner transition-transform duration-300 group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
-              </div>
-              <span className="font-medium text-gray-800 dark:text-white transition-transform duration-300 group-hover:translate-y-1">Inventory</span>
-            </Link>
-                    
-            <Link
-              href="/expiry"
-              className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/30 dark:to-amber-900/10 p-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 border border-amber-200 dark:border-amber-800 flex flex-col items-center justify-center group"
-            >
-              <div className="bg-amber-500 p-3 rounded-full mb-3 shadow-inner transition-transform duration-300 group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span className="font-medium text-gray-800 dark:text-white transition-transform duration-300 group-hover:translate-y-1">Expiry Summary</span>
-            </Link>
-                    
-            <Link
-              href="/sales-report"
-              className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/30 dark:to-purple-900/10 p-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 border border-purple-200 dark:border-purple-800 flex flex-col items-center justify-center group"
-            >
-              <div className="bg-purple-500 p-3 rounded-full mb-3 shadow-inner transition-transform duration-300 group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <span className="font-medium text-gray-800 dark:text-white transition-transform duration-300 group-hover:translate-y-1">Sales Report</span>
-            </Link>
+      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8">
+        
+        {/* Welcome Section */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-in fade-in-50 slide-in-from-bottom-5 duration-500">
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mt-4">Overview</h2>
+            <p className="text-gray-600 dark:text-gray-400 mt-1">Here's what's happening in your shop today.</p>
           </div>
         </div>
-                
-        {/* Dashboard Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <Link href="/medicine" className="bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/30 dark:to-indigo-900/10 p-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 border border-indigo-200 dark:border-indigo-800 group">
-            <div className="flex items-center">
-              <div className="p-3 bg-indigo-500 rounded-full mr-4 shadow-inner transition-transform duration-300 group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
+
+        {/* Quick Actions Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-in fade-in-50 slide-in-from-bottom-5 duration-500 delay-100">
+          <Link
+            href="/billing"
+            className="group relative overflow-hidden p-6 rounded-2xl glass-card border border-blue-100 dark:border-blue-900/30 bg-gradient-to-br from-white to-blue-50/50 dark:from-gray-900 dark:to-blue-950/20"
+          >
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <CreditCard className="w-24 h-24 text-blue-600 dark:text-blue-400 transform rotate-12" />
+            </div>
+            <div className="relative z-10">
+              <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <CreditCard className="w-6 h-6 text-blue-600 dark:text-blue-400" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 transition-transform duration-300 group-hover:translate-x-1">Medicines</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-white transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">{medicinesCount}</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">New Bill</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Create invoice & checkout</p>
+              <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium">
+                Start Billing <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </Link>
-        
-          <Link href="/low-stock" className="bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/30 dark:to-orange-900/10 p-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 border border-orange-200 dark:border-orange-800 group">
-            <div className="flex items-center">
-              <div className="p-3 bg-orange-500 rounded-full mr-4 shadow-inner transition-transform duration-300 group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+
+          <Link
+            href="/inventory"
+            className="group relative overflow-hidden p-6 rounded-2xl glass-card border border-emerald-100 dark:border-emerald-900/30 bg-gradient-to-br from-white to-emerald-50/50 dark:from-gray-900 dark:to-emerald-950/20"
+          >
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <Package className="w-24 h-24 text-emerald-600 dark:text-emerald-400 transform rotate-12" />
+            </div>
+            <div className="relative z-10">
+              <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-900/50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <Package className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 transition-transform duration-300 group-hover:translate-x-1">Low Stock</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-white transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">{lowStockCount}</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Inventory</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Manage stock & items</p>
+              <div className="flex items-center text-emerald-600 dark:text-emerald-400 text-sm font-medium">
+                View Stock <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </Link>
-                  
-          <Link href="/transactions" className="bg-gradient-to-br from-teal-50 to-teal-100 dark:from-teal-900/30 dark:to-teal-900/10 p-6 rounded-xl shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 border border-teal-200 dark:border-teal-800 group">
-            <div className="flex items-center">
-              <div className="p-3 bg-teal-500 rounded-full mr-4 shadow-inner transition-transform duration-300 group-hover:scale-110">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                </svg>
+
+          <Link
+            href="/expiry"
+            className="group relative overflow-hidden p-6 rounded-2xl glass-card border border-amber-100 dark:border-amber-900/30 bg-gradient-to-br from-white to-amber-50/50 dark:from-gray-900 dark:to-amber-950/20"
+          >
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <AlertTriangle className="w-24 h-24 text-amber-600 dark:text-amber-400 transform rotate-12" />
+            </div>
+            <div className="relative z-10">
+              <div className="w-12 h-12 bg-amber-100 dark:bg-amber-900/50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
               </div>
-              <div>
-                <p className="text-sm text-gray-600 dark:text-gray-300 transition-transform duration-300 group-hover:translate-x-1">Transactions</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-white transition-transform duration-300 group-hover:translate-x-1 group-hover:scale-105">View All</p>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Expiry Check</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Monitor expiring items</p>
+              <div className="flex items-center text-amber-600 dark:text-amber-400 text-sm font-medium">
+                Check Status <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </div>
+          </Link>
+
+          <Link
+            href="/sales-report"
+            className="group relative overflow-hidden p-6 rounded-2xl glass-card border border-purple-100 dark:border-purple-900/30 bg-gradient-to-br from-white to-purple-50/50 dark:from-gray-900 dark:to-purple-950/20"
+          >
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+              <TrendingUp className="w-24 h-24 text-purple-600 dark:text-purple-400 transform rotate-12" />
+            </div>
+            <div className="relative z-10">
+              <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/50 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                <TrendingUp className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">Sales Report</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">Analytics & revenue</p>
+              <div className="flex items-center text-purple-600 dark:text-purple-400 text-sm font-medium">
+                View Reports <ArrowRight className="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform" />
               </div>
             </div>
           </Link>
         </div>
+
+        {/* Improved Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in-50 slide-in-from-bottom-5 duration-500 delay-200">
+          {/* 1. Total Medicines */}
+          <Link href="/medicine" className="group relative overflow-hidden glass-card p-5 border-indigo-100 dark:border-indigo-900/30 flex flex-col justify-between h-full bg-gradient-to-br from-indigo-50/30 to-white dark:from-indigo-950/10 dark:to-gray-950">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-900/40 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Pill className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <span className="text-xs font-semibold px-2 py-1 rounded-md bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-300">Catalog</span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Medicines</p>
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse mt-1"></div>
+              ) : (
+                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1 leading-none">{medicinesCount}</p>
+              )}
+            </div>
+            <div className="mt-4 flex items-center text-sm font-medium text-indigo-600 dark:text-indigo-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              Manage Medicines <ArrowRight className="w-4 h-4 ml-1" />
+            </div>
+          </Link>
+
+          {/* 2. Low Stock */}
+          <Link href="/low-stock" className="group relative overflow-hidden glass-card p-5 border-rose-100 dark:border-rose-900/30 flex flex-col justify-between h-full bg-gradient-to-br from-rose-50/30 to-white dark:from-rose-950/10 dark:to-gray-950">
+             <div className="flex justify-between items-start mb-4">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-transform duration-300 group-hover:scale-110 ${lowStockCount > 0 ? 'bg-rose-100 dark:bg-rose-900/40' : 'bg-gray-100 dark:bg-gray-800/40'}`}>
+                <AlertCircle className={`w-5 h-5 ${lowStockCount > 0 ? 'text-rose-600 dark:text-rose-400 animate-pulse' : 'text-gray-500'}`} />
+              </div>
+              {lowStockCount > 0 && (
+                <span className="text-xs font-bold px-2 py-1 rounded-md bg-rose-500 text-white animate-bounce">Warning</span>
+              )}
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Low Stock Items</p>
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse mt-1"></div>
+              ) : (
+                <p className={`text-3xl font-bold mt-1 leading-none ${lowStockCount > 0 ? 'text-rose-600 dark:text-rose-500' : 'text-gray-900 dark:text-white'}`}>
+                  {lowStockCount}
+                </p>
+              )}
+            </div>
+             <div className="mt-4 flex items-center text-sm font-medium text-rose-600 dark:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity">
+               Restock Now <ArrowRight className="w-4 h-4 ml-1" />
+             </div>
+          </Link>
+
+
+
+          {/* 4. Total Transactions (New) */}
+          <Link href="/transactions" className="group relative overflow-hidden glass-card p-5 border-blue-100 dark:border-blue-900/30 flex flex-col justify-between h-full bg-gradient-to-br from-blue-50/30 to-white dark:from-blue-950/10 dark:to-gray-950">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/40 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <Receipt className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <span className="text-xs font-semibold px-2 py-1 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300">History</span>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Total Transactions</p>
+              {isLoading ? (
+                <div className="h-10 w-20 bg-gray-200 dark:bg-gray-800 rounded animate-pulse mt-1"></div>
+              ) : (
+                <p className="text-3xl font-bold text-gray-900 dark:text-white mt-1 leading-none">{transactionsCount}</p>
+              )}
+            </div>
+            <div className="mt-4 flex items-center text-sm font-medium text-blue-600 dark:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity">
+              View Ledger <ArrowRight className="w-4 h-4 ml-1" />
+            </div>
+          </Link>
+          
+        </div>
+        
+        {/* Empty state or simple spacer since 'Recent Activity' is removed */}
+        <div className="h-12"></div>
+        
       </main>
     </div>
   );
