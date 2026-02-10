@@ -33,19 +33,17 @@ export default function ExpiryPage() {
     const checkAuth = async () => {
       try {
         const res = await fetch('/api/auth/check');
-        if (!res.ok) {
-          router.push('/login');
-        }
-      } catch (error) {
+        if (!res.ok) router.push('/login');
+      } catch {
         router.push('/login');
       }
     };
     checkAuth();
   }, [router]);
 
-  const [expiringSoon, setExpiringSoon] = useState<Medicine[]>([]);
-  const [expired, setExpired] = useState<Medicine[]>([]);
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'expired' | 'under30' | 'under60'>('expired');
 
   useEffect(() => {
     const fetchExpiryData = async () => {
@@ -53,22 +51,7 @@ export default function ExpiryPage() {
         const response = await fetch('/api/inventory');
         if (response.ok) {
           const data = await response.json();
-          
-          const today = new Date();
-          const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-
-          const expiringSoonList = data.filter((med: Medicine) => {
-            const expiryDate = new Date(med.expiryDate);
-            return expiryDate >= today && expiryDate <= endOfMonth;
-          });
-
-          const expiredList = data.filter((med: Medicine) => {
-            const expiryDate = new Date(med.expiryDate);
-            return expiryDate < today;
-          });
-
-          setExpiringSoon(expiringSoonList);
-          setExpired(expiredList);
+          setMedicines(data);
         }
       } catch (error) {
         console.error('Error fetching expiry data:', error);
@@ -76,20 +59,45 @@ export default function ExpiryPage() {
         setLoading(false);
       }
     };
-
     fetchExpiryData();
   }, []);
+
+  const today = new Date();
+  const thirtyDaysLater = new Date();
+  thirtyDaysLater.setDate(today.getDate() + 30);
+  const sixtyDaysLater = new Date();
+  sixtyDaysLater.setDate(today.getDate() + 60);
+
+  const expiredItems = medicines.filter(med => new Date(med.expiryDate) < today);
+  const under30Items = medicines.filter(med => {
+    const date = new Date(med.expiryDate);
+    return date >= today && date < thirtyDaysLater;
+  });
+  const under60Items = medicines.filter(med => {
+    const date = new Date(med.expiryDate);
+    return date >= today && date < sixtyDaysLater;
+  });
+
+  const getFilteredItems = () => {
+    switch (activeTab) {
+      case 'expired': return expiredItems;
+      case 'under30': return under30Items;
+      case 'under60': return under60Items;
+      default: return expiredItems;
+    }
+  };
+
+  const filteredItems = getFilteredItems();
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
-        <div className="max-w-6xl mx-auto px-4 space-y-8">
-          <div className="animate-pulse space-y-8">
-            <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded-xl w-48"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-3xl"></div>
-              <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-3xl"></div>
-            </div>
+        <div className="max-w-6xl mx-auto px-4 space-y-8 animate-pulse">
+          <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded-xl w-48"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-3xl"></div>
+            <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-3xl"></div>
+            <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-3xl"></div>
           </div>
         </div>
       </div>
@@ -97,244 +105,151 @@ export default function ExpiryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
+    <div className="min-h-screen bg-gray-50/50 dark:bg-slate-950/50 py-8 animate-in fade-in duration-500">
       <div className="max-w-6xl mx-auto px-4 space-y-8">
         
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Link 
-            href="/"
-            className="p-2 bg-white dark:bg-gray-900 rounded-xl glass-card border border-gray-100 dark:border-gray-800 hover:text-amber-600 transition-colors"
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-              <History className="text-amber-600 w-8 h-8" />
-              Expiry Analytics
-            </h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-1">Identify and manage expiring stock</p>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+            <Link 
+              href="/"
+              className="p-2.5 bg-white dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 hover:text-rose-600 transition-all hover:scale-105 active:scale-95 shadow-sm"
+            >
+              <ChevronLeft className="w-5 h-5" />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-black text-slate-900 dark:text-white tracking-tight">Expiry Tracker</h1>
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">Proactively manage stock about to expire.</p>
+            </div>
+          </div>
+
+          {/* Tab Switcher */}
+          <div className="flex bg-slate-100 dark:bg-slate-900/50 p-1.5 rounded-2xl border border-slate-200 dark:border-slate-800/50 shadow-inner">
+            <button
+              onClick={() => setActiveTab('expired')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'expired' 
+                ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/30' 
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Expired
+            </button>
+            <button
+              onClick={() => setActiveTab('under30')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'under30' 
+                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' 
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Within 30 Days
+            </button>
+            <button
+              onClick={() => setActiveTab('under60')}
+              className={`px-6 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'under60' 
+                ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-lg' 
+                : 'text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'
+              }`}
+            >
+              Within 60 Days
+            </button>
           </div>
         </div>
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Expiring Soon Card */}
-          <div className="group relative glass-panel p-8 rounded-3xl border border-white/20 shadow-xl overflow-hidden bg-gradient-to-br from-amber-50 to-white dark:from-amber-950/20 dark:to-gray-900">
-            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500">
-              <Clock className="w-32 h-32 text-amber-600" />
+        {/* Summary Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-rose-50 dark:bg-rose-950/20 p-6 rounded-3xl border border-rose-100/50 dark:border-rose-900/30 flex items-center gap-5 group cursor-pointer" onClick={() => setActiveTab('expired')}>
+            <div className="w-14 h-14 bg-rose-100 dark:bg-rose-900/50 rounded-2xl flex items-center justify-center text-rose-600 dark:text-rose-400 group-hover:scale-110 transition-transform shadow-inner">
+               <AlertCircle className="w-7 h-7" />
             </div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-amber-100 dark:bg-amber-900/40 rounded-xl flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-amber-600" />
-                </div>
-                <h2 className="text-lg font-bold text-amber-900 dark:text-amber-100 uppercase tracking-wider">Expiring Soon</h2>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-amber-600 group-hover:scale-105 transition-transform inline-block">
-                  {expiringSoon.length}
-                </span>
-                <span className="text-sm font-bold text-amber-800/60 dark:text-amber-200/40 uppercase">Medicines</span>
-              </div>
-              <p className="mt-4 text-sm text-amber-700/80 dark:text-amber-300/60 font-medium">Items set to expire within the current calendar month.</p>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-rose-800/50 dark:text-rose-400/50">Already Expired</p>
+              <h2 className="text-2xl font-black text-rose-900 dark:text-rose-100">{expiredItems.length} Items</h2>
             </div>
           </div>
 
-          {/* Expired Card */}
-          <div className="group relative glass-panel p-8 rounded-3xl border border-white/20 shadow-xl overflow-hidden bg-gradient-to-br from-rose-50 to-white dark:from-rose-950/20 dark:to-gray-900">
-            <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none group-hover:scale-110 transition-transform duration-500">
-              <AlertCircle className="w-32 h-32 text-rose-600" />
+          <div className="bg-amber-50 dark:bg-amber-950/20 p-6 rounded-3xl border border-amber-100/50 dark:border-amber-900/30 flex items-center gap-5 group cursor-pointer" onClick={() => setActiveTab('under30')}>
+            <div className="w-14 h-14 bg-amber-100 dark:bg-amber-900/50 rounded-2xl flex items-center justify-center text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform shadow-inner">
+               <AlertTriangle className="w-7 h-7" />
             </div>
-            <div className="relative z-10">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-rose-100 dark:bg-rose-900/40 rounded-xl flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-rose-600" />
-                </div>
-                <h2 className="text-lg font-bold text-rose-900 dark:text-rose-100 uppercase tracking-wider">Dead Stock</h2>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-5xl font-black text-rose-600 group-hover:scale-105 transition-transform inline-block">
-                  {expired.length}
-                </span>
-                <span className="text-sm font-bold text-rose-800/60 dark:text-rose-200/40 uppercase">Expired Items</span>
-              </div>
-              <p className="mt-4 text-sm text-rose-700/80 dark:text-rose-300/60 font-medium">Critical: These items must be removed from circulation immediately.</p>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-amber-800/50 dark:text-amber-400/50">Under 30 Days</p>
+              <h2 className="text-2xl font-black text-amber-900 dark:text-amber-100">{under30Items.length} Items</h2>
+            </div>
+          </div>
+
+          <div className="bg-blue-50 dark:bg-blue-950/20 p-6 rounded-3xl border border-blue-100/50 dark:border-blue-900/30 flex items-center gap-5 group cursor-pointer" onClick={() => setActiveTab('under60')}>
+            <div className="w-14 h-14 bg-blue-100 dark:bg-blue-900/50 rounded-2xl flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform shadow-inner">
+               <Calendar className="w-7 h-7" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-blue-800/50 dark:text-blue-400/50">Under 60 Days</p>
+              <h2 className="text-2xl font-black text-blue-900 dark:text-blue-100">{under60Items.length} Items</h2>
             </div>
           </div>
         </div>
 
-        {/* Tables Section */}
-        <div className="space-y-12">
-          
-          {/* Expiring Soon Table */}
-          <section className="space-y-6">
-            <div className="flex items-center justify-between px-2">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <TrendingDown className="text-amber-500 w-6 h-6" />
-                Critical Expiry Watchlist
-              </h2>
-               {expiringSoon.length > 0 && (
-                <div className="text-[10px] font-black uppercase tracking-widest bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 px-3 py-1 rounded-full border border-amber-200/50 dark:border-amber-800/50">
-                  Priority Action Required
-                </div>
-               )}
-            </div>
-
-            {expiringSoon.length > 0 ? (
-              <div className="glass-panel rounded-3xl border border-white/20 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-amber-50/50 dark:bg-amber-900/10 border-b border-amber-100/50 dark:border-amber-800/30">
-                        <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest">Medicine & Batch</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest">Manufacturer</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest text-center">Expiry Status</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest text-right">Remaining Stock</th>
+        {/* Main List Table */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-800/50 border-b border-slate-100 dark:border-slate-800">
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Medicine Name</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Batch</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Expiry Date</th>
+                  <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Remaining Stock</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {filteredItems.length > 0 ? (
+                  filteredItems.map((med) => {
+                    const isExpired = new Date(med.expiryDate) < today;
+                    return (
+                      <tr key={med._id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-all group">
+                        <td className="px-8 py-6">
+                           <div className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{med.name}</div>
+                           <div className="text-[10px] text-slate-400 font-medium tracking-wide mt-1 uppercase">{med.brand}</div>
+                        </td>
+                        <td className="px-8 py-6">
+                           <span className="text-sm font-mono font-bold text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+                             {med.batchNumber}
+                           </span>
+                        </td>
+                        <td className="px-8 py-6">
+                           <div className="flex items-center gap-2">
+                             <div className={`w-2 h-2 rounded-full ${isExpired ? 'bg-rose-500' : 'bg-amber-500'}`} />
+                             <span className="text-sm font-bold text-slate-700 dark:text-slate-300">
+                               {new Date(med.expiryDate).toISOString().split('T')[0]}
+                             </span>
+                           </div>
+                        </td>
+                        <td className="px-8 py-6 text-right">
+                           <div className="flex flex-col items-end">
+                             <span className="text-lg font-black text-slate-900 dark:text-white">{med.stock} Units</span>
+                           </div>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                      {expiringSoon.map((med) => (
-                        <tr key={med._id} className="hover:bg-amber-50/30 dark:hover:bg-amber-900/10 transition-all group">
-                          <td className="px-6 py-5">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-amber-100/50 dark:bg-amber-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <Package className="w-5 h-5 text-amber-600" />
-                              </div>
-                              <div>
-                                <div className="font-bold text-gray-900 dark:text-white uppercase tracking-tight">{med.name}</div>
-                                <div className="text-[10px] font-bold text-gray-500 mt-1 flex items-center gap-1.5 leading-none">
-                                  <Tag className="w-3 h-3" />
-                                  {med.batchNumber}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-5">
-                            <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">{med.brand}</div>
-                          </td>
-                          <td className="px-6 py-5 text-center">
-                            <div className="inline-flex flex-col items-center">
-                              <div className="text-xs font-black text-amber-600 flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {new Date(med.expiryDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
-                              </div>
-                              <span className="text-[10px] font-bold text-amber-800/40 dark:text-amber-400/40 mt-0.5">Expires soon</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-5 text-right">
-                             <div className="flex flex-col items-end">
-                                <span className="text-lg font-black text-gray-900 dark:text-white leading-none">{med.stock}</span>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase mt-1">Strips LEFT</span>
-                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="glass-panel rounded-3xl p-12 text-center border border-white/20">
-                <div className="flex flex-col items-center opacity-30">
-                  <CheckCircle2 className="w-16 h-16 mb-4 text-emerald-500" />
-                  <p className="font-bold text-xl text-gray-900 dark:text-white">All Clear</p>
-                  <p className="text-sm">No medicines expiring this month</p>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Expired Table */}
-          <section className="space-y-6">
-            <div className="flex items-center justify-between px-2">
-              <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <AlertCircle className="text-rose-500 w-6 h-6" />
-                Expired Inventory List
-              </h2>
-               {expired.length > 0 && (
-                <div className="text-[10px] font-black uppercase tracking-widest bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-400 px-3 py-1 rounded-full border border-rose-200/50 dark:border-rose-800/50 animate-pulse">
-                  Immediate Removal Required
-                </div>
-               )}
-            </div>
-
-            {expired.length > 0 ? (
-              <div className="glass-panel rounded-3xl border border-white/20 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left">
-                    <thead>
-                      <tr className="bg-rose-50/50 dark:bg-rose-900/10 border-b border-rose-100/50 dark:border-rose-800/30">
-                        <th className="px-6 py-4 text-[10px] font-bold text-rose-800 dark:text-rose-400 uppercase tracking-widest">Medicine & Batch</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-rose-800 dark:text-rose-400 uppercase tracking-widest">Manufacturer</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-rose-800 dark:text-rose-400 uppercase tracking-widest text-center">Expired Date</th>
-                        <th className="px-6 py-4 text-[10px] font-bold text-rose-800 dark:text-rose-400 uppercase tracking-widest text-right">Stock Loss</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                      {expired.map((med) => (
-                        <tr key={med._id} className="hover:bg-rose-50/30 dark:hover:bg-rose-900/10 transition-all group">
-                          <td className="px-6 py-5">
-                            <div className="flex items-center gap-4">
-                              <div className="w-10 h-10 bg-rose-100/50 dark:bg-rose-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <AlertTriangle className="w-5 h-5 text-rose-600" />
-                              </div>
-                              <div>
-                                <div className="font-bold text-gray-900 dark:text-white uppercase tracking-tight line-through decoration-rose-500/30">{med.name}</div>
-                                <div className="text-[10px] font-bold text-rose-400 mt-1 flex items-center gap-1.5 leading-none bg-rose-50 dark:bg-rose-900/20 px-1.5 py-0.5 rounded w-fit">
-                                  {med.batchNumber}
-                                </div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-6 py-5">
-                            <div className="text-sm font-semibold text-gray-600 dark:text-gray-400">{med.brand}</div>
-                          </td>
-                          <td className="px-6 py-5 text-center">
-                             <div className="inline-flex flex-col items-center">
-                              <div className="text-xs font-black text-rose-600 flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5" />
-                                {new Date(med.expiryDate).toLocaleDateString(undefined, { month: 'short', year: 'numeric' })}
-                              </div>
-                              <span className="text-[10px] font-bold text-rose-800/40 dark:text-rose-400/40 mt-0.5">Non-sellable</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-5 text-right">
-                             <div className="flex flex-col items-end">
-                                <span className="text-lg font-black text-rose-700 dark:text-rose-500 leading-none">{med.stock}</span>
-                                <span className="text-[10px] font-bold text-rose-400 uppercase mt-1">Dead Strips</span>
-                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            ) : (
-              <div className="glass-panel rounded-3xl p-12 text-center border border-white/20">
-                <div className="flex flex-col items-center opacity-30">
-                  <CheckCircle2 className="w-16 h-16 mb-4 text-emerald-500" />
-                  <p className="font-bold text-xl text-gray-900 dark:text-white">Clean Sheet</p>
-                  <p className="text-sm">Zero expired items in stock</p>
-                </div>
-              </div>
-            )}
-          </section>
-
-          {/* Action Links */}
-          <div className="flex justify-center pt-8 pb-12 animate-in fade-in zoom-in duration-700">
-             <Link 
-               href="/inventory"
-               className="group flex items-center gap-3 px-8 py-4 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-bold shadow-2xl hover:scale-105 transition-all active:scale-95"
-             >
-                <Package className="w-5 h-5" />
-                Go to Inventory Manager
-                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-             </Link>
+                    );
+                  })
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="px-8 py-20 text-center">
+                       <div className="flex flex-col items-center opacity-30">
+                          <CheckCircle2 className="w-16 h-16 mb-4 text-emerald-500" />
+                          <p className="font-bold text-lg text-slate-900 dark:text-white">Clean Sheet</p>
+                          <p className="text-sm">No items found in this category.</p>
+                       </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
-
         </div>
+
       </div>
     </div>
   );

@@ -122,77 +122,57 @@ export default function SalesReportPage() {
   const exportToExcel = () => {
     if (!reportData || !dateRange) return;
     
-    const reportRows = [];
+    // Sheet 1: Financial Summary
+    const summaryData = [
+      { 'Report Meta': 'Store Name', 'Value': 'MediShop Admin' },
+      { 'Report Meta': 'Report Type', 'Value': 'Consolidated Sales Report' },
+      { 'Report Meta': 'Generated On', 'Value': format(new Date(), "dd-MM-yyyy HH:mm") },
+      { 'Report Meta': 'Period', 'Value': `${format(dateRange.start, "dd-MM-yyyy")} to ${format(dateRange.end, "dd-MM-yyyy")}` },
+      {},
+      { 'Report Meta': 'FINANCIAL METRICS', 'Value': '' },
+      { 'Report Meta': 'Total Gross Sales', 'Value': Number(reportData.totalSales.toFixed(2)) },
+      { 'Report Meta': 'Total Net Profit', 'Value': Number(reportData.totalProfit.toFixed(2)) },
+      { 'Report Meta': 'Total Transactions', 'Value': reportData.totalTransactions },
+      { 'Report Meta': 'Profit Margin (%)', 'Value': ((reportData.totalProfit / reportData.totalSales) * 100 || 0).toFixed(2) + '%' },
+      { 'Report Meta': 'Avg Invoice Value', 'Value': (reportData.totalSales / (reportData.totalTransactions || 1)).toFixed(2) }
+    ];
+
+    // Sheet 2: Daily Trends
+    const dailyData = reportData.dailySales.map(d => ({
+      'Date': format(new Date(d.date), "dd-MM-yyyy (EEE)"),
+      'Revenue (₹)': Number(d.sales.toFixed(2)),
+      'Profit (₹)': Number(d.profit.toFixed(2)),
+      'Margin %': ((d.profit / d.sales) * 100 || 0).toFixed(2) + '%'
+    }));
+
+    // Sheet 3: Product Intelligence
+    const productData = reportData.topSellingMedicines.map((med, idx) => ({
+      'Rank': idx + 1,
+      'Medicine Name': med.name,
+      'Units Sold': med.quantity,
+      'Revenue Contribution (₹)': Number(med.revenue.toFixed(2)),
+      'Est. Profit (₹)': Number((reportData.topSellingMedicines.find(m => m.name === med.name) as any)?.profit?.toFixed(2) || 0)
+    }));
     
-    // Add summary data
-    reportRows.push({
-      'Metric': 'Total Sales',
-      'Value': `₹${reportData.totalSales.toFixed(2)}`
-    });
-    reportRows.push({
-      'Metric': 'Total Profit',
-      'Value': `₹${reportData.totalProfit.toFixed(2)}`
-    });
-    reportRows.push({
-      'Metric': 'Total Transactions',
-      'Value': reportData.totalTransactions
-    });
-    reportRows.push({
-      'Metric': 'Average Transaction',
-      'Value': `₹${reportData.totalTransactions > 0 
-        ? (reportData.totalSales / reportData.totalTransactions).toFixed(2) 
-        : '0.00'}`
-    });
-    
-    if (reportData.mostSoldMedicine) {
-      reportRows.push({
-        'Metric': 'Most Sold Medicine',
-        'Value': `${reportData.mostSoldMedicine.name} (${reportData.mostSoldMedicine.quantity})`
-      });
-    }
-    
-    if (reportData.leastSoldMedicine) {
-      reportRows.push({
-        'Metric': 'Least Sold Medicine',
-        'Value': `${reportData.leastSoldMedicine.name} (${reportData.leastSoldMedicine.quantity})`
-      });
-    }
-    
-    // Add top selling medicines
-    reportRows.push({}, {'Metric': 'Top Selling Medicines:', 'Value': ''});
-    reportData.topSellingMedicines.forEach(med => {
-      reportRows.push({
-        'Metric': `  ${med.name}`,
-        'Value': `Qty: ${med.quantity}, Revenue: ₹${med.revenue.toFixed(2)}`
-      });
-    });
-    
-    // Add least selling medicines
-    reportRows.push({}, {'Metric': 'Least Selling Medicines:', 'Value': ''});
-    reportData.leastSellingMedicines.forEach(med => {
-      reportRows.push({
-        'Metric': `  ${med.name}`,
-        'Value': `Qty: ${med.quantity}, Revenue: ₹${med.revenue.toFixed(2)}`
-      });
-    });
-    
-    // Add daily sales data
-    reportRows.push({}, {'Metric': 'Daily Sales:', 'Value': ''});
-    reportData.dailySales.forEach(daily => {
-      reportRows.push({
-        'Metric': `  ${daily.date}`,
-        'Value': `Sales: ₹${daily.sales.toFixed(2)}, Profit: ₹${daily.profit.toFixed(2)}`
-      });
-    });
-    
-    const ws = XLSX.utils.json_to_sheet(reportRows);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sales Report");
     
-    // Add date range to filename
+    const wsSummary = XLSX.utils.json_to_sheet(summaryData, { skipHeader: true });
+    const wsDaily = XLSX.utils.json_to_sheet(dailyData);
+    const wsProducts = XLSX.utils.json_to_sheet(productData);
+    
+    // Formatting widths
+    const colWidths = { wch: 25 };
+    wsSummary['!cols'] = [colWidths, colWidths];
+    wsDaily['!cols'] = [colWidths, colWidths, colWidths, colWidths];
+    wsProducts['!cols'] = [{wch: 10}, colWidths, colWidths, colWidths, colWidths];
+
+    XLSX.utils.book_append_sheet(wb, wsSummary, "Financial Summary");
+    XLSX.utils.book_append_sheet(wb, wsDaily, "Daily Business Trend");
+    XLSX.utils.book_append_sheet(wb, wsProducts, "Product Analytics");
+    
     const startDate = format(dateRange.start, "yyyy-MM-dd");
     const endDate = format(dateRange.end, "yyyy-MM-dd");
-    XLSX.writeFile(wb, `Sales_Report_${startDate}_to_${endDate}.xlsx`);
+    XLSX.writeFile(wb, `Business_Intelligence_${startDate}_to_${endDate}.xlsx`);
   };
 
   if (loading) {
@@ -363,158 +343,99 @@ export default function SalesReportPage() {
               </div>
             </div>
 
-            {/* Middle Row: Product Rankings */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              
-              {/* Best Performers */}
-              <section className="space-y-4">
-                <div className="flex items-center justify-between px-2">
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <Medal className="text-emerald-500 w-5 h-5" />
-                    Top Performance
-                  </h2>
-                </div>
-                
-                <div className="glass-panel rounded-3xl p-6 border border-white/20 shadow-xl space-y-4 overflow-hidden relative">
-                  <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                     <Medal className="w-32 h-32" />
-                  </div>
-                  {reportData.topSellingMedicines.length > 0 ? (
-                    <div className="space-y-4">
-                      {reportData.topSellingMedicines.slice(0, 5).map((med, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-white/40 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-800 hover:scale-[1.01] transition-transform group">
-                          <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950 flex items-center justify-center text-xs font-black text-emerald-600">
-                              {idx + 1}
-                            </div>
-                            <div>
-                               <div className="font-bold text-gray-900 dark:text-white uppercase tracking-tight group-hover:text-emerald-600 transition-colors">{med.name}</div>
-                               <div className="text-[10px] font-bold text-gray-400 flex items-center gap-1 mt-0.5">
-                                 <Package className="w-3 h-3" />
-                                 {med.quantity} Units Sold
-                               </div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                             <div className="font-black text-emerald-600 dark:text-emerald-400">₹{med.revenue.toLocaleString('en-IN')}</div>
-                             <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Gross Revenue</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-20 text-center opacity-30">
-                      <Medal className="w-12 h-12 mb-3 mx-auto" />
-                      <p className="font-bold">No Top Performers</p>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              {/* Underperformers */}
-              <section className="space-y-4">
-                <div className="flex items-center justify-between px-2">
-                  <h2 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                    <TrendingDown className="text-rose-500 w-5 h-5" />
-                    Lowest Traction
-                  </h2>
-                </div>
-
-                <div className="glass-panel rounded-3xl p-6 border border-white/20 shadow-xl space-y-4 overflow-hidden relative">
-                  <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                     <TrendingDown className="w-32 h-32" />
-                  </div>
-                  {reportData.leastSellingMedicines.length > 0 ? (
-                    <div className="space-y-4">
-                      {reportData.leastSellingMedicines.slice(0, 5).map((med, idx) => (
-                        <div key={idx} className="flex items-center justify-between p-4 bg-white/40 dark:bg-gray-900/40 rounded-2xl border border-gray-100 dark:border-gray-800 group">
-                          <div className="flex items-center gap-4">
-                            <div className="w-8 h-8 rounded-full bg-rose-50 dark:bg-rose-950 flex items-center justify-center text-xs font-black text-rose-600">
-                              {idx + 1}
-                            </div>
-                            <div>
-                               <div className="font-bold text-gray-900 dark:text-white uppercase tracking-tight line-through opacity-50">{med.name}</div>
-                               <div className="text-[10px] font-bold text-rose-400 flex items-center gap-1 mt-0.5">
-                                 <Clock className="w-3 h-3" />
-                                 {med.quantity} Units Sold
-                               </div>
-                            </div>
-                          </div>
-                          <div className="text-right">
-                             <div className="font-black text-rose-600 dark:text-rose-400">₹{med.revenue.toLocaleString('en-IN')}</div>
-                             <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">Stale Revenue</div>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="py-20 text-center opacity-30">
-                      <TrendingDown className="w-12 h-12 mb-3 mx-auto" />
-                      <p className="font-bold">Consistent Performance</p>
-                    </div>
-                  )}
-                </div>
-              </section>
-            </div>
-
-            {/* Bottom Row: Insights Chart */}
-            <div className="glass-panel p-8 rounded-3xl border border-white/20 shadow-xl relative overflow-hidden group">
+            {/* Middle Row: Market Trends (Main Feature) */}
+            <div className="glass-panel p-8 rounded-3xl border border-white/20 shadow-xl relative overflow-hidden group min-h-[400px]">
                <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-                  <Activity className="w-64 h-64 text-indigo-600" />
+                  <Activity className="w-96 h-96 text-indigo-600" />
                </div>
                
-               <div className="flex items-center justify-between mb-8">
+               <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
                   <div>
-                    <h2 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
-                       <Activity className="text-indigo-600" />
-                       Market Trends
+                    <h2 className="text-3xl font-black text-gray-900 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                       <Activity className="text-indigo-600 w-8 h-8" />
+                       Market Intelligence
                     </h2>
-                    <p className="text-sm text-gray-500 font-medium">Daily sales and profit fluctuation analysis</p>
+                    <p className="text-sm text-gray-500 font-medium mt-1">Daily revenue vs profit elasticity analysis</p>
                   </div>
-                  <div className="flex gap-4">
-                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-indigo-600" />
-                        <span className="text-xs font-bold text-gray-500 uppercase">Sales</span>
+                  <div className="flex flex-wrap gap-4 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-2xl border border-gray-100 dark:border-gray-800">
+                     <div className="flex items-center gap-2 px-3 py-1">
+                        <div className="w-3 h-3 rounded-full bg-indigo-600 shadow-[0_0_8px_rgba(79,70,229,0.5)]" />
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Revenue</span>
                      </div>
-                     <div className="flex items-center gap-2">
-                        <div className="w-3 h-3 rounded-full bg-emerald-600" />
-                        <span className="text-xs font-bold text-gray-500 uppercase">Profit</span>
+                     <div className="flex items-center gap-2 px-3 py-1">
+                        <div className="w-3 h-3 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
+                        <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Net Profit</span>
                      </div>
                   </div>
                </div>
 
                {reportData.dailySales.length > 0 ? (
-                 <div className="grid grid-cols-1 md:grid-cols-7 lg:grid-cols-14 gap-px bg-gray-100 dark:bg-gray-800 rounded-3xl overflow-hidden border border-gray-100 dark:border-gray-800">
-                    {reportData.dailySales.map((day, i) => (
-                      <div key={i} className="bg-white/50 dark:bg-gray-900/50 p-4 hover:bg-white dark:hover:bg-gray-800 transition-colors group/day">
-                        <div className="text-[10px] font-black text-gray-400 uppercase mb-3 text-center">
-                          {format(new Date(day.date), "EEE dd")}
-                        </div>
-                        <div className="flex flex-col gap-2">
-                           <div className="relative h-20 w-full bg-gray-50 dark:bg-gray-950 rounded-lg overflow-hidden flex flex-col justify-end">
-                              <div 
-                                className="bg-indigo-600/20 group-hover/day:bg-indigo-600 transition-all duration-500 rounded-t-sm"
-                                style={{ height: `${Math.min(100, (day.sales / Math.max(...reportData.dailySales.map(d => d.sales || 1))) * 100)}%` }}
-                              />
-                           </div>
-                           <div className="text-[10px] font-black text-center text-indigo-600">₹{day.sales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</div>
-                        </div>
-                      </div>
-                    ))}
+                 <div className="space-y-6">
+                   {/* Visualization Grid */}
+                   <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-7 lg:grid-cols-14 gap-4">
+                      {reportData.dailySales.map((day, i) => {
+                        const prevDay = i > 0 ? reportData.dailySales[i-1] : null;
+                        const salesDiff = prevDay ? ((day.sales - prevDay.sales) / (prevDay.sales || 1)) * 100 : 0;
+                        const profitDiff = prevDay ? ((day.profit - prevDay.profit) / (prevDay.profit || 1)) * 100 : 0;
+                        const maxSales = Math.max(...reportData.dailySales.map(d => d.sales || 1));
+                        
+                        return (
+                          <div key={i} className="flex flex-col gap-3 group/day h-full">
+                            <div className="flex-1 min-h-[140px] bg-gray-50/50 dark:bg-gray-900/50 rounded-2xl p-2 flex flex-row items-end justify-center gap-1.5 border border-transparent hover:border-indigo-100 dark:hover:border-indigo-900/30 transition-all hover:shadow-lg hover:bg-white dark:hover:bg-gray-800">
+                               {/* Sales Bar */}
+                               <div 
+                                 className="w-full bg-indigo-600/40 group-hover/day:bg-indigo-600 transition-all duration-700 rounded-lg relative group/bar"
+                                 style={{ height: `${Math.max(10, (day.sales / maxSales) * 100)}%` }}
+                               >
+                                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-indigo-600 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap font-bold pointer-events-none">
+                                    ₹{day.sales.toLocaleString()}
+                                  </div>
+                               </div>
+                               {/* Profit Bar */}
+                               <div 
+                                 className="w-full bg-emerald-500/40 group-hover/day:bg-emerald-500 transition-all duration-700 rounded-lg relative group/pbar"
+                                 style={{ height: `${Math.max(5, (day.profit / maxSales) * 100)}%` }}
+                               >
+                                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-emerald-500 text-white text-[9px] px-1.5 py-0.5 rounded opacity-0 group-hover/pbar:opacity-100 transition-opacity whitespace-nowrap font-bold pointer-events-none">
+                                    ₹{day.profit.toLocaleString()}
+                                  </div>
+                               </div>
+                            </div>
+                            
+                            <div className="space-y-1.5 text-center px-1">
+                               <div className="text-[10px] font-black text-gray-400 uppercase tracking-tighter truncate">
+                                 {format(new Date(day.date), "EEE dd")}
+                               </div>
+                               
+                               {/* Fluctuation Badges */}
+                               <div className="flex flex-col gap-1 items-center">
+                                 {i > 0 ? (
+                                   <>
+                                     <div className={`text-[8px] font-black flex items-center gap-0.5 ${salesDiff >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                       {salesDiff >= 0 ? <ArrowUpRight className="w-2.5 h-2.5" /> : <ArrowDownRight className="w-2.5 h-2.5" />}
+                                       {Math.abs(salesDiff).toFixed(0)}%
+                                     </div>
+                                     <div className={`text-[8px] font-black flex items-center gap-0.5 opacity-60 ${profitDiff >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                       {profitDiff >= 0 ? 'P:+' : 'P:-'}{Math.abs(profitDiff).toFixed(0)}%
+                                     </div>
+                                   </>
+                                 ) : (
+                                   <div className="text-[8px] font-black text-gray-300 uppercase tracking-widest">Base</div>
+                                 )}
+                               </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                   </div>
+
                  </div>
                ) : (
-                 <div className="h-64 flex flex-col items-center justify-center text-gray-400 opacity-30 gap-4 border-2 border-dashed border-gray-200 dark:border-gray-800 rounded-3xl">
-                    <PieChart className="w-12 h-12" />
-                    <p className="font-bold">No sequential data available for this range</p>
+                 <div className="h-80 flex flex-col items-center justify-center text-gray-400 opacity-20 gap-4 border-2 border-dashed border-gray-100 dark:border-gray-800 rounded-3xl py-20">
+                    <PieChart className="w-16 h-16" />
+                    <p className="font-black uppercase tracking-widest">No sequential market data found</p>
                  </div>
                )}
-               
-               <div className="mt-8 flex items-center gap-3 p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
-                  <TrendingUp className="text-indigo-600 w-5 h-5 flex-shrink-0" />
-                  <p className="text-xs text-indigo-800 dark:text-indigo-300 font-medium">
-                    Analysis suggests a {filter === '7d' ? 'weekly' : 'monthly'} transaction volume of <strong>{reportData.totalTransactions}</strong> invoices with a net margin of <strong>{((reportData.totalProfit / reportData.totalSales) * 100 || 0).toFixed(1)}%</strong>.
-                  </p>
-               </div>
             </div>
           </>
         )}

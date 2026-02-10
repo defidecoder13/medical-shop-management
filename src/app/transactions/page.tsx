@@ -1,8 +1,10 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
 import * as XLSX from "xlsx";
 import { 
   History, 
@@ -11,16 +13,9 @@ import {
   Download, 
   Eye, 
   Printer, 
-  IndianRupee, 
-  Calendar, 
-  CreditCard, 
-  Hash, 
-  TrendingUp, 
   Search,
-  Filter,
   CheckCircle2,
-  Bookmark,
-  ArrowUpRight
+  FileText
 } from "lucide-react";
 
 type Transaction = {
@@ -30,6 +25,8 @@ type Transaction = {
   gstAmount: number;
   grandTotal: number;
   profit: number;
+  discountAmount?: number;
+  gstPercent?: number;
   gstEnabled: boolean;
   printInvoice?: boolean;
   items: Array<{
@@ -49,10 +46,8 @@ export default function TransactionsPage() {
     const checkAuth = async () => {
       try {
         const res = await fetch('/api/auth/check');
-        if (!res.ok) {
-          router.push('/login');
-        }
-      } catch (error) {
+        if (!res.ok) router.push('/login');
+      } catch {
         router.push('/login');
       }
     };
@@ -62,216 +57,275 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [dateFilter, setDateFilter] = useState<"1d" | "7d" | "1m">("1m");
+
+  const getDateRange = (filter: string) => {
+    const end = new Date();
+    const start = new Date();
+    if (filter === "1d") {
+      start.setHours(0, 0, 0, 0);
+    } else if (filter === "7d") {
+      start.setDate(end.getDate() - 7);
+    } else if (filter === "1m") {
+      start.setMonth(end.getMonth() - 1);
+    }
+    return { start, end };
+  };
 
   useEffect(() => {
-    fetch("/api/transactions")
+    const { start, end } = getDateRange(dateFilter);
+    setLoading(true);
+    fetch(`/api/transactions?startDate=${start.toISOString()}&endDate=${end.toISOString()}`)
       .then((res) => res.json())
       .then((data) => {
-        setTransactions(data);
+        if (Array.isArray(data)) {
+          setTransactions(data);
+        } else {
+          setTransactions([]);
+        }
         setLoading(false);
       })
-      .catch(() => setLoading(false));
-  }, []);
+      .catch(() => {
+        setTransactions([]);
+        setLoading(false);
+      });
+  }, [dateFilter]);
 
-  const filteredTransactions = transactions.filter(t => 
-    t._id.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredTransactions = Array.isArray(transactions) 
+    ? transactions.filter(t => {
+        const searchLower = searchQuery.toLowerCase();
+        const dateObj = new Date(t.createdAt);
+        
+        // Generate flexible date variations
+        const dateVariations = [
+          format(dateObj, "dd/MM/yyyy HH:mm"),
+          format(dateObj, "d/M/yyyy"),
+          format(dateObj, "d/M"),
+          format(dateObj, "dd/MM"),
+          dateObj.toLocaleDateString(),
+          format(dateObj, "MMM d"), // e.g., Feb 10
+        ].map(v => v.toLowerCase());
 
-  const exportToExcel = () => {
-    if (transactions.length === 0) return;
+        const itemsStr = t.items.map(i => i.name).join(", ").toLowerCase();
+        const amountStr = t.grandTotal.toString();
+        const idStr = t._id.slice(-8).toUpperCase().toLowerCase();
+
+        return idStr.includes(searchLower) || 
+               dateVariations.some(v => v.includes(searchLower)) || 
+               itemsStr.includes(searchLower) || 
+               amountStr.includes(searchLower);
+      })
+    : [];
+
+  const exportToExcel = async () => {
+    if (filteredTransactions.length === 0) return;
     
-    const formattedTransactions = transactions.map(t => ({
-      'Date': new Date(t.createdAt).toLocaleString(),
-      'Bill ID': t._id.slice(-6),
-      'Subtotal': `₹${t.subTotal ?? 0}`,
-      'GST': `₹${t.gstAmount ?? 0}`,
-      'Total': `₹${t.grandTotal ?? 0}`,
-      'Profit': `₹${t.profit?.toFixed(2) ?? '0.00'}`,
-      'Type': t.printInvoice ? "Printed" : "Saved",
-    }));
-    
-    const ws = XLSX.utils.json_to_sheet(formattedTransactions);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Transactions");
-    XLSX.writeFile(wb, `Transactions_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    setLoading(true);
+    try {
+      // For export, we use the already filtered and fetched transactions
+      const allTransactions = filteredTransactions;
+
+      // Sheet 1: Invoice Summary (GST Optimized)
+      const invoiceData = allTransactions.map(t => ({
+        'Date': format(new Date(t.createdAt), "dd-MM-yyyy HH:mm"),
+        'Invoice ID': t._id.slice(-8).toUpperCase(),
+        'Taxable Value': (t.subTotal - (t.discountAmount || 0)).toFixed(2),
+        'GST %': t.gstPercent ? `${t.gstPercent}%` : 'N/A',
+        'GST Amount': (t.gstAmount || 0).toFixed(2),
+        'Discount': (t.discountAmount || 0).toFixed(2),
+        'Grand Total': (t.grandTotal || 0).toFixed(2),
+        'Profit': (t.profit || 0).toFixed(2),
+        'Items Count': t.items.length
+      }));
+
+      // Sheet 2: Itemized Breakdown
+      const itemizedData: any[] = [];
+      allTransactions.forEach(t => {
+        t.items.forEach(item => {
+          // Calculate proportional discount for the item for tax accuracy
+          const totalBeforeDiscount = t.subTotal;
+          const discountRatio = t.discountAmount && totalBeforeDiscount > 0 
+            ? t.discountAmount / totalBeforeDiscount 
+            : 0;
+          
+          const itemOriginalTotal = item.total;
+          const itemDiscount = itemOriginalTotal * discountRatio;
+          const itemTaxableValue = itemOriginalTotal - itemDiscount;
+          
+          itemizedData.push({
+            'Invoice Date': format(new Date(t.createdAt), "dd-MM-yyyy"),
+            'Invoice ID': t._id.slice(-8).toUpperCase(),
+            'Medicine Name': item.name,
+            'Batch': item.batchNumber,
+            'Unit': item.unitType,
+            'Qty': item.qty,
+            'Price/Unit': item.sellingPrice.toFixed(2),
+            'Gross Total': itemOriginalTotal.toFixed(2),
+            'Discount': itemDiscount.toFixed(2),
+            'Taxable Value': itemTaxableValue.toFixed(2),
+          });
+        });
+      });
+
+      // Create Workbook
+      const wb = XLSX.utils.book_new();
+      
+      const wsInvoices = XLSX.utils.json_to_sheet(invoiceData);
+      const wsItems = XLSX.utils.json_to_sheet(itemizedData);
+      
+      // Auto-size columns (Simple implementation)
+      const fitToColumn = (data: any[]) => {
+        const columnWidths = Object.keys(data[0] || {}).map(key => ({
+          wch: Math.max(key.length, ...data.map(obj => obj[key]?.toString().length || 0)) + 2
+        }));
+        return columnWidths;
+      };
+
+      wsInvoices['!cols'] = fitToColumn(invoiceData);
+      wsItems['!cols'] = fitToColumn(itemizedData);
+
+      XLSX.utils.book_append_sheet(wb, wsInvoices, "Invoices Summary");
+      XLSX.utils.book_append_sheet(wb, wsItems, "Itemized Sales");
+      
+      XLSX.writeFile(wb, `Tax_Invoices_Filtered_Export_${format(new Date(), "yyyy-MM-dd")}.xlsx`);
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setLoading(false);
+    }
   };
   
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
-        <div className="max-w-7xl mx-auto px-4 space-y-8 animate-pulse">
-           <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded-xl w-48"></div>
-           <div className="h-96 bg-gray-200 dark:bg-gray-800 rounded-3xl"></div>
-        </div>
+      <div className="h-full flex items-center justify-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
-      <div className="max-w-7xl mx-auto px-4 space-y-8">
-        
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/"
-              className="p-2 bg-white dark:bg-gray-900 rounded-xl glass-card border border-gray-100 dark:border-gray-800 hover:text-violet-600 transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <History className="text-violet-600 w-8 h-8" />
-                Ledger Hub
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">Audit and manage historical billing data</p>
-            </div>
-          </div>
+    <div className="space-y-6 h-full flex flex-col">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Transaction History</h2>
+          <p className="text-sm text-muted-foreground">View and manage past sales records.</p>
+        </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <input 
-                placeholder="Search Invoice ID..."
-                className="w-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 pl-10 pr-4 py-2.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all shadow-sm"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </div>
+        <div className="flex gap-3">
+          <button
+            onClick={exportToExcel}
+            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+          >
+            <FileSpreadsheet size={18} />
+            Export to Excel
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-2.5 text-muted-foreground" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search by ID, Date, Items, or Amount..."
+            className="w-full pl-10 pr-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-card transition-all text-foreground placeholder:text-muted-foreground"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </div>
+
+        <div className="flex bg-secondary/50 p-1 rounded-lg border border-border">
+          {(["1d", "7d", "1m"] as const).map((range) => (
             <button
-              onClick={exportToExcel}
-              className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl font-bold transition-all shadow-lg shadow-emerald-500/20 active:scale-95 group"
+              key={range}
+              onClick={() => setDateFilter(range)}
+              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
+                dateFilter === range
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              }`}
             >
-              <FileSpreadsheet className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-              Statement Export
-              <Download className="w-4 h-4" />
+              {range.toUpperCase()}
             </button>
-          </div>
+          ))}
         </div>
+      </div>
 
-        {/* Transactions Table */}
-        <div className="glass-panel rounded-3xl border border-white/20 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-violet-50/50 dark:bg-violet-900/10 border-b border-violet-100/50 dark:border-violet-800/30">
-                  <th className="px-6 py-4 text-[10px] font-bold text-violet-800 dark:text-violet-400 uppercase tracking-widest">Temporal Log</th>
-                  <th className="px-6 py-4 text-[10px] font-bold text-violet-800 dark:text-violet-400 uppercase tracking-widest">Reference</th>
-                  <th className="px-6 py-4 text-[10px] font-bold text-violet-800 dark:text-violet-400 uppercase tracking-widest text-center">Financial Breakdown</th>
-                  <th className="px-6 py-4 text-[10px] font-bold text-violet-800 dark:text-violet-400 uppercase tracking-widest text-center">Net Yield</th>
-                  <th className="px-6 py-4 text-[10px] font-bold text-violet-800 dark:text-violet-400 uppercase tracking-widest text-right">Settings</th>
+      {/* Transactions Table */}
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
+        <div className="flex-1 overflow-x-auto overflow-y-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-secondary/50 sticky top-0 border-b border-border z-10">
+              <tr>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Date & Time</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Transaction ID</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Items</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Amount</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredTransactions.map((t) => (
+                <tr key={t._id} className="hover:bg-muted/50 transition-colors group">
+                  <td className="px-6 py-4">
+                    <div className="text-sm font-medium text-foreground">
+                      {new Date(t.createdAt).toLocaleDateString()}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      {new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-xs font-mono text-muted-foreground">
+                    {t._id.slice(-8).toUpperCase()}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-col gap-1">
+                      {t.items.map((item, index) => (
+                        <div key={index} className="text-sm text-foreground">
+                          {item.name} <span className="text-xs text-muted-foreground">x{item.qty}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="text-sm font-bold text-foreground">
+                      ₹{t.grandTotal.toFixed(2)}
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">
+                      Tax: ₹{t.gstAmount.toFixed(2)}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex items-center justify-center gap-2">
+                      <Link
+                        href={`/transactions/${t._id}`}
+                        className="p-1.5 text-muted-foreground hover:text-primary rounded hover:bg-primary/10 transition-all"
+                        title="View Details"
+                      >
+                        <Eye size={18} />
+                      </Link>
+                    </div>
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                {filteredTransactions.map((t, idx) => (
-                  <tr 
-                    key={t._id} 
-                    className="hover:bg-violet-50/20 dark:hover:bg-violet-900/5 transition-all group animate-in fade-in slide-in-from-bottom-2 duration-300"
-                    style={{ animationDelay: `${idx * 30}ms` }}
-                  >
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 bg-violet-50 dark:bg-violet-900/20 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <CreditCard className="w-5 h-5 text-violet-600" />
-                        </div>
-                        <div>
-                          <div className="font-bold text-gray-900 dark:text-white uppercase tracking-tight">
-                            {new Date(t.createdAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' })}
-                          </div>
-                          <div className="text-[10px] font-bold text-gray-500 dark:text-gray-400 flex items-center gap-1.5 mt-0.5">
-                            <Clock className="w-3 h-3" />
-                            {new Date(t.createdAt).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                        </div>
+              ))}
+              {filteredTransactions.length === 0 && (
+                <tr>
+                   <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
+                      <div className="flex flex-col items-center gap-2">
+                        <Search size={24} className="opacity-50" />
+                        <p>No transactions found.</p>
                       </div>
-                    </td>
-                    <td className="px-6 py-5">
-                       <div className="flex flex-col">
-                          <div className="text-xs font-black text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
-                            <Hash className="w-3.5 h-3.5 text-violet-400" />
-                            {t._id.slice(-8).toUpperCase()}
-                          </div>
-                          <div className={`text-[9px] font-black uppercase mt-1.5 px-2 py-0.5 rounded-full w-fit ${t.printInvoice ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
-                             {t.printInvoice ? 'Physical Invoice' : 'Digital Record'}
-                          </div>
-                       </div>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                       <div className="flex flex-col items-center gap-1">
-                          <div className="text-lg font-black text-gray-900 dark:text-white tabular-nums">
-                            ₹{t.grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-                          </div>
-                          <div className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest flex gap-2">
-                             <span>Base: ₹{t.subTotal.toFixed(0)}</span>
-                             <span>•</span>
-                             <span>GST: ₹{t.gstAmount.toFixed(0)}</span>
-                          </div>
-                       </div>
-                    </td>
-                    <td className="px-6 py-5 text-center">
-                       <div className="inline-flex flex-col items-center p-2 bg-emerald-50/50 dark:bg-emerald-900/10 rounded-2xl border border-emerald-100/50 dark:border-emerald-800/30">
-                          <div className="flex items-center gap-1.5 text-emerald-600 font-black">
-                             <TrendingUp className="w-3.5 h-3.5" />
-                             ₹{t.profit?.toFixed(2) ?? '0.00'}
-                          </div>
-                          <div className="text-[9px] font-bold text-emerald-800/40 dark:text-emerald-400/40 uppercase tracking-tighter mt-0.5">
-                             Gross Margin
-                          </div>
-                       </div>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                       <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/transactions/${t._id}`}
-                            className="p-2.5 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-violet-600 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-violet-200 transition-all shadow-sm"
-                            title="Audit Transaction"
-                          >
-                            <Eye className="w-5 h-5" />
-                          </Link>
-                          <button
-                            onClick={() => window.open(`/print/${t._id}`, '_blank')}
-                            className="p-2.5 bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:text-emerald-600 rounded-xl border border-gray-100 dark:border-gray-700 hover:border-emerald-200 transition-all shadow-sm"
-                            title="Generate Duplicate Invoice"
-                          >
-                            <Printer className="w-5 h-5" />
-                          </button>
-                       </div>
-                    </td>
-                  </tr>
-                ))}
-
-                {filteredTransactions.length === 0 && (
-                  <tr>
-                    <td colSpan={5} className="py-24 text-center">
-                       <div className="flex flex-col items-center opacity-30">
-                          <Search className="w-12 h-12 mb-3" />
-                          <p className="font-bold text-xl uppercase tracking-tighter">No Ledger History</p>
-                          <p className="text-sm">Verify your invoice reference number</p>
-                       </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                   </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-
-        {/* Action Footnote */}
-        <div className="flex justify-center pb-12">
-           <p className="text-[11px] font-bold text-gray-500 dark:text-gray-400 flex items-center gap-2 uppercase tracking-widest bg-white dark:bg-gray-900 px-6 py-2 rounded-full border border-gray-100 dark:border-gray-800 shadow-sm">
-             <Bookmark className="w-3.5 h-3.5 text-violet-400" />
-             End of primary transaction log
-           </p>
+        <div className="p-4 bg-secondary/30 border-t border-border text-xs text-muted-foreground flex justify-between items-center">
+           <span>Showing {filteredTransactions.length} records</span>
         </div>
-
       </div>
     </div>
   );
 }
-
-const Clock = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-  </svg>
-);

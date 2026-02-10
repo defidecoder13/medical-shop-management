@@ -1,12 +1,12 @@
-// app/api/inventory/route.ts
-
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Medicine from "@/src/models/Medicine";
 
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/inventory
- * Search by name / brand / batch
+ * Search by name / brand / batch / rackNumber
  */
 export async function GET(req: Request) {
   try {
@@ -23,12 +23,25 @@ export async function GET(req: Request) {
           { name: { $regex: q, $options: "i" } },
           { brand: { $regex: q, $options: "i" } },
           { batchNumber: { $regex: q, $options: "i" } },
+          { rackNumber: { $regex: q, $options: "i" } }, // Added rack search
+          { composition: { $regex: q, $options: "i" } }, // Generic Search
         ],
       };
     }
 
-    const medicines = await Medicine.find(query).sort({ createdAt: -1 });
-    return NextResponse.json(medicines);
+    const medicines = await Medicine.find(query).sort({ createdAt: -1 }).lean();
+
+    // Ensure safe data return
+    const safeMedicines = medicines.map((med: any) => ({
+      ...med,
+      buyingPricePerStrip: med.buyingPricePerStrip || med.buyingPrice || 0,
+      sellingPricePerStrip: med.sellingPricePerStrip || med.mrp || med.sellingPrice || 0,
+      rackNumber: med.rackNumber || "",
+      composition: med.composition || "",
+      stock: med.stock || 0,
+    }));
+
+    return NextResponse.json(safeMedicines);
   } catch (error) {
     console.error("INVENTORY GET ERROR:", error);
     return NextResponse.json(
@@ -54,7 +67,8 @@ export async function POST(req: Request) {
 
     const stock = Number(body.stock);
     const tabletsPerStrip = Number(body.tabletsPerStrip);
-    const buyingPricePerStrip = Number(body.buyingPrice);
+    const buyingPricePerStrip = Number(body.buyingPrice); // COST
+    const sellingPricePerStrip = Number(body.sellingPrice); // MRP (New)
 
     const {
       name,
@@ -62,6 +76,8 @@ export async function POST(req: Request) {
       batchNumber,
       expiryDate,
       gstPercent,
+      rackNumber, // New
+      composition, // New
     } = body;
 
     if (
@@ -70,7 +86,8 @@ export async function POST(req: Request) {
       !expiryDate ||
       Number.isNaN(stock) ||
       Number.isNaN(tabletsPerStrip) ||
-      Number.isNaN(buyingPricePerStrip)
+      Number.isNaN(buyingPricePerStrip) ||
+      Number.isNaN(sellingPricePerStrip)
     ) {
       return NextResponse.json(
         { error: "Invalid or missing fields" },
@@ -78,9 +95,9 @@ export async function POST(req: Request) {
       );
     }
 
-    if (stock <= 0 || tabletsPerStrip <= 0 || buyingPricePerStrip <= 0) {
+    if (stock <= 0 || tabletsPerStrip <= 0 || buyingPricePerStrip <= 0 || sellingPricePerStrip <= 0) {
       return NextResponse.json(
-        { error: "Stock, tablets per strip and buying price must be > 0" },
+        { error: "Stock, tablets, cost, and MRP must be > 0" },
         { status: 400 }
       );
     }
@@ -109,7 +126,10 @@ export async function POST(req: Request) {
       tabletsPerStrip,
       totalTabletsInStock,
       buyingPricePerStrip,
+      sellingPricePerStrip,
       gstPercent,
+      rackNumber: rackNumber || "",
+      composition: composition || "",
     });
 
     return NextResponse.json(medicine);
@@ -185,8 +205,20 @@ export async function PUT(req: Request) {
       med.batchNumber = body.batchNumber;
     if (body.expiryDate !== undefined)
       med.expiryDate = body.expiryDate;
-    if (typeof body.buyingPrice === "number")
+
+    // Updated price fields
+    if (typeof body.buyingPrice === "number") {
+      if (body.buyingPrice <= 0) return NextResponse.json({ error: "Cost Price must be > 0" }, { status: 400 });
       med.buyingPricePerStrip = body.buyingPrice;
+    }
+    if (typeof body.sellingPrice === "number") {
+      if (body.sellingPrice <= 0) return NextResponse.json({ error: "MRP must be > 0" }, { status: 400 });
+      med.sellingPricePerStrip = body.sellingPrice;
+    }
+
+    if (body.rackNumber !== undefined) med.rackNumber = body.rackNumber;
+    if (body.composition !== undefined) med.composition = body.composition;
+
     if (typeof body.gstPercent === "number")
       med.gstPercent = body.gstPercent;
 

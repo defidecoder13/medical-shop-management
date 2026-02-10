@@ -1,28 +1,19 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  Package, 
-  Calendar, 
-  DollarSign, 
-  Hash, 
-  Search, 
-  Edit, 
-  Trash2, 
   Plus, 
-  AlertCircle, 
-  ChevronLeft,
-  LayoutGrid,
-  History,
-  Tag,
-  Boxes,
-  AlertTriangle,
+  Filter, 
+  Search, 
+  Edit3, 
+  MoreVertical, 
+  Trash2, 
+  ArrowUpDown,
   CheckCircle2,
-  Clock,
-  Info
+  AlertCircle 
 } from "lucide-react";
-import Link from "next/link";
 
 type Medicine = {
   _id?: string;
@@ -30,18 +21,14 @@ type Medicine = {
   brand?: string;
   batchNumber: string;
   expiryDate: string;
-
-  // stock = STRIPS
   stock: number | "";
-
-  // tablets per strip (FIXED value)
   tabletsPerStrip: number | "";
-
-  // derived & returned from backend
-  totalTabletsInStock?: number;
-
-  buyingPrice: number | "";
+  buyingPrice: number | ""; // Cost Price
+  sellingPrice: number | ""; // MRP
+  rackNumber: string;
+  composition: string;
   gstPercent: number;
+  totalTabletsInStock?: number;
 };
 
 const emptyMedicine: Medicine = {
@@ -52,37 +39,56 @@ const emptyMedicine: Medicine = {
   stock: "",
   tabletsPerStrip: "",
   buyingPrice: "",
+  sellingPrice: "",
+  rackNumber: "",
+  composition: "",
   gstPercent: 5,
 };
 
 export default function InventoryPage() {
   const router = useRouter();
+  const [medicines, setMedicines] = useState<Medicine[]>([]);
+  const [search, setSearch] = useState("");
+  const [showForm, setShowForm] = useState(false);
+  const [form, setForm] = useState<Medicine>(emptyMedicine);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+
+  // Sorting State
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Medicine | 'none', direction: 'asc' | 'desc' }>({ key: 'none', direction: 'asc' });
+  const [showSort, setShowSort] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const res = await fetch('/api/auth/check');
-        if (!res.ok) {
-          router.push('/login');
-        }
-      } catch (error) {
+        if (!res.ok) router.push('/login');
+      } catch {
         router.push('/login');
       }
     };
     checkAuth();
   }, [router]);
 
-  const [medicines, setMedicines] = useState<Medicine[]>([]);
-  const [form, setForm] = useState<Medicine>(emptyMedicine);
-  const [search, setSearch] = useState("");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
-
   const fetchMedicines = async () => {
-    const res = await fetch(`/api/inventory?q=${search}`);
+    const res = await fetch(`/api/inventory?q=${search}&_t=${Date.now()}`);
     const data = await res.json();
-    setMedicines(data);
+    setMedicines(data.map((m: any) => ({
+      _id: m._id,
+      name: m.name,
+      brand: m.brand,
+      batchNumber: m.batchNumber,
+      expiryDate: m.expiryDate,
+      stock: m.stock,
+      tabletsPerStrip: m.tabletsPerStrip,
+      buyingPrice: m.buyingPricePerStrip, // Cost
+      sellingPrice: m.sellingPricePerStrip, // MRP
+      rackNumber: m.rackNumber,
+      composition: m.composition,
+      gstPercent: m.gstPercent,
+      totalTabletsInStock: m.totalTabletsInStock
+    })));
   };
 
   useEffect(() => {
@@ -91,20 +97,14 @@ export default function InventoryPage() {
 
   const handleSubmit = async () => {
     setLoading(true);
-
     const method = editingId ? "PUT" : "POST";
-
     const payload = {
       ...form,
-      ...(editingId
-        ? {}
-        : {
-            totalTabletsInStock:
-              typeof form.stock === "number" &&
-              typeof form.tabletsPerStrip === "number"
-                ? form.stock * form.tabletsPerStrip
-                : 0,
-          }),
+      stock: Number(form.stock),
+      tabletsPerStrip: Number(form.tabletsPerStrip),
+      buyingPrice: Number(form.buyingPrice),
+      sellingPrice: Number(form.sellingPrice),
+      totalTabletsInStock: Number(form.stock) * Number(form.tabletsPerStrip)
     };
 
     try {
@@ -119,350 +119,382 @@ export default function InventoryPage() {
 
       if (!res.ok) {
         setMessage({ text: data.error || "Something went wrong", type: 'error' });
-        setTimeout(() => setMessage(null), 3000);
-        return;
+      } else {
+        setMessage({ 
+          text: editingId ? "Medicine updated successfully" : "Medicine added successfully", 
+          type: 'success' 
+        });
+        setForm(emptyMedicine);
+        setEditingId(null);
+        setShowForm(false);
+        fetchMedicines();
       }
-
-      setMessage({ 
-        text: editingId ? "✅ Medicine updated successfully" : "✅ Medicine added successfully", 
-        type: 'success' 
-      });
       setTimeout(() => setMessage(null), 3000);
-      
-      setForm(emptyMedicine);
-      setEditingId(null);
-      fetchMedicines();
-    } catch (error) {
+    } catch {
       setLoading(false);
       setMessage({ text: "An error occurred", type: 'error' });
-      setTimeout(() => setMessage(null), 3000);
     }
   };
 
   const handleEdit = (med: Medicine) => {
     setForm({
       ...med,
-      expiryDate: med.expiryDate.slice(0, 10),
-      stock: med.stock ?? "",
-      tabletsPerStrip: med.tabletsPerStrip ?? "",
-      buyingPrice: med.buyingPrice ?? "",
+      expiryDate: med.expiryDate ? med.expiryDate.slice(0, 10) : "",
     });
     setEditingId(med._id!);
-    // Scroll to form
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setShowForm(true);
   };
 
-  const isExpired = (date: string) => new Date(date) < new Date();
-  const today = new Date().toISOString().slice(0, 10);
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to permanently delete this medicine? This action cannot be undone.")) {
+      setLoading(true);
+      try {
+        const res = await fetch(`/api/inventory/${id}`, {
+          method: "DELETE",
+        });
 
-  const isFormValid =
-    form.name.trim() !== "" &&
-    form.batchNumber.trim() !== "" &&
-    form.expiryDate !== "" &&
-    form.stock !== "" &&
-    form.tabletsPerStrip !== "" &&
-    form.buyingPrice !== "";
+        if (res.ok) {
+          setMessage({ text: "Medicine deleted permanently", type: 'success' });
+          fetchMedicines();
+        } else {
+          const data = await res.json();
+          setMessage({ text: data.error || "Failed to delete", type: 'error' });
+        }
+      } catch (error) {
+        setMessage({ text: "An error occurred", type: 'error' });
+      } finally {
+        setLoading(false);
+        setTimeout(() => setMessage(null), 3000);
+      }
+    }
+  };
+
+  const filteredMeds = medicines
+    .filter(m => {
+       const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase()) || 
+                           m.brand?.toLowerCase().includes(search.toLowerCase()) ||
+                           m.batchNumber.toLowerCase().includes(search.toLowerCase()) ||
+                           m.composition?.toLowerCase().includes(search.toLowerCase());
+       
+       return matchesSearch;
+    })
+    .sort((a, b) => {
+       if (sortConfig.key === 'none') return 0;
+       
+       const aValue = a[sortConfig.key as keyof Medicine];
+       const bValue = b[sortConfig.key as keyof Medicine];
+
+       if (aValue === undefined || bValue === undefined) return 0;
+
+       if (sortConfig.key === 'expiryDate') {
+          return sortConfig.direction === 'asc' 
+             ? new Date(aValue as string).getTime() - new Date(bValue as string).getTime()
+             : new Date(bValue as string).getTime() - new Date(aValue as string).getTime();
+       }
+
+       if (typeof aValue === 'number' && typeof bValue === 'number') {
+          return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
+       }
+
+       return sortConfig.direction === 'asc' 
+          ? String(aValue).localeCompare(String(bValue))
+          : String(bValue).localeCompare(String(aValue));
+    });
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
-        
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/"
-              className="p-2 bg-white dark:bg-gray-900 rounded-xl glass-card border border-gray-100 dark:border-gray-800 hover:text-emerald-600 transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <Boxes className="text-emerald-600 w-8 h-8" />
-                Inventory Manager
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">Monitor and manage your medicine stock</p>
-            </div>
-          </div>
-
-          {message && (
-            <div className={`px-4 py-2 rounded-2xl flex items-center gap-2 animate-in fade-in zoom-in duration-300 ${
-              message.type === 'success' 
-                ? 'bg-emerald-50 text-emerald-800 border border-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400 dark:border-emerald-800/30' 
-                : 'bg-rose-50 text-rose-800 border border-rose-100 dark:bg-rose-900/20 dark:text-rose-400 dark:border-rose-800/30'
-            }`}>
-              {message.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
-              <span className="text-sm font-medium">{message.text}</span>
-            </div>
-          )}
+    <div className="space-y-6 h-full flex flex-col">
+      {/* Header Actions */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 className="text-2xl font-bold text-foreground">Inventory Management</h2>
+          <p className="text-sm text-muted-foreground">Manage your medicine stock and pricing.</p>
         </div>
+        <button 
+          onClick={() => {
+            setForm(emptyMedicine);
+            setEditingId(null);
+            setShowForm(!showForm);
+          }}
+          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors shadow-sm"
+        >
+          <Plus size={18} />
+          {showForm ? "Cancel" : "Add New Medicine"}
+        </button>
+      </div>
 
-        {/* Add / Edit Form - Glass Panel */}
-        <div className="glass-panel p-6 rounded-3xl border border-white/20 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none">
-            <Plus className="w-48 h-48" />
-          </div>
-          
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 bg-emerald-100 dark:bg-emerald-900/40 rounded-lg flex items-center justify-center">
-              {editingId ? <Edit className="w-4 h-4 text-emerald-600" /> : <Plus className="w-4 h-4 text-emerald-600" />}
+      {message && (
+        <div className={`p-4 rounded-lg flex items-center gap-2 text-sm font-medium ${
+          message.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
+        }`}>
+          {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          {message.text}
+        </div>
+      )}
+
+      {/* Form Section */}
+      {showForm && (
+        <div className="bg-card p-6 rounded-xl border border-border shadow-sm animate-in fade-in slide-in-from-top-4">
+          <h3 className="font-semibold text-foreground mb-4">{editingId ? "Edit Medicine" : "New Medicine Details"}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Medicine Name</label>
+              <input 
+                placeholder="e.g. Dolo 650" 
+                value={form.name}
+                onChange={e => setForm({...form, name: e.target.value})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+              />
             </div>
-            <h2 className="text-lg font-bold text-gray-900 dark:text-white">
-              {editingId ? "Edit Medicine Details" : "Register New Medicine"}
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Medicine Name</label>
-              <div className="relative">
-                <input
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
-                  placeholder="e.g. Paracetamol"
-                  value={form.name}
-                  onChange={(e) => setForm({ ...form, name: e.target.value })}
-                />
-                <Package className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Brand</label>
+              <input 
+                placeholder="e.g. Micro Labs" 
+                value={form.brand}
+                onChange={e => setForm({...form, brand: e.target.value})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+              />
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Brand / Manufacturer</label>
-              <div className="relative">
-                <input
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
-                  placeholder="e.g. GSK"
-                  value={form.brand}
-                  onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                />
-                <Tag className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Batch Number</label>
+              <input 
+                placeholder="e.g. BATCH123" 
+                value={form.batchNumber}
+                onChange={e => setForm({...form, batchNumber: e.target.value})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+              />
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Batch Number</label>
-              <div className="relative">
-                <input
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
-                  placeholder="e.g. B-12345"
-                  value={form.batchNumber}
-                  onChange={(e) => setForm({ ...form, batchNumber: e.target.value })}
-                />
-                <Hash className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Rack / Row</label>
+              <input 
+                placeholder="e.g. A1" 
+                value={form.rackNumber}
+                onChange={e => setForm({...form, rackNumber: e.target.value})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+              />
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Expiry Date</label>
-              <div className="relative">
-                <input
-                  type="date"
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
-                  value={form.expiryDate}
-                  onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
-                />
-                <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Composition (Generic)</label>
+              <input 
+                placeholder="e.g. Paracetamol 500mg" 
+                value={form.composition}
+                onChange={e => setForm({...form, composition: e.target.value})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+              />
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Stock (Strips)</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
-                  placeholder="0"
-                  value={form.stock}
-                  onChange={(e) => setForm({ ...form, stock: e.target.value === "" ? "" : Number(e.target.value) })}
-                />
-                <Plus className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Expiry Date</label>
+              <input 
+                type="date"
+                value={form.expiryDate}
+                onChange={e => setForm({...form, expiryDate: e.target.value})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground w-full"
+              />
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Tablets per Strip</label>
-              <div className="relative">
-                <input
-                  type="number"
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
-                  placeholder="10"
-                  value={form.tabletsPerStrip}
-                  onChange={(e) => setForm({ ...form, tabletsPerStrip: e.target.value === "" ? "" : Number(e.target.value) })}
-                />
-                <LayoutGrid className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-              </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Stock (Strips)</label>
+              <input 
+                type="number" 
+                placeholder="0" 
+                value={form.stock}
+                onChange={e => setForm({...form, stock: e.target.value === "" ? "" : Number(e.target.value)})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+              />
             </div>
-
-            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest ml-1">Buying Price (₹)</label>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Tablets / Strip</label>
+              <input 
+                type="number" 
+                placeholder="0" 
+                value={form.tabletsPerStrip}
+                onChange={e => setForm({...form, tabletsPerStrip: e.target.value === "" ? "" : Number(e.target.value)})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Buying Price</label>
               <div className="relative">
-                <input
-                  type="number"
-                  className="w-full bg-white/50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 px-4 py-2.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all"
-                  placeholder="0.00"
+                <span className="absolute left-3 top-2 text-muted-foreground text-sm">₹</span>
+                <input 
+                  type="number" 
+                  placeholder="0.00" 
                   value={form.buyingPrice}
-                  onChange={(e) => setForm({ ...form, buyingPrice: e.target.value === "" ? "" : Number(e.target.value) })}
+                  onChange={e => setForm({...form, buyingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
+                  className="pl-7 pr-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50 w-full"
                 />
-                <DollarSign className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
               </div>
             </div>
-
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Selling Price (MRP)</label>
+              <div className="relative">
+                <span className="absolute left-3 top-2 text-muted-foreground text-sm">₹</span>
+                <input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={form.sellingPrice}
+                  onChange={e => setForm({...form, sellingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
+                  className="pl-7 pr-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50 w-full"
+                />
+              </div>
+            </div>
             <div className="flex items-end">
-              <button
+              <button 
                 onClick={handleSubmit}
-                disabled={!isFormValid || loading}
-                className={`w-full py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg active:scale-[0.98] ${
-                  !isFormValid || loading
-                    ? "bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-600 cursor-not-allowed"
-                    : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-500/20"
-                }`}
+                disabled={loading}
+                className="w-full bg-primary text-primary-foreground font-medium rounded-lg py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
               >
-                {loading ? (
-                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : (
-                  <>
-                    <Plus className="w-4 h-4" />
-                    {editingId ? "Update Stock" : "Add to Stock"}
-                  </>
-                )}
+                {loading ? "Saving..." : "Save Medicine"}
               </button>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Search and Table Area */}
-        <div className="space-y-4">
-          <div className="flex flex-col md:flex-row gap-4 justify-between items-center">
-             <div className="relative w-full md:w-96">
-                <input
-                  placeholder="Search by name, brand or batch..."
-                  className="w-full bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 px-10 py-2.5 rounded-2xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-sm"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                />
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-             </div>
-             
-             <div className="flex gap-2">
-                <button 
-                   onClick={() => setSearch("")}
-                   className="px-4 py-2 text-sm font-medium text-gray-500 hover:text-emerald-600 transition-colors"
+      {/* Filters Bar */}
+      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-2.5 text-muted-foreground" size={18} />
+          <input 
+            type="text" 
+            placeholder="Search by name, brand, batch or composition..."
+            className="w-full pl-10 pr-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-card transition-all text-foreground placeholder:text-muted-foreground"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
+        <div className="flex gap-2 relative">
+          
+          {/* Sort Dropdown */}
+          <div className="relative">
+            <button 
+              onClick={() => { setShowSort(!showSort); }}
+              className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-all ${
+                sortConfig.key !== 'none' 
+                ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
+                : 'border-border hover:bg-secondary text-foreground'
+              }`}
+            >
+              <ArrowUpDown size={16} />
+              Sort
+            </button>
+
+            {showSort && (
+              <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-xl z-50 p-2 animate-in fade-in slide-in-from-top-2">
+                {[
+                  { label: 'Name', key: 'name' },
+                  { label: 'Expiry Date', key: 'expiryDate' },
+                  { label: 'Stock Level', key: 'stock' },
+                  { label: 'Selling Price', key: 'sellingPrice' }
+                ].map((s) => (
+                  <button
+                    key={s.key}
+                    onClick={() => {
+                      setSortConfig({
+                        key: s.key as any,
+                        direction: sortConfig.key === s.key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
+                      });
+                      setShowSort(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide flex items-center justify-between hover:bg-secondary transition-all ${
+                      sortConfig.key === s.key ? 'text-primary' : 'text-muted-foreground'
+                    }`}
+                  >
+                    {s.label}
+                    {sortConfig.key === s.key && (
+                      <ArrowUpDown size={12} className={sortConfig.direction === 'desc' ? 'rotate-180' : ''} />
+                    )}
+                  </button>
+                ))}
+                <button
+                  onClick={() => { setSortConfig({ key: 'none', direction: 'asc' }); setShowSort(false); }}
+                  className="w-full text-left px-4 py-2 rounded-lg text-[10px] font-black text-rose-500 uppercase tracking-widest hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all mt-1 border-t border-border"
                 >
-                  Reset Filter
+                  Reset Sort
                 </button>
-                <div className="px-3 py-1 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-lg text-xs font-semibold flex items-center gap-2 shadow-sm">
-                   <Boxes className="w-3.5 h-3.5 text-gray-400" />
-                   Total Items: {medicines.length}
-                </div>
-             </div>
+              </div>
+            )}
           </div>
+        </div>
+      </div>
 
-          <div className="glass-panel rounded-3xl border border-white/20 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-500">
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
-                <thead>
-                  <tr className="bg-emerald-50/50 dark:bg-emerald-900/10 border-b border-emerald-100/50 dark:border-emerald-800/30">
-                    <th className="px-6 py-4 text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-widest">Medicine Details</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-widest">Catalog Infomation</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-widest">Expiration</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-widest">Stock Levels</th>
-                    <th className="px-6 py-4 text-[10px] font-bold text-emerald-800 dark:text-emerald-400 uppercase tracking-widest text-right">Settings</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                  {medicines.map((med, idx) => {
-                    const expired = isExpired(med.expiryDate);
-                    const lowStock = typeof med.stock === "number" && med.stock < 10;
-                    
-                    return (
-                      <tr 
-                        key={med._id} 
-                        className="hover:bg-gray-50/50 dark:hover:bg-gray-800/30 transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-300"
-                        style={{ animationDelay: `${idx * 50}ms` }}
+      {/* Data Table */}
+      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
+        <div className="flex-1 overflow-x-auto overflow-y-auto">
+          <table className="w-full text-left border-collapse">
+            <thead className="bg-secondary/50 sticky top-0 border-b border-border z-10">
+              <tr>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Medicine Name</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Rack</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Stock</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Tablets</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Batch</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Expiry</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Cost</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">MRP</th>
+                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {filteredMeds.map((med) => (
+                <tr key={med._id} className="hover:bg-muted/50 transition-colors group">
+                  <td className="px-6 py-4 font-semibold text-foreground text-sm">
+                    {med.name}
+                    <span className="block text-[10px] text-muted-foreground font-normal">{med.composition ? `${med.composition} • ` : ''}{med.brand}</span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-foreground">{med.rackNumber || "-"}</td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className={`font-bold ${Number(med.stock) < 50 ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
+                      {med.stock}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground ml-1">STRIPS</span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-foreground">
+                    {med.totalTabletsInStock || (Number(med.stock) * Number(med.tabletsPerStrip)) || 0}
+                  </td>
+                  <td className="px-6 py-4 text-xs font-mono text-muted-foreground">{med.batchNumber}</td>
+                  <td className="px-6 py-4 text-sm">
+                    <span className={new Date(med.expiryDate) < new Date() ? 'text-rose-600 dark:text-rose-400 font-medium' : 'text-muted-foreground'}>
+                      {med.expiryDate ? med.expiryDate.slice(0, 10) : "-"}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-sm text-right text-muted-foreground">₹{Number(med.buyingPrice).toFixed(2)}</td>
+                  <td className="px-6 py-4 text-sm font-semibold text-right text-foreground">₹{Number(med.sellingPrice).toFixed(2)}</td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center justify-center gap-1">
+                      <button 
+                        onClick={() => handleEdit(med)}
+                        className="p-1.5 text-muted-foreground hover:text-primary rounded hover:bg-primary/10 transition-all"
                       >
-                        <td className="px-6 py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${expired ? 'bg-rose-50 dark:bg-rose-900/20' : 'bg-emerald-50 dark:bg-emerald-900/20'}`}>
-                               <Package className={`w-5 h-5 ${expired ? 'text-rose-600' : 'text-emerald-600'}`} />
-                            </div>
-                            <div>
-                              <div className="font-bold text-gray-900 dark:text-white group-hover:text-emerald-600 transition-colors uppercase tracking-tight">{med.name}</div>
-                              <div className="text-[10px] font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 px-1.5 py-0.5 rounded mt-1 inline-block">
-                                BATCH: {med.batchNumber}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                           <div className="text-sm">
-                             <div className="font-semibold text-gray-700 dark:text-gray-300">{med.brand || "Generics"}</div>
-                             <div className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
-                               <History className="w-3 h-3" />
-                               Synced: {today}
-                             </div>
-                           </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                            <div className={`text-xs font-bold flex items-center gap-1.5 ${expired ? 'text-rose-500' : 'text-gray-700 dark:text-gray-300'}`}>
-                              <Clock className="w-3 h-3" />
-                              {med.expiryDate.slice(0, 10)}
-                            </div>
-                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-tighter ${
-                              expired 
-                                ? 'bg-rose-500 text-white animate-pulse' 
-                                : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400'
-                            }`}>
-                              {expired ? 'Expired' : 'Valid'}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="space-y-1">
-                             <div className="flex items-center gap-2">
-                                <span className={`text-lg font-black ${lowStock ? 'text-amber-500' : 'text-gray-900 dark:text-white'}`}>
-                                  {med.stock}
-                                </span>
-                                <span className="text-[10px] font-bold text-gray-400 uppercase">Strips</span>
-                             </div>
-                             <div className="text-[10px] font-medium text-gray-400 flex items-center gap-1.5 leading-none">
-                               <Boxes className="w-3 h-3" />
-                               {med.totalTabletsInStock ?? 0} total units
-                             </div>
-                             {lowStock && !expired && (
-                               <div className="flex items-center gap-1 text-[10px] font-bold text-amber-600 animate-pulse">
-                                 <AlertTriangle className="w-3 h-3" />
-                                 Critical Level
-                               </div>
-                             )}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                           <button
-                             onClick={() => handleEdit(med)}
-                             className="p-2 text-gray-400 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-xl transition-all"
-                           >
-                             <Edit className="w-5 h-5" />
-                           </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-
-                  {medicines.length === 0 && (
-                    <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center">
-                        <div className="flex flex-col items-center opacity-30">
-                          <Search className="w-12 h-12 mb-3" />
-                          <p className="font-bold text-lg">No Items Found</p>
-                          <p className="text-sm">Try adjusting your search filters</p>
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                        <Edit3 size={16} />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(med._id!)}
+                        className="p-1.5 text-muted-foreground hover:text-destructive rounded hover:bg-destructive/10 transition-all"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                      <button className="p-1.5 text-muted-foreground hover:text-foreground rounded hover:bg-secondary transition-all">
+                        <MoreVertical size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {filteredMeds.length === 0 && (
+                <tr>
+                   <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
+                      No medicines found matching your search.
+                   </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+        <div className="p-4 bg-secondary/30 border-t border-border flex items-center justify-between text-xs font-medium text-muted-foreground">
+          <p>Showing {filteredMeds.length} medicines</p>
+          <div className="flex gap-2">
+            <button className="px-3 py-1 bg-card border border-border rounded shadow-sm disabled:opacity-50" disabled>Previous</button>
+            <button className="px-3 py-1 bg-primary text-primary-foreground border border-primary rounded shadow-sm">1</button>
+            <button className="px-3 py-1 bg-card border border-border rounded shadow-sm">Next</button>
           </div>
         </div>
       </div>

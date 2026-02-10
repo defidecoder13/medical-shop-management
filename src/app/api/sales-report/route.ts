@@ -54,49 +54,51 @@ export async function GET(request: Request) {
     }
 
     bills.forEach((bill: any) => {
-      totalSales += bill.grandTotal;
-      
-      // Calculate the discount ratio to apply to individual items
-      const originalSubtotal = bill.subTotal; // This is the total before discount
+      totalSales += bill.grandTotal || 0;
+
+      const originalSubtotal = bill.subTotal;
       const discountPercent = bill.discountPercent || 0;
       const discountAmount = bill.discountAmount || 0;
-      
-      // For each item in the bill, calculate revenue and actual profit
+
       bill.items.forEach((item: any) => {
         if (!medicineQuantities[item.name]) {
           medicineQuantities[item.name] = { quantity: 0, revenue: 0, profit: 0 };
         }
-        
+
         medicineQuantities[item.name].quantity += item.qty;
         medicineQuantities[item.name].revenue += item.total;
-        
-        // Calculate actual profit based on buying price
-        const medicine = medicineMap.get(item.name);
-        if (medicine) {
-          let costPerUnit = 0;
-          if (item.unitType === 'strip') {
-            costPerUnit = medicine.buyingPricePerStrip;
-          } else {
-            // If unit is tablet, calculate cost per tablet
-            costPerUnit = medicine.buyingPricePerStrip / medicine.tabletsPerStrip;
+
+        // Profit Calculation
+        // New Bills: use stored buyingPrice
+        let costPerUnit = 0;
+        if (item.buyingPrice !== undefined) {
+          costPerUnit = item.buyingPrice;
+        } else {
+          // Old Bills: fallback to current inventory buying price
+          const medicine = medicineMap.get(item.name);
+          if (medicine) {
+            if (item.unitType === 'strip') {
+              costPerUnit = medicine.buyingPricePerStrip || 0;
+            } else {
+              costPerUnit = (medicine.buyingPricePerStrip || 0) / (medicine.tabletsPerStrip || 1);
+            }
           }
-          
-          const totalCost = costPerUnit * item.qty;
-          
-          // Apply proportional discount to this item's selling price
-          let discountedItemTotal = item.total; // Default to the stored total
-          if (originalSubtotal > 0) {
-            // Calculate the discount ratio and apply it proportionally to this item
-            const itemOriginalTotal = item.sellingPrice * item.qty; // Original total before discount
-            const discountRatio = discountAmount / originalSubtotal; // How much discount was applied overall
-            const itemDiscount = itemOriginalTotal * discountRatio; // Discount for this item
-            discountedItemTotal = itemOriginalTotal - itemDiscount;
-          }
-          
-          const itemProfit = discountedItemTotal - totalCost; // Actual profit = discounted selling price - cost price
-          medicineQuantities[item.name].profit += itemProfit;
-          totalProfit += itemProfit;
         }
+
+        const totalCost = costPerUnit * item.qty;
+
+        // Apply proportional discount to this item's selling price
+        let discountedItemTotal = item.total;
+        if (originalSubtotal > 0 && discountAmount > 0) {
+          const itemOriginalTotal = item.sellingPrice * item.qty;
+          const discountRatio = discountAmount / originalSubtotal;
+          const itemDiscount = itemOriginalTotal * discountRatio;
+          discountedItemTotal = itemOriginalTotal - itemDiscount;
+        }
+
+        const itemProfit = discountedItemTotal - totalCost;
+        medicineQuantities[item.name].profit += itemProfit;
+        totalProfit += itemProfit;
       });
     });
 
@@ -132,41 +134,40 @@ export async function GET(request: Request) {
       if (!dailySalesMap[date]) {
         dailySalesMap[date] = { sales: 0, profit: 0 };
       }
-      dailySalesMap[date].sales += bill.grandTotal;
-      
-      // Calculate actual profit for the day based on items sold
-      let dailyProfit = 0;
-      
-      // Calculate the discount ratio to apply to individual items
-      const originalSubtotal = bill.subTotal; // This is the total before discount
+      dailySalesMap[date].sales += bill.grandTotal || 0;
+
+      const originalSubtotal = bill.subTotal;
       const discountAmount = bill.discountAmount || 0;
-      
+
+      let dailyProfit = 0;
       bill.items.forEach((item: any) => {
-        const medicine = medicineMap.get(item.name);
-        if (medicine) {
-          let costPerUnit = 0;
-          if (item.unitType === 'strip') {
-            costPerUnit = medicine.buyingPricePerStrip;
-          } else {
-            // If unit is tablet, calculate cost per tablet
-            costPerUnit = medicine.buyingPricePerStrip / medicine.tabletsPerStrip;
+        let costPerUnit = 0;
+
+        if (item.buyingPrice !== undefined) {
+          costPerUnit = item.buyingPrice;
+        } else {
+          const medicine = medicineMap.get(item.name);
+          if (medicine) {
+            if (item.unitType === 'strip') {
+              costPerUnit = medicine.buyingPricePerStrip || 0;
+            } else {
+              costPerUnit = (medicine.buyingPricePerStrip || 0) / (medicine.tabletsPerStrip || 1);
+            }
           }
-          
-          const totalCost = costPerUnit * item.qty;
-          
-          // Apply proportional discount to this item's selling price
-          let discountedItemTotal = item.total; // Default to the stored total
-          if (originalSubtotal > 0) {
-            // Calculate the discount ratio and apply it proportionally to this item
-            const itemOriginalTotal = item.sellingPrice * item.qty; // Original total before discount
-            const discountRatio = discountAmount / originalSubtotal; // How much discount was applied overall
-            const itemDiscount = itemOriginalTotal * discountRatio; // Discount for this item
-            discountedItemTotal = itemOriginalTotal - itemDiscount;
-          }
-          
-          const itemProfit = discountedItemTotal - totalCost; // Actual profit = discounted selling price - cost price
-          dailyProfit += itemProfit;
         }
+
+        const totalCost = costPerUnit * item.qty;
+
+        let discountedItemTotal = item.total;
+        if (originalSubtotal > 0 && discountAmount > 0) {
+          const itemOriginalTotal = item.sellingPrice * item.qty;
+          const discountRatio = discountAmount / originalSubtotal;
+          const itemDiscount = itemOriginalTotal * discountRatio;
+          discountedItemTotal = itemOriginalTotal - itemDiscount;
+        }
+
+        const itemProfit = discountedItemTotal - totalCost;
+        dailyProfit += itemProfit;
       });
       dailySalesMap[date].profit += dailyProfit;
     });

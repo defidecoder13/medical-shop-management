@@ -73,7 +73,7 @@ export default function TransactionDetailsPage() {
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Transaction Not Found</h2>
             <p className="text-gray-500 mb-6">The requested invoice details could not be retrieved.</p>
             <button
-              onClick={() => router.back()}
+              onClick={() => router.push('/transactions')}
               className="px-6 py-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-xl font-bold hover:opacity-90 transition-opacity"
             >
               Return to Ledger
@@ -90,7 +90,7 @@ export default function TransactionDetailsPage() {
         {/* Header Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 animate-in fade-in slide-in-from-top-4 duration-500">
            <button
-             onClick={() => router.back()}
+             onClick={() => router.push('/transactions')}
              className="flex items-center gap-2 text-gray-500 hover:text-blue-600 dark:text-gray-400 dark:hover:text-blue-400 transition-colors group"
            >
              <div className="p-2 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-800 shadow-sm group-hover:border-blue-200 dark:group-hover:border-blue-800 transition-colors">
@@ -110,11 +110,19 @@ export default function TransactionDetailsPage() {
              </div>
              
              <button
-               onClick={() => window.open(`/print/${id}`, '_blank')}
-               className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+               onClick={() => window.open(`/print/${id}?type=thermal`, '_blank')}
+               className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-black/20"
              >
-               <Printer className="w-4 h-4" />
-               Print
+               <Printer className="w-3 h-3 text-slate-400" />
+               Thermal
+             </button>
+
+             <button
+               onClick={() => window.open(`/print/${id}?type=a4`, '_blank')}
+               className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+             >
+               <Receipt className="w-3 h-3" />
+               A4 Invoice
              </button>
            </div>
         </div>
@@ -149,15 +157,6 @@ export default function TransactionDetailsPage() {
                           {new Date(bill.createdAt).toLocaleDateString(undefined, { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })}
                        </p>
                     </div>
-                    <div className="space-y-1">
-                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
-                          <CreditCard className="w-3 h-3" />
-                          Payment Status
-                       </p>
-                       <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
-                          Paid in Full
-                       </p>
-                    </div>
                  </div>
               </div>
            </div>
@@ -177,7 +176,6 @@ export default function TransactionDetailsPage() {
                        <thead className="bg-gray-50 dark:bg-gray-800/50">
                           <tr>
                              <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest">Item Details</th>
-                             <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center">Batch</th>
                              <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-center">Qty</th>
                              <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-right">Price</th>
                              <th className="px-6 py-4 text-[10px] font-bold text-gray-500 uppercase tracking-widest text-right">Total</th>
@@ -186,22 +184,16 @@ export default function TransactionDetailsPage() {
                        <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                           {bill.items.map((item: any, i: number) => (
                              <tr key={i} className="group hover:bg-gray-50/50 dark:hover:bg-gray-800/20 transition-colors">
-                                <td className="px-6 py-4">
-                                   <div className="flex items-center gap-3">
-                                      <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600">
-                                         <Package className="w-4 h-4" />
-                                      </div>
-                                      <span className="font-bold text-gray-900 dark:text-white uppercase text-sm">
-                                         {item.name}
-                                      </span>
-                                   </div>
-                                </td>
-                                <td className="px-6 py-4 text-center">
-                                   <div className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 dark:bg-gray-800 text-[10px] font-mono font-bold text-gray-500">
-                                      <Hash className="w-3 h-3" />
-                                      {item.batchNumber}
-                                   </div>
-                                </td>
+                                 <td className="px-6 py-4">
+                                    <div className="flex items-center gap-3">
+                                       <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center text-indigo-600">
+                                          <Package className="w-4 h-4" />
+                                       </div>
+                                       <div className="font-bold text-gray-900 dark:text-white uppercase text-sm">
+                                          {item.name}
+                                       </div>
+                                    </div>
+                                 </td>
                                 <td className="px-6 py-4 text-center">
                                    <span className="font-bold text-gray-900 dark:text-white text-sm">
                                       {item.qty} <span className="text-gray-400 text-xs font-normal lowercase">{item.unitType}s</span>

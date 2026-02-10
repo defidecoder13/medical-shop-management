@@ -6,7 +6,7 @@ import Medicine from "@/src/models/Medicine";
 // GET: Fetch a single bill by ID
 export async function GET(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -43,7 +43,7 @@ export async function GET(
 // PUT: Update a bill (if needed for future features)
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -85,7 +85,7 @@ export async function PUT(
 // DELETE: Delete a bill (if needed for future features)
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
@@ -109,9 +109,9 @@ export async function DELETE(
       );
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       message: "Bill deleted successfully",
-      deletedBill 
+      deletedBill
     });
   } catch (error) {
     console.error("DELETE BILL ERROR:", error);

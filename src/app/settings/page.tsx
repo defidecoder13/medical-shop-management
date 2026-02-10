@@ -22,6 +22,7 @@ import Link from "next/link";
 type SettingsData = {
   shopName: string;
   address?: string;
+  phone?: string;
   gstEnabled: boolean;
   gstNumber?: string | null;
   defaultGstPercent: number;
@@ -172,6 +173,18 @@ export default function SettingsPage() {
                        />
                     </div>
                  </div>
+                 <div className="space-y-2">
+                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contact Number</label>
+                     <div className="relative">
+                        <Info className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                           placeholder="+91 00000 00000"
+                           className="w-full bg-white/50 dark:bg-gray-950/50 border border-gray-100 dark:border-gray-800 pl-11 pr-4 py-3 rounded-2xl focus:outline-none focus:ring-2 focus:ring-slate-500/50 transition-all font-bold"
+                           value={settings.phone || ""}
+                           onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                        />
+                     </div>
+                  </div>
               </div>
            </div>
 

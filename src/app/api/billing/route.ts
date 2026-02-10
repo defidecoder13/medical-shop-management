@@ -15,7 +15,7 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const { items = [], printInvoice = false, discountPercent = 0 } = await req.json();
+    const { items = [], printInvoice = false, discountPercent = 0, gstEnabled: reqGstEnabled } = await req.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json(
@@ -25,78 +25,95 @@ export async function POST(req: Request) {
     }
 
     const settings = await Settings.findOne();
-    const gstEnabled = settings?.gstEnabled ?? false;
+    // Use request toggle if provided, otherwise fallback to settings
+    const gstEnabled = reqGstEnabled !== undefined ? reqGstEnabled : (settings?.gstEnabled ?? false);
 
     let subTotal = 0;
     const billItems: any[] = [];
 
     for (const item of items) {
-      const med = await Medicine.findById(item.medicineId);
+      const medicine = await Medicine.findById(item.medicineId);
 
-      if (!med) {
-        throw new Error("Medicine not found");
+      if (!medicine) {
+        return NextResponse.json(
+          { error: `Medicine not found: ${item.name}` },
+          { status: 400 }
+        );
       }
 
       // 🔐 Save state for rollback
       updatedMeds.push({
-        _id: med._id.toString(),
-        stock: med.stock,
-        totalTabletsInStock: med.totalTabletsInStock,
+        _id: medicine._id.toString(),
+        stock: medicine.stock,
+        totalTabletsInStock: medicine.totalTabletsInStock,
       });
 
-      // 📉 Stock deduction
-      if (item.unitType === "tablet") {
-        if (med.totalTabletsInStock < item.qty) {
-          throw new Error(`Insufficient tablets for ${med.name}`);
-        }
-        med.totalTabletsInStock -= item.qty;
+      // Check stock
+      let stockToDeduct = 0;
+      if (item.unitType === "strip") {
+        stockToDeduct = item.qty;
       } else {
-        const needed = item.qty * med.tabletsPerStrip;
-        if (med.totalTabletsInStock < needed) {
-          throw new Error(`Insufficient strips for ${med.name}`);
-        }
-        med.totalTabletsInStock -= needed;
+        stockToDeduct = item.qty / (medicine.tabletsPerStrip || 1);
       }
 
-      // 🔄 Auto recalc strips
-      med.stock = Math.floor(
-        med.totalTabletsInStock / med.tabletsPerStrip
-      );
+      if (medicine.stock < stockToDeduct) {
+        return NextResponse.json(
+          { error: `Insufficient stock for: ${item.name}` },
+          { status: 400 }
+        );
+      }
 
-      await med.save();
+      // Decrement stock
+      medicine.stock -= stockToDeduct;
+      // Also update totalTabletsInStock for consistency
+      medicine.totalTabletsInStock = medicine.stock * (medicine.tabletsPerStrip || 1);
+      await medicine.save();
 
-      const lineTotal = item.sellingPrice * item.qty;
-      subTotal += lineTotal;
+      // Calculate Buying Price for this item (Unit Cost)
+      let unitBuyingPrice = 0;
+      if (item.unitType === "strip") {
+        unitBuyingPrice = medicine.buyingPricePerStrip || 0;
+      } else {
+        // Cost per tablet
+        unitBuyingPrice = (medicine.buyingPricePerStrip || 0) / (medicine.tabletsPerStrip || 1);
+      }
+
+      // Recalculate item total to be safe
+      const itemTotal = item.sellingPrice * item.qty;
+      subTotal += itemTotal;
 
       billItems.push({
-        name: med.name,
-        batchNumber: med.batchNumber,
+        name: medicine.name, // Take from DB for absolute certainty
+        batchNumber: medicine.batchNumber, // Take from DB for absolute certainty
         unitType: item.unitType,
         qty: item.qty,
         sellingPrice: item.sellingPrice,
-        total: lineTotal,
+        buyingPrice: unitBuyingPrice,
+        total: itemTotal,
       });
     }
 
     // Calculate discount (preserve decimals)
     const discountAmount = subTotal * (discountPercent / 100);
     const subTotalAfterDiscount = subTotal - discountAmount;
-    
-    const gstAmount = gstEnabled ? subTotalAfterDiscount * 0.05 : 0;
+
+    const gstPercent = settings?.defaultGstPercent ?? 0; // Default to 0 if not set in settings
+    const gstAmount = gstEnabled ? subTotalAfterDiscount * (gstPercent / 100) : 0;
     const grandTotal = subTotalAfterDiscount + gstAmount;
-    
+
     // Round only the final totals for storage
     const roundedDiscountAmount = Math.round(discountAmount * 100) / 100;
     const roundedGstAmount = Math.round(gstAmount * 100) / 100;
     const roundedGrandTotal = Math.round(grandTotal * 100) / 100;
 
-    // 💾 CREATE BILL (THIS WAS FAILING BEFORE)
+    // 💾 CREATE BILL
     const bill = await Bill.create({
       items: billItems,
       subTotal,
       discountPercent,
       discountAmount: roundedDiscountAmount,
       gstAmount: roundedGstAmount,
+      gstPercent: gstEnabled ? gstPercent : 0,
       grandTotal: roundedGrandTotal,
       gstEnabled,
       printInvoice,

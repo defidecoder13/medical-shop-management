@@ -4,6 +4,7 @@ const SettingsSchema = new mongoose.Schema(
   {
     shopName: { type: String, required: true },
     address: { type: String },
+    phone: { type: String },
 
     gstEnabled: { type: Boolean, default: false },
     gstNumber: { type: String, default: null },
