@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Medicine from "@/src/models/Medicine";
+import User from "@/src/models/User";
+import bcrypt from "bcryptjs";
 
 export const dynamic = "force-dynamic";
 
@@ -292,9 +294,23 @@ export async function GET(req: Request) {
             }
         }
 
+        // Seed Admin User
+        const adminEmail = "medsaathi@admin.com";
+        const adminPassword = "himadri@26";
+
+        const existingAdmin = await User.findOne({ email: adminEmail });
+        if (!existingAdmin) {
+            const hashedPassword = await bcrypt.hash(adminPassword, 10);
+            await User.create({
+                email: adminEmail,
+                password: hashedPassword
+            });
+            console.log("Admin user created.");
+        }
+
         return NextResponse.json({
             success: true,
-            message: `Seeding complete. Added ${createdCount} new medicines.`
+            message: `Seeding complete. Added ${createdCount} new medicines and verified admin user.`
         });
     } catch (error) {
         console.error("SEED API ERROR:", error);
