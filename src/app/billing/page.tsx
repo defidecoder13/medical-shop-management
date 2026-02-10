@@ -20,6 +20,8 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/src/components/ui/separator";
+import { useDebounce } from "@/src/hooks/use-debounce";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Medicine = {
   _id: string;
@@ -61,6 +63,7 @@ function BillingContent() {
   const processedAddId = useRef<string | null>(null);
 
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discountPercent, setDiscountPercent] = useState<number | "">("");
@@ -166,14 +169,14 @@ function BillingContent() {
 
 
   useEffect(() => {
-    if (!search) {
+    if (!debouncedSearch) {
       setMedicines([]);
       return;
     }
-    fetch(`/api/inventory?q=${search}`)
+    fetch(`/api/inventory?q=${debouncedSearch}`)
       .then((res) => res.json())
       .then(setMedicines);
-  }, [search]);
+  }, [debouncedSearch]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -385,10 +388,19 @@ function BillingContent() {
 
             {/* Results Dropdown */}
             {medicines.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto">
-                {medicines.map((med) => (
-                  <button
+              <motion.div 
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 5 }}
+                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto"
+              >
+                <AnimatePresence>
+                {medicines.map((med, index) => (
+                  <motion.button
                     key={med._id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     onClick={() => addToCart(med)}
                     className="w-full flex justify-between items-center p-3 hover:bg-muted/50 text-left transition-colors border-b border-border last:border-0"
                   >
@@ -405,9 +417,10 @@ function BillingContent() {
                     <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
                       <Plus size={16} />
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
-              </div>
+                </AnimatePresence>
+              </motion.div>
             )}
           </div>
 
@@ -437,8 +450,16 @@ function BillingContent() {
                   <p className="text-xs text-muted-foreground">Search items to add</p>
                 </div>
               ) : (
-                cart.map((item) => (
-                  <div key={item.medicineId} className="p-4 rounded-lg border border-border bg-secondary/20 hover:border-primary/30 transition-all">
+                <AnimatePresence>
+                {cart.map((item) => (
+                  <motion.div 
+                    key={item.medicineId} 
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="p-4 rounded-lg border border-border bg-secondary/20 hover:border-primary/30 transition-all"
+                  >
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <div className="font-medium text-foreground text-sm">{item.name}</div>
@@ -495,8 +516,9 @@ function BillingContent() {
                         </div>
                       </div>
                     </div>
-                  </div>
-                ))
+                  </motion.div>
+                ))}
+                </AnimatePresence>
               )}
             </div>
           </div>

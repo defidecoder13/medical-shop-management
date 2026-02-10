@@ -25,6 +25,15 @@ const MedicineSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// Compound Index for Search Performance
+MedicineSchema.index({
+  name: "text",
+  brand: "text",
+  composition: "text",
+  batchNumber: "text",
+  rackNumber: "text"
+});
+
 // Prevent Mongoose overwrite warning & force new schema in dev
 if (process.env.NODE_ENV !== "production" && mongoose.models.Medicine) {
   delete mongoose.models.Medicine;

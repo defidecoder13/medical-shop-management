@@ -6,6 +6,8 @@ import { Search, Bell, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation"; // Added useRouter
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useDebounce } from "@/src/hooks/use-debounce";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const Topbar = () => {
   const pathname = usePathname();
@@ -13,26 +15,23 @@ export const Topbar = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showResults, setShowResults] = useState(false);
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Debounce search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (searchQuery.length > 1) {
-        fetch(`/api/inventory?q=${searchQuery}`)
-          .then(res => res.json())
-          .then(data => {
-            setSearchResults(data);
-            setShowResults(true);
-          })
-          .catch(err => console.error(err));
-      } else {
-        setSearchResults([]);
-        setShowResults(false);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+    if (debouncedSearchQuery.length > 1) {
+      fetch(`/api/inventory?q=${debouncedSearchQuery}`)
+        .then(res => res.json())
+        .then(data => {
+          setSearchResults(data);
+          setShowResults(true);
+        })
+        .catch(err => console.error(err));
+    } else {
+      setSearchResults([]);
+      setShowResults(false);
+    }
+  }, [debouncedSearchQuery]);
 
   // Click outside to close
   useEffect(() => {
@@ -79,12 +78,21 @@ export const Topbar = () => {
           />
           
           {/* Search Results Dropdown */}
+          <AnimatePresence>
           {showResults && searchResults.length > 0 && (
-            <div className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 5 }}
+              className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl shadow-xl z-50 max-h-80 overflow-y-auto"
+            >
               <div className="p-2">
-                {searchResults.map((med) => (
-                  <button
+                {searchResults.map((med, index) => (
+                  <motion.button
                     key={med._id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
                     onClick={() => handleSelectMedicine(med._id)}
                     className="w-full flex items-center justify-between p-2.5 hover:bg-muted/50 rounded-lg text-left transition-colors group/item"
                   >
@@ -98,11 +106,12 @@ export const Topbar = () => {
                         <span>Rack: {med.rackNumber || 'N/A'}</span>
                       </div>
                     </div>
-                  </button>
+                  </motion.button>
                 ))}
               </div>
-            </div>
+            </motion.div>
           )}
+          </AnimatePresence>
         </div>
         
         <ThemeToggle />

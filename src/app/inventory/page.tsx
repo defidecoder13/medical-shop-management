@@ -12,8 +12,11 @@ import {
   Trash2, 
   ArrowUpDown,
   CheckCircle2,
-  AlertCircle 
+  AlertCircle, 
+  Loader2
 } from "lucide-react";
+import { useDebounce } from "@/src/hooks/use-debounce";
+import { motion, AnimatePresence } from "framer-motion";
 
 type Medicine = {
   _id?: string;
@@ -49,6 +52,7 @@ export default function InventoryPage() {
   const router = useRouter();
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [search, setSearch] = useState("");
+  const debouncedSearch = useDebounce(search, 300);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Medicine>(emptyMedicine);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -72,7 +76,7 @@ export default function InventoryPage() {
   }, [router]);
 
   const fetchMedicines = async () => {
-    const res = await fetch(`/api/inventory?q=${search}&_t=${Date.now()}`);
+    const res = await fetch(`/api/inventory?q=${debouncedSearch}&_t=${Date.now()}`);
     const data = await res.json();
     setMedicines(data.map((m: any) => ({
       _id: m._id,
@@ -93,7 +97,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchMedicines();
-  }, [search]);
+  }, [debouncedSearch]);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -434,8 +438,16 @@ export default function InventoryPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {filteredMeds.map((med) => (
-                <tr key={med._id} className="hover:bg-muted/50 transition-colors group">
+              <AnimatePresence>
+              {filteredMeds.map((med, index) => (
+                <motion.tr 
+                  key={med._id} 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: index * 0.05, duration: 0.2 }}
+                  className="hover:bg-muted/50 transition-colors group"
+                >
                   <td className="px-6 py-4 font-semibold text-foreground text-sm">
                     {med.name}
                     <span className="block text-[10px] text-muted-foreground font-normal">{med.composition ? `${med.composition} • ` : ''}{med.brand}</span>
@@ -477,8 +489,9 @@ export default function InventoryPage() {
                       </button>
                     </div>
                   </td>
-                </tr>
+                </motion.tr>
               ))}
+              </AnimatePresence>
               {filteredMeds.length === 0 && (
                 <tr>
                    <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
