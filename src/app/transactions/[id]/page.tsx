@@ -110,19 +110,11 @@ export default function TransactionDetailsPage() {
              </div>
              
              <button
-               onClick={() => window.open(`/print/${id}?type=thermal`, '_blank')}
-               className="flex items-center gap-2 px-4 py-2 bg-slate-900 border border-slate-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-slate-800 transition-all active:scale-95 shadow-lg shadow-black/20"
+               onClick={() => window.open(`/print/${id}`, '_blank')}
+               className="flex items-center gap-2 px-5 py-2 bg-black hover:bg-gray-900 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-black/20 transition-all active:scale-95"
              >
-               <Printer className="w-3 h-3 text-slate-400" />
-               Thermal
-             </button>
-
-             <button
-               onClick={() => window.open(`/print/${id}?type=a4`, '_blank')}
-               className="flex items-center gap-2 px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-xs uppercase tracking-widest shadow-lg shadow-blue-500/20 transition-all active:scale-95"
-             >
-               <Receipt className="w-3 h-3" />
-               A4 Invoice
+               <Printer className="w-4 h-4" />
+               Print Invoice
              </button>
            </div>
         </div>

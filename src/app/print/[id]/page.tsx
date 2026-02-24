@@ -5,7 +5,10 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 
 type BillItem = {
   name: string;
+  brand?: string;
+  expiryDate?: string;
   batchNumber: string;
+  hsnCode?: string;
   unitType: "strip" | "tablet";
   qty: number;
   sellingPrice: number;
@@ -84,15 +87,21 @@ function PrintInvoiceContent() {
   if (loading) return <div className="p-10 text-center font-bold text-gray-500 font-mono">GENERATING INVOICE...</div>;
   if (error || !bill || !settings) return <div className="p-10 text-center text-red-500 font-bold uppercase">ERROR: {error || "RESOURCE_NOT_FOUND"}</div>;
 
+  const ITEMS_PER_PAGE = 13; // Set to 13 to allow ~13-14 items per page safely
+  const chunks = [];
+  for (let i = 0; i < bill.items.length; i += ITEMS_PER_PAGE) {
+    chunks.push(bill.items.slice(i, i + ITEMS_PER_PAGE));
+  }
+
   return (
-    <div className={`bg-white text-black leading-tight ${layout === 'thermal' ? 'w-[80mm] p-0' : 'max-w-[210mm] mx-auto p-0 min-h-screen'}`}>
+    <div className={`bg-[#f3f4f6] text-black leading-tight max-w-[210mm] mx-auto p-0 min-h-screen`}>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
         
         @media print {
           @page {
-            margin: 0;
-            size: ${layout === 'thermal' ? '80mm auto' : 'A4 portrait'};
+            size: A5 landscape;
+            margin: 8mm;
           }
           body { 
             background: white; 
@@ -101,29 +110,44 @@ function PrintInvoiceContent() {
             -webkit-print-color-adjust: exact;
           }
           .no-print { display: none !important; }
+          .print-page {
+            page-break-after: always;
+            box-sizing: border-box;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+          }
+          .print-page:last-child {
+            page-break-after: auto;
+          }
         }
 
         body {
           background-color: #f3f4f6;
-        }
-
-        .thermal-font {
-          font-family: 'Courier Prime', monospace;
-          font-size: 13px;
-        }
-
-        .a4-font {
           font-family: 'Inter', sans-serif;
         }
 
-        .thermal-divider {
-           border-top: 1px dashed black;
-           margin: 6px 0;
+        .mono-font {
+          font-family: 'IBM Plex Mono', monospace;
         }
 
-        .a4-table th, .a4-table td {
-           border: 1px solid #000;
-           padding: 8px 12px;
+        .border-soft {
+          border-color: #e5e5e5;
+        }
+
+        .a5-table th {
+          border-bottom: 1px solid #000;
+          padding: 2px 4px;
+        }
+        
+        .a5-table td {
+          border-bottom: 1px solid #e5e5e5;
+          padding: 2px 4px;
+        }
+        
+        .a5-table tbody tr:nth-child(even) {
+          background-color: #fafafa;
         }
       `}</style>
 
@@ -143,183 +167,189 @@ function PrintInvoiceContent() {
         </button>
       </div>
 
-      {layout === 'thermal' ? (
-        /* ================= THERMAL LAYOUT ================= */
-        <div className="thermal-font p-3 bg-white mx-auto shadow-sm">
-          <div className="text-center space-y-1">
-             <div className="text-lg font-bold uppercase tracking-wide leading-none mb-1">{settings.shopName}</div>
-             <div className="text-[10px] leading-tight uppercase px-4">{settings.address}</div>
-             {settings.phone && <div className="text-[11px] font-bold mt-1">CONTACT: {settings.phone}</div>}
-             {settings.gstEnabled && settings.gstNumber && <div className="text-[11px] font-bold">GSTIN: {settings.gstNumber}</div>}
-          </div>
+      {chunks.map((chunkItems, pageIndex) => {
+        const isLastPage = pageIndex === chunks.length - 1;
 
-          <div className="thermal-divider" />
-          <div className="flex justify-between text-[11px]">
-             <div>BILL: #{bill._id.slice(-8).toUpperCase()}</div>
-             <div>{new Date(bill.createdAt).toLocaleDateString()}</div>
-          </div>
-          <div className="thermal-divider" />
-
-          {/* Thermal Table-like Header */}
-          <div className="flex justify-between font-bold text-[11px] mb-1">
-             <span className="w-[50%]">ITEM</span>
-             <span className="w-[15%] text-center">QTY</span>
-             <span className="w-[15%] text-right">RATE</span>
-             <span className="w-[20%] text-right">TOTAL</span>
-          </div>
-          <div className="thermal-divider" />
-
-          <div className="space-y-3">
-             {bill.items.map((item, i) => (
-               <div key={i} className="text-[11px]">
-                 <div className="font-bold uppercase mb-0.5">{item.name}</div>
-                 <div className="flex justify-between items-baseline">
-                   <span className="w-[50%] opacity-80 text-[10px]">BATCH: {item.batchNumber}</span>
-                   <span className="w-[15%] text-center">{item.qty}{item.unitType === 'strip' ? 's' : 't'}</span>
-                   <span className="w-[15%] text-right">₹{item.sellingPrice}</span>
-                   <span className="w-[20%] text-right font-bold">₹{item.total}</span>
-                 </div>
+        return (
+          <div key={pageIndex} className="print-page bg-white p-4 flex flex-col min-h-screen">
+            {/* Header Section */}
+            <div className="flex justify-between items-start mb-2 border-b-2 border-black pb-2">
+               {/* Left: Store Details */}
+               <div className="w-[45%]">
+                  <h1 className="text-xl font-bold uppercase tracking-tight leading-none mb-1">{settings.shopName}</h1>
+                  <p className="text-[10px] font-medium text-gray-600 uppercase max-w-[250px] leading-snug mb-1">{settings.address}</p>
+                  <div className="flex flex-col gap-0.5">
+                     {settings.phone && <div className="text-[10px] font-semibold">Ph: <span className="mono-font">{settings.phone}</span></div>}
+                     {settings.gstEnabled && settings.gstNumber && (
+                       <div className="text-[10px] font-bold">
+                         GSTIN: <span className="mono-font">{settings.gstNumber}</span>
+                       </div>
+                     )}
+                  </div>
                </div>
-             ))}
-          </div>
+               
+               {/* Center: Title */}
+               <div className="w-[20%] text-center mt-2 flex flex-col items-center">
+                  <div className="inline-block border border-black px-3 py-1 mb-1">
+                     <h2 className="text-sm font-black uppercase tracking-widest">Tax Invoice</h2>
+                  </div>
+                  {chunks.length > 1 && (
+                    <span className="text-[9px] font-semibold text-gray-500">Page {pageIndex + 1} of {chunks.length}</span>
+                  )}
+               </div>
 
-          <div className="thermal-divider" />
-          
-          <div className="space-y-1 text-[11px]">
-             <div className="flex justify-between">
-                <span>SUBTOTAL:</span>
-                <span>₹{bill.subTotal.toFixed(2)}</span>
-             </div>
-             
-             <div className="flex justify-between">
-                <span>GST {bill.gstEnabled ? `(${bill.gstPercent}%)` : ""}:</span>
-                <span>₹{(bill.gstAmount || 0).toFixed(2)}</span>
-             </div>
+               {/* Right: Invoice/Patient Details */}
+               <div className="w-[35%] text-right flex flex-col items-end text-[10px]">
+                  <div className="grid grid-cols-[auto_auto] gap-x-3 gap-y-1 text-left w-full max-w-[200px]">
+                     <span className="font-semibold text-gray-500 uppercase">Invoice #</span>
+                     <span className="font-bold mono-font text-[11px] text-right">{bill._id.slice(-8).toUpperCase()}</span>
+                     
+                     <span className="font-semibold text-gray-500 uppercase">Date</span>
+                     <span className="font-medium mono-font text-right">
+                        {new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                     </span>
+                     
+                     <span className="font-semibold text-gray-500 uppercase">Time</span>
+                     <span className="font-medium mono-font text-right">
+                        {new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                     </span>
+                  </div>
+               </div>
+            </div>
 
-             <div className="flex justify-between">
-                <span>DISCOUNT:</span>
-                <span>₹{(bill.discountAmount || 0).toFixed(2)}</span>
-             </div>
+            {/* Items Table */}
+            <div className="flex-1">
+               <table className="a5-table w-full border-collapse text-left">
+                   <thead>
+                     <tr>
+                        <th className="w-[3%] text-center text-[9px] font-bold uppercase text-gray-600">Sr</th>
+                        <th className="w-[20%] text-[9px] font-bold uppercase text-gray-600">Product</th>
+                        <th className="w-[9%] text-[9px] font-bold uppercase text-gray-600">MFG</th>
+                        <th className="w-[8%] text-center text-[9px] font-bold uppercase text-gray-600">HSN</th>
+                        <th className="w-[10%] text-center text-[9px] font-bold uppercase text-gray-600">Batch</th>
+                        <th className="w-[8%] text-center text-[9px] font-bold uppercase text-gray-600">Exp.</th>
+                        <th className="w-[8%] text-center text-[9px] font-bold uppercase text-gray-600">Qty</th>
+                        <th className="w-[7%] text-right text-[9px] font-bold uppercase text-gray-600">MRP</th>
+                        <th className="w-[6%] text-right text-[9px] font-bold uppercase text-gray-600">Disc</th>
+                        <th className="w-[6%] text-right text-[9px] font-bold uppercase text-gray-600">CGST</th>
+                        <th className="w-[6%] text-right text-[9px] font-bold uppercase text-gray-600">SGST</th>
+                        <th className="w-[9%] text-right text-[9px] font-bold uppercase text-gray-600">Amount</th>
+                     </tr>
+                  </thead>
+                 <tbody>
+                    {chunkItems.map((item, localIndex) => {
+                      const absoluteIndex = pageIndex * ITEMS_PER_PAGE + localIndex;
+                      const cgstPercent = bill.gstEnabled ? (bill.gstPercent / 2) : 0;
+                      const sgstPercent = bill.gstEnabled ? (bill.gstPercent / 2) : 0;
+                      
+                      // Format Expiry MM/YY
+                      let expStr = "-";
+                      if (item.expiryDate) {
+                         const d = new Date(item.expiryDate);
+                         expStr = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(-2)}`;
+                      }
 
-             <div className="thermal-divider" />
-             <div className="flex justify-between text-[14px] font-bold">
-                <span>GRAND TOTAL:</span>
-                <span>₹{bill.grandTotal.toFixed(2)}</span>
-             </div>
-          </div>
+                      // Format Mfg (first word)
+                      let mfgStr = "-";
+                      if (item.brand) {
+                         mfgStr = item.brand.split(" ")[0].toUpperCase();
+                      }
 
-          <div className="thermal-divider" />
-          <div className="text-center text-[10px] mt-4 space-y-1 uppercase leading-tight font-bold">
-             <div>{settings.invoiceFooter || "THANK YOU! GET WELL SOON."}</div>
-             <div className="opacity-80">NO RETURN WITHOUT ORIGINAL BILL</div>
-             <div className="pt-2 italic opacity-50 text-[8px]">POWERED BY MEDISAATHI CORE</div>
-          </div>
-        </div>
-      ) : (
-        /* ================= A4 LAYOUT ================= */
-        <div className="a4-font bg-white shadow-2xl p-12 min-h-screen">
-          
-          {/* A4 Header Section */}
-          <div className="flex justify-between items-start border-b-4 border-black pb-8 mb-10">
-             <div className="space-y-4">
-                <div>
-                   <h1 className="text-4xl font-extrabold uppercase tracking-tighter leading-none mb-1">{settings.shopName}</h1>
-                   <p className="text-[11px] font-bold uppercase text-gray-500 tracking-wider">PHARMACY & HEALTHCARE SERVICES</p>
-                </div>
-                <div className="space-y-1">
-                   <div className="text-xs font-medium max-w-[360px] leading-relaxed uppercase">{settings.address}</div>
-                   {settings.phone && <div className="text-xs font-bold">PHONE: <span className="font-mono">{settings.phone}</span></div>}
-                   {settings.gstEnabled && settings.gstNumber && (
-                     <div className="text-xs font-black text-black mt-1">
-                       GSTIN: <span className="font-mono tracking-wide">{settings.gstNumber}</span>
+                      // Display Bill Discount
+                      const discStr = bill.discountPercent > 0 ? `${bill.discountPercent}%` : "-";
+                      
+                      return (
+                        <tr key={absoluteIndex} className="h-[22px]">
+                          <td className="text-center mono-font text-[9px] text-gray-500">{absoluteIndex + 1}</td>
+                          <td>
+                            <div className="font-semibold text-[10px] leading-tight text-black truncate max-w-[120px] pr-1">{item.name}</div>
+                          </td>
+                          <td>
+                             <div className="text-[9px] font-medium text-gray-600 truncate">{mfgStr}</div>
+                          </td>
+                          <td className="text-center font-medium mono-font text-[9px] text-gray-600">{item.hsnCode || "-"}</td>
+                          <td className="text-center font-bold mono-font text-[9px] text-gray-800">{item.batchNumber}</td>
+                          <td className="text-center font-medium mono-font text-[9px] text-gray-600">{expStr}</td>
+                          <td className="text-center font-bold text-[10px]">
+                            {item.qty} <span className="text-[8px] uppercase font-semibold text-gray-500">{item.unitType === 'strip' ? 'S' : 'T'}</span>
+                          </td>
+                          <td className="text-right mono-font text-[9px]">₹{item.sellingPrice.toFixed(2)}</td>
+                          <td className="text-right mono-font text-[9px] text-gray-600">{discStr}</td>
+                          <td className="text-right mono-font text-[9px] text-gray-600">{cgstPercent > 0 ? `${cgstPercent}%` : '-'}</td>
+                          <td className="text-right mono-font text-[9px] text-gray-600">{sgstPercent > 0 ? `${sgstPercent}%` : '-'}</td>
+                          <td className="text-right font-bold mono-font text-[10px]">₹{item.total.toFixed(2)}</td>
+                        </tr>
+                      )
+                    })}
+                 </tbody>
+              </table>
+            </div>
+
+            {/* Always push footer items to bottom of page */}
+            <div className="flex-grow min-h-[10px]"></div>
+
+            {/* Summary & Footer Section (ONLY ON LAST PAGE) */}
+            {isLastPage ? (
+              <div className="mt-2 border-t-2 border-black pt-2 flex justify-between items-end pb-1 shrink-0">
+                 {/* Left: Notes & Terms */}
+                 <div className="w-[55%] text-[9px] text-gray-600 leading-snug space-y-3">
+                    <div>
+                       <p className="font-medium text-gray-700 italic">"Medicines without original bill will not be accepted for return."</p>
+                    </div>
+                 </div>
+
+                 {/* Right: Totals Grid */}
+                 <div className="w-[40%] flex gap-4">
+                     <div className="flex-1 text-[10px] border border-gray-200 p-2 space-y-1 bg-[#fafafa]">
+                        <div className="flex justify-between">
+                           <span className="font-medium text-gray-500 uppercase">Subtotal</span>
+                           <span className="font-semibold mono-font">₹{bill.subTotal.toFixed(2)}</span>
+                        </div>
+                        {bill.gstEnabled && (
+                          <>
+                            <div className="flex justify-between">
+                               <span className="font-medium text-gray-500 uppercase">CGST ({bill.gstPercent / 2}%)</span>
+                               <span className="font-semibold mono-font">₹{((bill.gstAmount || 0) / 2).toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between">
+                               <span className="font-medium text-gray-500 uppercase">SGST ({bill.gstPercent / 2}%)</span>
+                               <span className="font-semibold mono-font">₹{((bill.gstAmount || 0) / 2).toFixed(2)}</span>
+                            </div>
+                          </>
+                        )}
+                        {(bill.discountAmount > 0) && (
+                          <div className="flex justify-between text-green-700">
+                             <span className="font-medium uppercase">Discount</span>
+                             <span className="font-semibold mono-font">-₹{bill.discountAmount.toFixed(2)}</span>
+                          </div>
+                        )}
                      </div>
-                   )}
-                </div>
-             </div>
-             <div className="text-right flex flex-col items-end gap-2">
-                <div className="bg-black text-white p-3 px-6 -mr-12">
-                   <div className="text-2xl font-black uppercase tracking-widest">Tax Invoice</div>
-                </div>
-                <div className="mt-4 text-right">
-                   <div className="text-[10px] font-black uppercase text-gray-400 mb-1">Invoice Reference</div>
-                   <div className="text-lg font-black font-mono tracking-tight leading-none">#{bill._id.toUpperCase()}</div>
-                   <div className="text-[11px] font-bold mt-2 uppercase">Date & Time</div>
-                   <div className="text-xs font-mono">{new Date(bill.createdAt).toLocaleString('en-IN', { dateStyle: 'long', timeStyle: 'short' })}</div>
-                </div>
-             </div>
+                     
+                     <div className="flex-1 flex flex-col justify-between items-end">
+                        <div className="text-right w-full bg-black text-white px-3 py-2">
+                           <div className="text-[10px] font-bold uppercase tracking-wide opacity-80 mb-0.5">Grand Total</div>
+                           <div className="text-[18px] font-bold mono-font leading-none">₹{Math.round(bill.grandTotal).toFixed(2)}</div>
+                        </div>
+                        
+                        <div className="mt-4 text-center w-full">
+                           <div className="border-t border-gray-400 w-[80%] mx-auto mb-1"></div>
+                           <div className="text-[9px] font-bold uppercase text-gray-500">Authorized Signatory</div>
+                        </div>
+                     </div>
+                 </div>
+              </div>
+            ) : (
+               <div className="mt-2 text-right shrink-0">
+                 <span className="text-[9px] font-bold italic text-gray-400 border-t border-gray-200 pt-2 block w-full">Continued on Page {pageIndex + 2} ...</span>
+               </div>
+            )}
+            
+            <div className="text-center text-[8px] mt-2 font-medium text-gray-400 flex justify-between items-center no-print shrink-0">
+              <span>For internal use only - Not final receipt</span>
+            </div>
           </div>
-
-          {/* A4 Items Table */}
-          <table className="a4-table w-full border-collapse">
-             <thead>
-                <tr className="bg-gray-100">
-                   <th className="w-[5%] text-center text-[11px] font-black uppercase">#</th>
-                   <th className="w-[45%] text-left text-[11px] font-black uppercase tracking-wider">Item Description</th>
-                   <th className="w-[15%] text-center text-[11px] font-black uppercase">Batch</th>
-                   <th className="w-[10%] text-center text-[11px] font-black uppercase">Qty</th>
-                   <th className="w-[10%] text-right text-[11px] font-black uppercase">Rate</th>
-                   <th className="w-[15%] text-right text-[11px] font-black uppercase">Total</th>
-                </tr>
-             </thead>
-             <tbody>
-                {bill.items.map((item, i) => (
-                  <tr key={i} className="hover:bg-gray-50 transition-colors">
-                    <td className="text-center font-mono text-xs">{String(i + 1).padStart(2, '0')}</td>
-                    <td className="font-bold text-[13px] uppercase tracking-tight">{item.name}</td>
-                    <td className="text-center font-mono text-xs text-gray-600 italic uppercase">{item.batchNumber}</td>
-                    <td className="text-center font-bold text-[13px]">
-                       {item.qty} <span className="text-[9px] uppercase font-black text-gray-400">{item.unitType}</span>
-                    </td>
-                    <td className="text-right font-mono text-xs">₹{item.sellingPrice.toFixed(2)}</td>
-                    <td className="text-right font-black text-[13px]">₹{item.total.toFixed(2)}</td>
-                  </tr>
-                ))}
-                {/* Empty rows to maintain structure if needed */}
-                {Array.from({ length: Math.max(0, 10 - bill.items.length) }).map((_, i) => (
-                  <tr key={`empty-${i}`} className="h-10 opacity-25">
-                    <td></td><td></td><td></td><td></td><td></td><td></td>
-                  </tr>
-                ))}
-             </tbody>
-          </table>
-
-          {/* A4 Totals Section */}
-          <div className="mt-10 flex justify-end">
-             <div className="w-1/2 space-y-1">
-                <div className="flex justify-between text-xs py-2 px-4 bg-gray-50 border border-black/5">
-                   <span className="text-gray-500 font-black uppercase tracking-wider">Subtotal</span>
-                   <span className="font-bold font-mono">₹{bill.subTotal.toFixed(2)}</span>
-                </div>
-                
-                <div className="flex justify-between text-xs py-2 px-4 border border-black/5">
-                   <span className="text-gray-500 font-bold uppercase tracking-wider flex items-center gap-2">
-                      GST {bill.gstEnabled ? `(${bill.gstPercent}%)` : ""}
-                   </span>
-                   <span className="font-bold font-mono">₹{(bill.gstAmount || 0).toFixed(2)}</span>
-                </div>
-
-                <div className="flex justify-between text-xs py-2 px-4 border border-black/5">
-                   <span className="text-gray-500 font-bold uppercase tracking-wider">Discount</span>
-                   <span className="font-bold font-mono">₹{(bill.discountAmount || 0).toFixed(2)}</span>
-                </div>
-
-                <div className="bg-black text-white mt-4 p-5 flex justify-between items-center shadow-lg">
-                   <span className="text-[12px] font-black uppercase tracking-[0.3em]">Total Payable</span>
-                   <span className="text-3xl font-black font-mono">₹{bill.grandTotal.toFixed(2)}</span>
-                </div>
-                <div className="text-right text-[9px] font-black uppercase text-gray-400 tracking-widest mt-2 px-1">
-                   Net amount inclusive of all taxes
-                </div>
-             </div>
-          </div>
-
-          {/* A4 Footer */}
-          <div className="mt-auto pt-20 pb-8 text-center border-t border-gray-100">
-             <p className="text-[11px] font-bold uppercase tracking-[0.5em] text-gray-300 mb-2">MedSaathi Pharmacy</p>
-             <p className="text-[10px] font-bold text-gray-400 uppercase italic tracking-tighter">Stay healthy, Stay happy!</p>
-          </div>
-        </div>
-      )}
+        );
+      })}
     </div>
   );
 }

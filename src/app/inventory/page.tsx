@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Plus, 
@@ -30,6 +30,7 @@ type Medicine = {
   sellingPrice: number | ""; // MRP
   rackNumber: string;
   composition: string;
+  hsnCode?: string;
   gstPercent: number;
   totalTabletsInStock?: number;
 };
@@ -45,6 +46,7 @@ const emptyMedicine: Medicine = {
   sellingPrice: "",
   rackNumber: "",
   composition: "",
+  hsnCode: "3004",
   gstPercent: 5,
 };
 
@@ -58,6 +60,16 @@ export default function InventoryPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+
+  // Autocomplete State
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Refs for auto-focus
+  const autocompleteRef = useRef<HTMLDivElement>(null);
+  const batchNumberInputRef = useRef<HTMLInputElement>(null);
 
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: keyof Medicine | 'none', direction: 'asc' | 'desc' }>({ key: 'none', direction: 'asc' });
@@ -90,6 +102,7 @@ export default function InventoryPage() {
       sellingPrice: m.sellingPricePerStrip, // MRP
       rackNumber: m.rackNumber,
       composition: m.composition,
+      hsnCode: m.hsnCode,
       gstPercent: m.gstPercent,
       totalTabletsInStock: m.totalTabletsInStock
     })));
@@ -98,6 +111,62 @@ export default function InventoryPage() {
   useEffect(() => {
     fetchMedicines();
   }, [debouncedSearch]);
+
+  // Handle Autocomplete Click Outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
+        setShowSuggestions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleMedicineNameChange = async (val: string) => {
+    setForm({...form, name: val});
+    
+    if (val.length < 2) {
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
+
+    searchTimeoutRef.current = setTimeout(async () => {
+      setLoadingSuggestions(true);
+      try {
+        const res = await fetch(`/api/global-medicines?q=${encodeURIComponent(val)}`);
+        if (res.ok) {
+          const data = await res.json();
+          setSuggestions(data);
+          setShowSuggestions(data.length > 0);
+        }
+      } catch (error) {
+        console.error("Autocomplete fetch error", error);
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    }, 300); // 300ms debounce
+  };
+
+  const handleSuggestionSelect = (suggestion: any) => {
+    setForm({
+      ...form,
+      name: suggestion.name,
+      brand: suggestion.brand || "",
+      composition: suggestion.composition || "",
+    });
+    setShowSuggestions(false);
+    
+    // Jump focus to Batch Number input after brief delay to allow React state to settle
+    setTimeout(() => {
+      if (batchNumberInputRef.current) {
+        batchNumberInputRef.current.focus();
+      }
+    }, 50);
+  };
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -240,14 +309,48 @@ export default function InventoryPage() {
         <div className="bg-card p-6 rounded-xl border border-border shadow-sm animate-in fade-in slide-in-from-top-4">
           <h3 className="font-semibold text-foreground mb-4">{editingId ? "Edit Medicine" : "New Medicine Details"}</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 relative" ref={autocompleteRef}>
               <label className="text-xs font-semibold text-muted-foreground uppercase">Medicine Name</label>
-              <input 
-                placeholder="e.g. Dolo 650" 
-                value={form.name}
-                onChange={e => setForm({...form, name: e.target.value})}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
-              />
+              <div className="relative">
+                <input 
+                  placeholder="e.g. Dolo 650" 
+                  value={form.name}
+                  onChange={e => handleMedicineNameChange(e.target.value)}
+                  onFocus={() => {
+                    if (suggestions.length > 0) setShowSuggestions(true);
+                  }}
+                  className="w-full px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                  autoComplete="off"
+                />
+                {loadingSuggestions && (
+                  <div className="absolute right-3 top-2.5">
+                    <Loader2 size={16} className="animate-spin text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              
+              <AnimatePresence>
+                {showSuggestions && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                    className="absolute z-50 top-[calc(100%+4px)] left-0 w-[150%] sm:w-[200%] bg-card border border-border rounded-xl shadow-xl overflow-hidden max-h-64 overflow-y-auto"
+                  >
+                    {suggestions.map((s, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => handleSuggestionSelect(s)}
+                        className="w-full text-left px-4 py-3 hover:bg-secondary border-b border-border/50 last:border-0 transition-colors flex flex-col items-start gap-1"
+                      >
+                        <div className="flex justify-between w-full items-center">
+                          <span className="font-semibold text-sm text-foreground">{s.name}</span>
+                          <span className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded-full">{s.brand}</span>
+                        </div>
+                        <span className="text-xs text-muted-foreground line-clamp-1 break-all">{s.composition}</span>
+                      </button>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase">Brand</label>
@@ -261,6 +364,7 @@ export default function InventoryPage() {
             <div className="flex flex-col gap-2">
               <label className="text-xs font-semibold text-muted-foreground uppercase">Batch Number</label>
               <input 
+                ref={batchNumberInputRef}
                 placeholder="e.g. BATCH123" 
                 value={form.batchNumber}
                 onChange={e => setForm({...form, batchNumber: e.target.value})}
@@ -282,6 +386,15 @@ export default function InventoryPage() {
                 placeholder="e.g. Paracetamol 500mg" 
                 value={form.composition}
                 onChange={e => setForm({...form, composition: e.target.value})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">HSN Code</label>
+              <input 
+                placeholder="e.g. 3004" 
+                value={form.hsnCode}
+                onChange={e => setForm({...form, hsnCode: e.target.value})}
                 className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
               />
             </div>

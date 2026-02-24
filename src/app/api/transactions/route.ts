@@ -44,7 +44,7 @@ export async function GET(request: Request) {
         if (medicine && item.sellingPrice !== undefined && item.qty !== undefined) {
           // Calculate profit per unit
           const sellingPrice = item.sellingPrice || 0;
-          const buyingPrice = medicine.buyingPrice || 0;
+          const buyingPrice = medicine.buyingPricePerStrip || 0;
           const qty = item.qty || 0;
 
           // Calculate profit per unit

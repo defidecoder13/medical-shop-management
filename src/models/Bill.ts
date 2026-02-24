@@ -3,7 +3,10 @@ import mongoose, { Schema } from "mongoose";
 const BillItemSchema = new Schema(
   {
     name: String,
+    brand: String,
+    expiryDate: Date,
     batchNumber: String,
+    hsnCode: String,
     unitType: { type: String, enum: ["strip", "tablet"] },
     qty: Number,
     sellingPrice: Number, // MRP at time of sale

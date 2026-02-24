@@ -38,6 +38,7 @@ export async function GET(req: Request) {
       sellingPricePerStrip: med.sellingPricePerStrip || med.mrp || med.sellingPrice || 0,
       rackNumber: med.rackNumber || "",
       composition: med.composition || "",
+      hsnCode: med.hsnCode || "",
       stock: med.stock || 0,
     }));
 
@@ -78,6 +79,7 @@ export async function POST(req: Request) {
       gstPercent,
       rackNumber, // New
       composition, // New
+      hsnCode, // HSN
     } = body;
 
     if (
@@ -130,6 +132,7 @@ export async function POST(req: Request) {
       gstPercent,
       rackNumber: rackNumber || "",
       composition: composition || "",
+      hsnCode: hsnCode || "3004",
     });
 
     return NextResponse.json(medicine);
@@ -218,6 +221,7 @@ export async function PUT(req: Request) {
 
     if (body.rackNumber !== undefined) med.rackNumber = body.rackNumber;
     if (body.composition !== undefined) med.composition = body.composition;
+    if (body.hsnCode !== undefined) med.hsnCode = body.hsnCode;
 
     if (typeof body.gstPercent === "number")
       med.gstPercent = body.gstPercent;

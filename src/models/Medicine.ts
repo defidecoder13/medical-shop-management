@@ -20,6 +20,7 @@ const MedicineSchema = new mongoose.Schema(
     sellingPricePerStrip: { type: Number, required: true }, // MRP (New Field)
     rackNumber: { type: String }, // New Field
     composition: { type: String }, // Generic Name / Salt
+    hsnCode: { type: String }, // HSN Code
     gstPercent: { type: Number, default: 5 },
   },
   { timestamps: true }

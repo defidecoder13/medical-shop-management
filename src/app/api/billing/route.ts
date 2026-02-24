@@ -85,6 +85,9 @@ export async function POST(req: Request) {
       billItems.push({
         name: medicine.name, // Take from DB for absolute certainty
         batchNumber: medicine.batchNumber, // Take from DB for absolute certainty
+        brand: medicine.brand, // For Short MFG
+        expiryDate: medicine.expiryDate, // For Exp.
+        hsnCode: medicine.hsnCode, // HSN
         unitType: item.unitType,
         qty: item.qty,
         sellingPrice: item.sellingPrice,
