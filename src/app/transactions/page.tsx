@@ -76,8 +76,7 @@ export default function TransactionsPage() {
   useEffect(() => {
     const { start, end } = getDateRange(dateFilter);
     setLoading(true);
-    fetch(`/api/transactions?startDate=${start.toISOString()}&endDate=${end.toISOString()}`)
-      .then((res) => res.json())
+    apiClient.get(`/api/transactions?startDate=${start.toISOString()}&endDate=${end.toISOString()}`)
       .then((data) => {
         if (Array.isArray(data)) {
           setTransactions(data);
@@ -280,8 +279,17 @@ export default function TransactionsPage() {
               {filteredTransactions.map((t) => (
                 <tr key={t._id} className="hover:bg-muted/50 transition-colors group">
                   <td className="px-6 py-4">
-                    <div className="text-sm font-medium text-foreground">
-                      {new Date(t.createdAt).toLocaleDateString()}
+                    <div className="flex items-center gap-2">
+                       <div className="text-sm font-medium text-foreground">
+                         {new Date(t.createdAt).toLocaleDateString()}
+                       </div>
+                       {/* @ts-ignore - isUnsynced is custom injected property for offline items */}
+                       {t.isUnsynced && (
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
+                             <CheckCircle2 size={10} />
+                             Unsynced
+                          </span>
+                       )}
                     </div>
                     <div className="text-xs text-muted-foreground">
                       {new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

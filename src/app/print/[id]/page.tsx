@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { apiClient } from "@/src/lib/apiClient";
 
 type BillItem = {
   name: string;
@@ -51,16 +52,9 @@ function PrintInvoiceContent() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [billRes, settingsRes] = await Promise.all([
-          fetch(`/api/billing/${id}`),
-          fetch(`/api/settings`)
-        ]);
-
-        if (!billRes.ok || !settingsRes.ok) throw new Error("Failed to fetch data");
-
         const [billData, settingsData] = await Promise.all([
-          billRes.json(),
-          settingsRes.json()
+          apiClient.get(`/api/billing/${id}`),
+          apiClient.get(`/api/settings`)
         ]);
 
         setBill(billData);

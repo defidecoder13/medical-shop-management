@@ -44,8 +44,7 @@ export default function TransactionDetailsPage() {
   useEffect(() => {
     if (!id) return;
 
-    fetch(`/api/transactions/${id}`)
-      .then((res) => res.json())
+    apiClient.get(`/api/transactions/${id}`)
       .then((data) => {
         setBill(data);
         setLoading(false);

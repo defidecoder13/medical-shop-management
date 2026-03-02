@@ -23,6 +23,7 @@ import { Separator } from "@/src/components/ui/separator";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
+import { setApiCache } from "@/src/lib/localDb";
 
 type Medicine = {
   _id: string;
@@ -287,7 +288,7 @@ function BillingContent() {
     setLoading(true);
 
     try {
-      const data = await apiClient.post("/api/billing", {
+      const payload = {
         items: cart.flatMap((c) => {
           const items = [];
           if (c.stripQty > 0 && typeof c.stripSellingPrice === 'number') {
@@ -315,7 +316,61 @@ function BillingContent() {
         discountPercent: dp,
         gstEnabled: gstEnabled, // Send toggle status
         printInvoice: false, // Never print from here
-      });
+      };
+
+      const data = await apiClient.post("/api/billing", payload);
+
+      // Construct Mock transaction for offline or use real data for online caching
+      let txToCache;
+      
+      if (data.offlineQueued && data._id) {
+         // Reconstruct the transaction locally for offline printing
+         const processedItems = payload.items.map(item => ({
+            ...item,
+            total: item.qty * item.sellingPrice
+         }));
+         
+         txToCache = {
+            _id: data._id,
+            createdAt: new Date().toISOString(),
+            subTotal: subTotal,
+            discountPercent: dp,
+            discountAmount: discountAmount,
+            gstPercent: gstPercent,
+            gstEnabled: gstEnabled,
+            gstAmount: gstEnabled ? (subTotal - discountAmount) * (gstPercent / 100) : 0,
+            grandTotal: grandTotal,
+            items: processedItems,
+            printInvoice: false,
+            isUnsynced: true // Custom flag strictly for UI display
+         };
+      } else if (data._id) {
+         txToCache = {
+             ...data,
+             isUnsynced: false
+         };
+      }
+
+      if (txToCache && data._id) {
+         // Inject the transaction into the local cache for immediate offline viewing/printing
+         await setApiCache(`/api/billing/${data._id}`, txToCache);
+         await setApiCache(`/api/transactions/${data._id}`, txToCache);
+         
+         // Try to inject it into the latest generic transactions cache list so it appears in the table offline
+         try {
+             const now = new Date();
+             const start = new Date(); start.setMonth(now.getMonth() - 1);
+             const url1m = `/api/transactions?startDate=${start.toISOString()}&endDate=${now.toISOString()}`;
+             
+             // Dynamic fetch from idb
+             const idbData = await import("@/src/lib/localDb").then(m => m.getApiCache(url1m));
+             if (idbData && Array.isArray(idbData)) {
+                 await import("@/src/lib/localDb").then(m => m.setApiCache(url1m, [txToCache, ...idbData]));
+             }
+         } catch (e) {
+             console.warn("Failed to inject to list cache", e);
+         }
+      }
 
       setLoading(false);
 
@@ -323,12 +378,19 @@ function BillingContent() {
       localStorage.removeItem('medishop_cart');
       setSearch("");
       setDiscountPercent("");
-      // Success popup logic - using the existing message state for now, 
-      // user requested "success poppup", the current implementation uses a top-right toast-like message.
-      // I will stick to the existing message system but ensure the text matches the request.
-      setMessage({text: data.offlineQueued ? "Bill queued for sync" : "Bill generated successfully", type: "success"});
-
+      setMessage({text: data.offlineQueued ? "Bill saved offline (Unsynced)" : "Bill generated successfully", type: "success"});
+      
       setTimeout(() => setMessage(null), 3000);
+      
+      // Prompt for printing
+      if (data._id) {
+         // Small delay so the success message renders before blocking the thread with confirm
+         setTimeout(() => {
+            if (window.confirm("Bill generated. Do you want to print the invoice now?")) {
+               window.open(`/print/${data._id}`, '_blank');
+            }
+         }, 100);
+      }
     } catch (err: any) {
       setLoading(false);
       setMessage({text: err.message || "An unexpected error occurred", type: "error"});
