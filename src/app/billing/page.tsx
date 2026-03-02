@@ -358,9 +358,7 @@ function BillingContent() {
          
          // Try to inject it into the latest generic transactions cache list so it appears in the table offline
          try {
-             const now = new Date();
-             const start = new Date(); start.setMonth(now.getMonth() - 1);
-             const url1m = `/api/transactions?startDate=${start.toISOString()}&endDate=${now.toISOString()}`;
+             const url1m = `/api/transactions?range=1m`;
              
              // Dynamic fetch from idb
              const idbData = await import("@/src/lib/localDb").then(m => m.getApiCache(url1m));

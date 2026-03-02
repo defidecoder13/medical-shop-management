@@ -60,23 +60,9 @@ export default function TransactionsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState<"1d" | "7d" | "1m">("1m");
 
-  const getDateRange = (filter: string) => {
-    const end = new Date();
-    const start = new Date();
-    if (filter === "1d") {
-      start.setHours(0, 0, 0, 0);
-    } else if (filter === "7d") {
-      start.setDate(end.getDate() - 7);
-    } else if (filter === "1m") {
-      start.setMonth(end.getMonth() - 1);
-    }
-    return { start, end };
-  };
-
   useEffect(() => {
-    const { start, end } = getDateRange(dateFilter);
     setLoading(true);
-    apiClient.get(`/api/transactions?startDate=${start.toISOString()}&endDate=${end.toISOString()}`)
+    apiClient.get(`/api/transactions?range=${dateFilter}`)
       .then((data) => {
         if (Array.isArray(data)) {
           setTransactions(data);

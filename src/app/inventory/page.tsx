@@ -90,7 +90,7 @@ export default function InventoryPage() {
 
   const fetchMedicines = async () => {
     try {
-      const data = await apiClient.get(`/api/inventory?q=${debouncedSearch}&_t=${Date.now()}`);
+      const data = await apiClient.get(`/api/inventory?q=${debouncedSearch}`);
       setMedicines(data.map((m: any) => ({
         _id: m._id,
         name: m.name,

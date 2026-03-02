@@ -8,6 +8,7 @@ import {
   Package, 
   AlertOctagon 
 } from "lucide-react";
+import { apiClient } from "@/src/lib/apiClient";
 
 import { StatsCard } from "@/src/components/dashboard/stats-card";
 import { SalesChart } from "@/src/components/dashboard/sales-chart";
@@ -39,9 +40,8 @@ export default function Home() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const res = await fetch(`/api/dashboard-analytics?range=${chartRange}`, { cache: 'no-store' });
-        if (res.ok) {
-          const analytics = await res.json();
+        const analytics = await apiClient.get(`/api/dashboard-analytics?range=${chartRange}`);
+        if (analytics) {
           setData(analytics);
         }
       } catch (error) {

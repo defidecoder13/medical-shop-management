@@ -13,9 +13,23 @@ export async function GET(request: Request) {
     const limit = searchParams.get("limit");
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
+    const range = searchParams.get("range");
 
     const filter: any = {};
-    if (startDate || endDate) {
+    if (range) {
+      const end = new Date();
+      const start = new Date();
+      if (range === "1d") {
+        start.setHours(0, 0, 0, 0);
+      } else if (range === "7d") {
+        start.setDate(end.getDate() - 7);
+      } else if (range === "1m") {
+        start.setMonth(end.getMonth() - 1);
+      }
+      if (range !== "all") {
+        filter.createdAt = { $gte: start, $lte: end };
+      }
+    } else if (startDate || endDate) {
       filter.createdAt = {};
       if (startDate) filter.createdAt.$gte = new Date(startDate);
       if (endDate) filter.createdAt.$lte = new Date(endDate);
