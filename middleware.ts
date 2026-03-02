@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verify } from "jsonwebtoken";
+import { jwtVerify } from "jose";
 
 // Define protected paths
 const protectedPaths = [
@@ -18,7 +18,7 @@ const protectedPaths = [
   /^\/api\/transactions/,
 ];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // Check if the current path is protected
   const isProtected = protectedPaths.some((path) => path.test(request.nextUrl.pathname));
 
@@ -36,8 +36,9 @@ export function middleware(request: NextRequest) {
     }
 
     try {
-      // Verify the token
-      verify(token, process.env.JWT_SECRET || "fallback_secret_key");
+      // Verify the token using jose
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET || "fallback_secret_key");
+      await jwtVerify(token, secret);
       // Token is valid, allow access
     } catch (error) {
       // If API route, return 401
@@ -54,7 +55,8 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get("auth_token")?.value;
     if (token) {
       try {
-        verify(token, process.env.JWT_SECRET || "fallback_secret_key");
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET || "fallback_secret_key");
+        await jwtVerify(token, secret);
         // If valid token exists, redirect to dashboard
         return NextResponse.redirect(new URL("/", request.url));
       } catch (error) {

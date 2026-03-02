@@ -22,6 +22,7 @@ import Link from "next/link";
 import { Separator } from "@/src/components/ui/separator";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiClient } from "@/src/lib/apiClient";
 
 type Medicine = {
   _id: string;
@@ -102,8 +103,8 @@ function BillingContent() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) router.push('/login');
+        const data = await apiClient.get('/api/auth/check');
+        if (!data) router.push('/login');
       } catch {
         router.push('/login');
       }
@@ -117,14 +118,12 @@ function BillingContent() {
       processedAddId.current = addId; // Mark as processed immediately
       
       const fetchAndAdd = async () => {
-        try {
+          try {
           // Clear the param immediately to prevent any double-invocation issues
           router.replace('/billing');
 
-          const res = await fetch(`/api/inventory/${addId}`);
-          if (res.ok) {
-            const med = await res.json();
-            
+          const med = await apiClient.get(`/api/inventory/${addId}`);
+          if (med) {
             // Check usage using the ref to avoid stale closures or state logic issues
             const currentCart = cartRef.current;
             const exists = currentCart.find(c => c.medicineId === med._id);
@@ -173,17 +172,16 @@ function BillingContent() {
       setMedicines([]);
       return;
     }
-    fetch(`/api/inventory?q=${debouncedSearch}`)
-      .then((res) => res.json())
-      .then(setMedicines);
+    apiClient.get(`/api/inventory?q=${debouncedSearch}`)
+      .then(setMedicines)
+      .catch((err) => console.error(err));
   }, [debouncedSearch]);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const res = await fetch('/api/settings');
-        if (res.ok) {
-          const settings = await res.json();
+        const settings = await apiClient.get('/api/settings');
+        if (settings) {
           // Logic: Default Enabled if settings say so, but user can toggle later.
           setGstEnabled(settings.gstEnabled || false);
           setGstPercent(settings.defaultGstPercent || 0);
@@ -289,59 +287,51 @@ function BillingContent() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/billing", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: cart.flatMap((c) => {
-            const items = [];
-            if (c.stripQty > 0 && typeof c.stripSellingPrice === 'number') {
-              items.push({
-                medicineId: c.medicineId,
-                name: c.name,
-                batchNumber: c.batchNumber,
-                unitType: 'strip',
-                qty: c.stripQty,
-                sellingPrice: c.stripSellingPrice,
-              });
-            }
-            if (c.tabletQty > 0 && typeof c.tabletSellingPrice === 'number') {
-              items.push({
-                medicineId: c.medicineId,
-                name: c.name,
-                batchNumber: c.batchNumber,
-                unitType: 'tablet',
-                qty: c.tabletQty,
-                sellingPrice: c.tabletSellingPrice,
-              });
-            }
-            return items;
-          }),
-          discountPercent: dp,
-          gstEnabled: gstEnabled, // Send toggle status
-          printInvoice: false, // Never print from here
+      const data = await apiClient.post("/api/billing", {
+        items: cart.flatMap((c) => {
+          const items = [];
+          if (c.stripQty > 0 && typeof c.stripSellingPrice === 'number') {
+            items.push({
+              medicineId: c.medicineId,
+              name: c.name,
+              batchNumber: c.batchNumber,
+              unitType: 'strip',
+              qty: c.stripQty,
+              sellingPrice: c.stripSellingPrice,
+            });
+          }
+          if (c.tabletQty > 0 && typeof c.tabletSellingPrice === 'number') {
+            items.push({
+              medicineId: c.medicineId,
+              name: c.name,
+              batchNumber: c.batchNumber,
+              unitType: 'tablet',
+              qty: c.tabletQty,
+              sellingPrice: c.tabletSellingPrice,
+            });
+          }
+          return items;
         }),
+        discountPercent: dp,
+        gstEnabled: gstEnabled, // Send toggle status
+        printInvoice: false, // Never print from here
       });
 
-      const data = await res.json();
       setLoading(false);
 
-      if (!res.ok) {
-        setMessage({text: data.error || "Billing failed", type: "error"});
-      } else {
-        setCart([]);
-        localStorage.removeItem('medishop_cart');
-        setSearch("");
-        setDiscountPercent("");
-        // Success popup logic - using the existing message state for now, 
-        // user requested "success poppup", the current implementation uses a top-right toast-like message.
-        // I will stick to the existing message system but ensure the text matches the request.
-        setMessage({text: "Bill generated successfully", type: "success"});
-      }
+      setCart([]);
+      localStorage.removeItem('medishop_cart');
+      setSearch("");
+      setDiscountPercent("");
+      // Success popup logic - using the existing message state for now, 
+      // user requested "success poppup", the current implementation uses a top-right toast-like message.
+      // I will stick to the existing message system but ensure the text matches the request.
+      setMessage({text: data.offlineQueued ? "Bill queued for sync" : "Bill generated successfully", type: "success"});
+
       setTimeout(() => setMessage(null), 3000);
-    } catch {
+    } catch (err: any) {
       setLoading(false);
-      setMessage({text: "An unexpected error occurred", type: "error"});
+      setMessage({text: err.message || "An unexpected error occurred", type: "error"});
       setTimeout(() => setMessage(null), 3000);
     }
   };

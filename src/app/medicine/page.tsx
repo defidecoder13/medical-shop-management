@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { apiClient } from "@/src/lib/apiClient";
 import * as XLSX from "xlsx";
 import { 
   Package, 
@@ -52,8 +53,7 @@ export default function MedicineListPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    fetch("/api/inventory")
-      .then((res) => res.json())
+    apiClient.get("/api/inventory")
       .then((data) => {
         setMedicines(data);
         setLoading(false);

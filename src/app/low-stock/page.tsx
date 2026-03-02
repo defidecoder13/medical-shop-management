@@ -18,6 +18,7 @@ import {
   Truck
 } from "lucide-react";
 import Link from "next/link";
+import { apiClient } from "@/src/lib/apiClient";
 
 interface Medicine {
   _id: string;
@@ -34,8 +35,8 @@ export default function LowStockPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) {
+        const data = await apiClient.get('/api/auth/check');
+        if (!data) {
           router.push('/login');
         }
       } catch (error) {
@@ -51,9 +52,8 @@ export default function LowStockPage() {
   useEffect(() => {
     const fetchLowStockData = async () => {
       try {
-        const response = await fetch('/api/inventory');
-        if (response.ok) {
-          const data = await response.json();
+        const data = await apiClient.get('/api/inventory');
+        if (data && Array.isArray(data)) {
           // Filter for medicines with stock <= 10 (low stock threshold)
           const lowStockItems = data.filter((med: Medicine) => med.stock <= 10);
           setLowStockMedicines(lowStockItems);

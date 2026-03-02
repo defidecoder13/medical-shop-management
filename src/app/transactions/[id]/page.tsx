@@ -15,6 +15,7 @@ import {
   Tag
 } from "lucide-react";
 import Link from "next/link";
+import { apiClient } from "@/src/lib/apiClient";
 
 export default function TransactionDetailsPage() {
   const params = useParams();
@@ -23,8 +24,8 @@ export default function TransactionDetailsPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) {
+        const data = await apiClient.get('/api/auth/check');
+        if (!data) {
           router.push('/login');
         }
       } catch (error) {

@@ -1,0 +1,102 @@
+import { getApiCache, setApiCache, addToSyncQueue } from "./localDb";
+
+export const apiClient = {
+    /**
+     * GET Request wrapper
+     */
+    async get(url: string, options: RequestInit = {}) {
+        const isOnline = navigator.onLine;
+
+        if (isOnline) {
+            try {
+                const response = await fetch(url, options);
+                if (!response.ok) throw new Error("Network response was not ok");
+
+                const data = await response.json();
+
+                // Cache successful GET request
+                await setApiCache(url, data);
+
+                return data;
+            } catch (error) {
+                console.warn(`Network fetch failed for ${url}, falling back to cache.`, error);
+            }
+        }
+
+        // Offline or Network Failed -> Fallback to Cache
+        console.log(`[Offline Read] Attempting to load from cache: ${url}`);
+        const cachedData = await getApiCache(url);
+        if (cachedData) {
+            return cachedData;
+        }
+
+        throw new Error(`Offline and no cached data available for ${url}`);
+    },
+
+    /**
+     * POST Request wrapper
+     */
+    async post(url: string, body: any, options: RequestInit = {}) {
+        return this._mutate(url, "POST", body, options);
+    },
+
+    /**
+     * PUT Request wrapper
+     */
+    async put(url: string, body: any, options: RequestInit = {}) {
+        return this._mutate(url, "PUT", body, options);
+    },
+
+    /**
+     * DELETE Request wrapper
+     */
+    async delete(url: string, body?: any, options: RequestInit = {}) {
+        return this._mutate(url, "DELETE", body, options);
+    },
+
+    /**
+     * Internal Mutation Handler
+     */
+    async _mutate(
+        url: string,
+        method: "POST" | "PUT" | "DELETE" | "PATCH",
+        body: any,
+        options: RequestInit = {}
+    ) {
+        const isOnline = navigator.onLine;
+
+        if (isOnline) {
+            try {
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        "Content-Type": "application/json",
+                        ...options.headers,
+                    },
+                    body: body ? JSON.stringify(body) : undefined,
+                    ...options,
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `Request failed with status ${response.status}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                console.warn(`[Network Write Failed] Queuing ${method} ${url} for sync.`, error);
+            }
+        }
+
+        // Offline or Network Failed -> Queue the mutation
+        console.log(`[Offline Write] Queuing ${method} operation for ${url}`);
+        await addToSyncQueue(url, method, body);
+
+        // Return a mocked success response for optimistic UI updates
+        return {
+            success: true,
+            offlineQueued: true,
+            _id: body?._id || `temp-${Date.now()}` // Mock ID for optimistic updates
+        };
+    }
+};

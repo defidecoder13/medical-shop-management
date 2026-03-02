@@ -17,6 +17,7 @@ import {
   CheckCircle2,
   FileText
 } from "lucide-react";
+import { apiClient } from "@/src/lib/apiClient";
 
 type Transaction = {
   _id: string;
@@ -45,8 +46,8 @@ export default function TransactionsPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) router.push('/login');
+        const data = await apiClient.get('/api/auth/check');
+        if (!data) router.push('/login');
       } catch {
         router.push('/login');
       }
@@ -80,12 +81,22 @@ export default function TransactionsPage() {
       .then((data) => {
         if (Array.isArray(data)) {
           setTransactions(data);
+          // Ensure robust sorting (newest first based on generic ISO string or timestamp)
+          // If your schema uses MongoDB ObjectIds, they generally sort chronologically, 
+          // but explicit date sort is safer:
+          let sortedData = [...data].sort((a: Transaction, b: Transaction) => {
+             const dateA = new Date(a.createdAt).getTime();
+             const dateB = new Date(b.createdAt).getTime();
+             return dateB - dateA; // Descending
+          });
+          setTransactions(sortedData);
         } else {
           setTransactions([]);
         }
         setLoading(false);
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("Failed to fetch transactions:", error);
         setTransactions([]);
         setLoading(false);
       });

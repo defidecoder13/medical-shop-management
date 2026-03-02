@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiClient } from "@/src/lib/apiClient";
 
 type Medicine = {
   _id?: string;
@@ -88,24 +89,27 @@ export default function InventoryPage() {
   }, [router]);
 
   const fetchMedicines = async () => {
-    const res = await fetch(`/api/inventory?q=${debouncedSearch}&_t=${Date.now()}`);
-    const data = await res.json();
-    setMedicines(data.map((m: any) => ({
-      _id: m._id,
-      name: m.name,
-      brand: m.brand,
-      batchNumber: m.batchNumber,
-      expiryDate: m.expiryDate,
-      stock: m.stock,
-      tabletsPerStrip: m.tabletsPerStrip,
-      buyingPrice: m.buyingPricePerStrip, // Cost
-      sellingPrice: m.sellingPricePerStrip, // MRP
-      rackNumber: m.rackNumber,
-      composition: m.composition,
-      hsnCode: m.hsnCode,
-      gstPercent: m.gstPercent,
-      totalTabletsInStock: m.totalTabletsInStock
-    })));
+    try {
+      const data = await apiClient.get(`/api/inventory?q=${debouncedSearch}&_t=${Date.now()}`);
+      setMedicines(data.map((m: any) => ({
+        _id: m._id,
+        name: m.name,
+        brand: m.brand,
+        batchNumber: m.batchNumber,
+        expiryDate: m.expiryDate,
+        stock: m.stock,
+        tabletsPerStrip: m.tabletsPerStrip,
+        buyingPrice: m.buyingPricePerStrip, // Cost
+        sellingPrice: m.sellingPricePerStrip, // MRP
+        rackNumber: m.rackNumber,
+        composition: m.composition,
+        hsnCode: m.hsnCode,
+        gstPercent: m.gstPercent,
+        totalTabletsInStock: m.totalTabletsInStock
+      })));
+    } catch (error) {
+      console.error("Failed to fetch medicines", error);
+    }
   };
 
   useEffect(() => {
@@ -137,12 +141,9 @@ export default function InventoryPage() {
     searchTimeoutRef.current = setTimeout(async () => {
       setLoadingSuggestions(true);
       try {
-        const res = await fetch(`/api/global-medicines?q=${encodeURIComponent(val)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setSuggestions(data);
-          setShowSuggestions(data.length > 0);
-        }
+        const data = await apiClient.get(`/api/global-medicines?q=${encodeURIComponent(val)}`);
+        setSuggestions(data);
+        setShowSuggestions(data.length > 0);
       } catch (error) {
         console.error("Autocomplete fetch error", error);
       } finally {
@@ -181,31 +182,27 @@ export default function InventoryPage() {
     };
 
     try {
-      const res = await fetch("/api/inventory", {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(editingId ? { ...payload, _id: editingId } : payload),
-      });
-
-      const data = await res.json();
-      setLoading(false);
-
-      if (!res.ok) {
-        setMessage({ text: data.error || "Something went wrong", type: 'error' });
+      let data;
+      if (editingId) {
+        data = await apiClient.put("/api/inventory", { ...payload, _id: editingId });
       } else {
-        setMessage({ 
-          text: editingId ? "Medicine updated successfully" : "Medicine added successfully", 
-          type: 'success' 
-        });
-        setForm(emptyMedicine);
-        setEditingId(null);
-        setShowForm(false);
-        fetchMedicines();
+        data = await apiClient.post("/api/inventory", payload);
       }
-      setTimeout(() => setMessage(null), 3000);
-    } catch {
       setLoading(false);
-      setMessage({ text: "An error occurred", type: 'error' });
+
+      setMessage({ 
+        text: data.offlineQueued ? (editingId ? "Update queued for sync" : "Addition queued for sync") : (editingId ? "Medicine updated successfully" : "Medicine added successfully"), 
+        type: 'success' 
+      });
+      setForm(emptyMedicine);
+      setEditingId(null);
+      setShowForm(false);
+      fetchMedicines();
+
+      setTimeout(() => setMessage(null), 3000);
+    } catch (err: any) {
+      setLoading(false);
+      setMessage({ text: err.message || "An error occurred", type: 'error' });
     }
   };
 
@@ -222,19 +219,12 @@ export default function InventoryPage() {
     if (window.confirm("Are you sure you want to permanently delete this medicine? This action cannot be undone.")) {
       setLoading(true);
       try {
-        const res = await fetch(`/api/inventory/${id}`, {
-          method: "DELETE",
-        });
+        const data = await apiClient.delete(`/api/inventory/${id}`);
 
-        if (res.ok) {
-          setMessage({ text: "Medicine deleted permanently", type: 'success' });
-          fetchMedicines();
-        } else {
-          const data = await res.json();
-          setMessage({ text: data.error || "Failed to delete", type: 'error' });
-        }
-      } catch (error) {
-        setMessage({ text: "An error occurred", type: 'error' });
+        setMessage({ text: data.offlineQueued ? "Deletion queued for sync" : "Medicine deleted permanently", type: 'success' });
+        fetchMedicines();
+      } catch (error: any) {
+        setMessage({ text: error.message || "Failed to delete", type: 'error' });
       } finally {
         setLoading(false);
         setTimeout(() => setMessage(null), 3000);
