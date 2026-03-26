@@ -27,6 +27,9 @@ type Bill = {
   grandTotal: number;
   gstEnabled: boolean;
   createdAt: string;
+  patientName?: string;
+  patientPhone?: string;
+  doctorName?: string;
 };
 
 type Settings = {
@@ -193,20 +196,33 @@ function PrintInvoiceContent() {
                </div>
 
                {/* Right: Invoice/Patient Details */}
-               <div className="w-[35%] text-right flex flex-col items-end text-[10px]">
-                  <div className="grid grid-cols-[auto_auto] gap-x-3 gap-y-1 text-left w-full max-w-[200px]">
+               <div className="w-[40%] flex flex-col items-end text-[10px]">
+                  <div className="grid grid-cols-[auto_auto] gap-x-3 gap-y-1 text-left w-full max-w-[220px]">
                      <span className="font-semibold text-gray-500 uppercase">Invoice #</span>
                      <span className="font-bold mono-font text-[11px] text-right">{bill._id.slice(-8).toUpperCase()}</span>
                      
                      <span className="font-semibold text-gray-500 uppercase">Date</span>
                      <span className="font-medium mono-font text-right">
-                        {new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} {new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
                      </span>
                      
-                     <span className="font-semibold text-gray-500 uppercase">Time</span>
-                     <span className="font-medium mono-font text-right">
-                        {new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
-                     </span>
+                     {bill.patientName && (
+                        <>
+                           <span className="font-semibold text-gray-500 uppercase pt-1">Patient</span>
+                           <span className="font-bold text-[10px] text-right pt-1 truncate">
+                              {bill.patientName} {bill.patientPhone ? `(${bill.patientPhone})` : ''}
+                           </span>
+                        </>
+                     )}
+
+                     {bill.doctorName && (
+                        <>
+                           <span className="font-semibold text-gray-500 uppercase">Doctor</span>
+                           <span className="font-bold text-[10px] text-right truncate">
+                              Dr. {bill.doctorName.replace(/^Dr\.?\s*/i, '')}
+                           </span>
+                        </>
+                     )}
                   </div>
                </div>
             </div>

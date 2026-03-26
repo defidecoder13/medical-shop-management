@@ -15,7 +15,15 @@ export async function POST(req: Request) {
   try {
     await connectDB();
 
-    const { items = [], printInvoice = false, discountPercent = 0, gstEnabled: reqGstEnabled } = await req.json();
+    const {
+      items = [],
+      printInvoice = false,
+      discountPercent = 0,
+      gstEnabled: reqGstEnabled,
+      patientName,
+      patientPhone,
+      doctorName
+    } = await req.json();
 
     if (!items || items.length === 0) {
       return NextResponse.json(
@@ -120,6 +128,9 @@ export async function POST(req: Request) {
       grandTotal: roundedGrandTotal,
       gstEnabled,
       printInvoice,
+      patientName,
+      patientPhone,
+      doctorName,
     });
 
     return NextResponse.json(bill);

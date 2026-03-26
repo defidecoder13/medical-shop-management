@@ -69,6 +69,9 @@ function BillingContent() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discountPercent, setDiscountPercent] = useState<number | "">("");
+  const [patientName, setPatientName] = useState("");
+  const [patientPhone, setPatientPhone] = useState("");
+  const [doctorName, setDoctorName] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   
@@ -315,6 +318,9 @@ function BillingContent() {
         }),
         discountPercent: dp,
         gstEnabled: gstEnabled, // Send toggle status
+        patientName,
+        patientPhone,
+        doctorName,
         printInvoice: false, // Never print from here
       };
 
@@ -342,6 +348,9 @@ function BillingContent() {
             grandTotal: grandTotal,
             items: processedItems,
             printInvoice: false,
+            patientName,
+            patientPhone,
+            doctorName,
             isUnsynced: true // Custom flag strictly for UI display
          };
       } else if (data._id) {
@@ -376,6 +385,9 @@ function BillingContent() {
       localStorage.removeItem('medishop_cart');
       setSearch("");
       setDiscountPercent("");
+      setPatientName("");
+      setPatientPhone("");
+      setDoctorName("");
       setMessage({text: data.offlineQueued ? "Bill saved offline (Unsynced)" : "Bill generated successfully", type: "success"});
       
       setTimeout(() => setMessage(null), 3000);
@@ -505,64 +517,115 @@ function BillingContent() {
                   <motion.div 
                     key={item.medicineId} 
                     layout
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="p-4 rounded-lg border border-border bg-secondary/20 hover:border-primary/30 transition-all"
+                    className="group relative p-4 rounded-xl border border-border bg-card hover:bg-accent/5 transition-all shadow-sm hover:shadow-md overflow-hidden flex flex-col gap-3"
                   >
-                    <div className="flex justify-between items-start mb-3">
-                      <div>
-                        <div className="font-medium text-foreground text-sm">{item.name}</div>
-                        <div className="flex items-center gap-2 mt-1">
-                          <div className="text-[10px] text-muted-foreground bg-secondary/50 border border-border px-1.5 py-0.5 rounded">
-                            Stock: {item.stock}
-                          </div>
-                          <div className="text-[10px] text-indigo-600 dark:text-indigo-400 font-medium flex items-center gap-1 bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded">
-                            <Package size={10} />
-                            Rack: {item.rackNumber || 'N/A'}
-                          </div>
+                    {/* Left Accent Bar */}
+                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                    <div className="flex justify-between items-start pr-8">
+                      <div className="space-y-1.5">
+                        <div className="font-semibold text-foreground text-[15px] flex items-center gap-2">
+                          {item.name}
+                          {item.stock < 10 && (
+                            <span className="px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-[9px] font-bold uppercase tracking-wider">
+                              Low Stock
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2 text-xs">
+                          <span className="text-muted-foreground/80 font-medium">Batch: <span className="text-foreground">{item.batchNumber}</span></span>
+                          <span className="w-1 h-1 rounded-full bg-border" />
+                          <span className="text-muted-foreground/80 font-medium">
+                            Stock: <span className={item.stock < 10 ? "text-rose-500 font-bold" : "text-foreground"}>{item.stock}</span>
+                          </span>
+                          {item.rackNumber && (
+                            <>
+                              <span className="w-1 h-1 rounded-full bg-border" />
+                              <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded text-[10px] tracking-wide uppercase">
+                                <Package size={12} strokeWidth={2.5} />
+                                Rack {item.rackNumber}
+                              </div>
+                            </>
+                          )}
                         </div>
                       </div>
+
                       <button
                         onClick={() => removeItem(item.medicineId)}
-                        className="text-muted-foreground hover:text-destructive transition-colors p-1"
+                        className="absolute right-3 top-4 text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 p-1.5 rounded-md transition-colors"
+                        title="Remove Item"
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={16} strokeWidth={2} />
                       </button>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Strip */}
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-bold text-muted-foreground w-8">STRIP</label>
-                        <div className="flex-1 flex shadow-sm rounded-md overflow-hidden border border-border">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                      {/* Strip Input */}
+                      <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-secondary/40 border border-border/50">
+                        <div className="flex justify-between items-center px-1">
+                          <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />
+                            Strips
+                          </label>
+                          <span className="text-[11px] font-semibold text-foreground/80 tabular-nums">MRP: ₹{item.stripSellingPrice}/ea</span>
+                        </div>
+                        <div className="relative flex items-center shadow-sm rounded-md overflow-hidden border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all bg-background">
                           <input
                             type="number"
+                            min="0"
                             placeholder="Qty"
-                            className="flex-1 bg-background px-2 py-1 text-xs border-r border-border outline-none text-center text-foreground font-medium focus:bg-accent/50 transition-colors"
+                            className="w-full bg-transparent px-3 py-1.5 text-sm outline-none text-foreground font-semibold placeholder:font-normal placeholder:text-muted-foreground/50 tabular-nums"
                             value={item.stripQty || ''}
                             onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
                           />
-                          <div className="flex-1 bg-secondary px-2 py-1 text-xs outline-none text-muted-foreground flex items-center justify-center">
-                            MRP: ₹{item.stripSellingPrice}
-                          </div>
+                          <AnimatePresence>
+                            {item.stripQty > 0 && typeof item.stripSellingPrice === 'number' && (
+                              <motion.div 
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="absolute right-2 px-1.5 py-0.5 rounded bg-blue-50 text-[10px] font-bold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 pointer-events-none tabular-nums"
+                              >
+                                ₹{(item.stripQty * item.stripSellingPrice).toFixed(2)}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </div>
                       
-                      {/* Tablet */}
-                      <div className="flex items-center gap-2">
-                        <label className="text-[10px] font-bold text-muted-foreground w-8">TAB</label>
-                        <div className="flex-1 flex shadow-sm rounded-md overflow-hidden border border-border">
+                      {/* Tablet Input */}
+                      <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-secondary/40 border border-border/50">
+                        <div className="flex justify-between items-center px-1">
+                          <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5">
+                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                            Tablets
+                          </label>
+                          <span className="text-[11px] font-semibold text-foreground/80 tabular-nums">MRP: ₹{item.tabletSellingPrice}/ea</span>
+                        </div>
+                        <div className="relative flex items-center shadow-sm rounded-md overflow-hidden border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all bg-background">
                           <input
                             type="number"
+                            min="0"
                             placeholder="Qty"
-                            className="flex-1 bg-background px-2 py-1 text-xs border-r border-border outline-none text-center text-foreground font-medium focus:bg-accent/50 transition-colors"
+                            className="w-full bg-transparent px-3 py-1.5 text-sm outline-none text-foreground font-semibold placeholder:font-normal placeholder:text-muted-foreground/50 tabular-nums"
                             value={item.tabletQty || ''}
                             onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
                           />
-                          <div className="flex-1 bg-secondary px-2 py-1 text-xs outline-none text-muted-foreground flex items-center justify-center">
-                            MRP: ₹{item.tabletSellingPrice}
-                          </div>
+                          <AnimatePresence>
+                            {item.tabletQty > 0 && typeof item.tabletSellingPrice === 'number' && (
+                              <motion.div 
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                className="absolute right-2 px-1.5 py-0.5 rounded bg-emerald-50 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 pointer-events-none tabular-nums"
+                              >
+                                ₹{(item.tabletQty * item.tabletSellingPrice).toFixed(2)}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </div>
                       </div>
                     </div>
@@ -581,6 +644,32 @@ function BillingContent() {
               <Calculator size={20} className="text-primary" />
               Bill Summary
             </h2>
+
+            {/* Customer & Prescription Details */}
+            <div className="space-y-3 mb-6 bg-secondary/30 p-4 rounded-lg border border-border/50">
+              <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Customer & Prescription (Optional)</h3>
+              <input 
+                type="text" 
+                placeholder="Patient Name" 
+                value={patientName} 
+                onChange={(e) => setPatientName(e.target.value)} 
+                className="w-full bg-background border border-border px-3 py-2 rounded-md text-sm outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50 text-foreground" 
+              />
+              <input 
+                type="text" 
+                placeholder="Doctor Name" 
+                value={doctorName} 
+                onChange={(e) => setDoctorName(e.target.value)} 
+                className="w-full bg-background border border-border px-3 py-2 rounded-md text-sm outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50 text-foreground" 
+              />
+              <input 
+                type="tel" 
+                placeholder="Patient Phone" 
+                value={patientPhone} 
+                onChange={(e) => setPatientPhone(e.target.value)} 
+                className="w-full bg-background border border-border px-3 py-2 rounded-md text-sm outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50 text-foreground" 
+              />
+            </div>
 
             <div className="space-y-4 text-sm">
               <div className="flex justify-between text-muted-foreground">

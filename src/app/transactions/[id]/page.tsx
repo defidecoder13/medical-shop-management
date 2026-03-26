@@ -12,7 +12,10 @@ import {
   CheckCircle2, 
   Package, 
   Layers, 
-  Tag
+  Tag,
+  Undo2,
+  X,
+  AlertCircle
 } from "lucide-react";
 import Link from "next/link";
 import { apiClient } from "@/src/lib/apiClient";
@@ -40,6 +43,66 @@ export default function TransactionDetailsPage() {
 
   const [bill, setBill] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+
+  // Return Modal State
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [returnItems, setReturnItems] = useState<any[]>([]);
+  const [returnLoading, setReturnLoading] = useState(false);
+  const [returnError, setReturnError] = useState("");
+
+  const openReturnModal = () => {
+     const initialReturnState = bill.items
+        .filter((item: any) => item.qty - (item.returnedQty || 0) > 0)
+        .map((item: any) => ({
+           id: Math.random().toString(), // local unique key
+           name: item.name,
+           batchNumber: item.batchNumber,
+           maxQty: item.qty - (item.returnedQty || 0),
+           returnQty: 0,
+           unitType: item.unitType,
+           unitTotal: item.total / item.qty
+        }));
+     setReturnItems(initialReturnState);
+     setReturnError("");
+     setShowReturnModal(true);
+  };
+
+  const handleReturnSubmit = async () => {
+     const itemsToReturn = returnItems.filter(item => item.returnQty > 0);
+     if (itemsToReturn.length === 0) {
+        setReturnError("Please specify at least one item to return.");
+        return;
+     }
+
+     setReturnLoading(true);
+     setReturnError("");
+
+     try {
+        const payload = {
+           originalBillId: bill._id,
+           returnedItems: itemsToReturn.map(item => ({
+              name: item.name,
+              batchNumber: item.batchNumber,
+              returnQty: Number(item.returnQty)
+           }))
+        };
+
+        const res = await apiClient.post('/api/returns', payload);
+        if (res.error) {
+           setReturnError(res.error);
+        } else {
+           setShowReturnModal(false);
+           setLoading(true);
+           const freshBill = await apiClient.get(`/api/transactions/${id}`);
+           setBill(freshBill);
+           setLoading(false);
+        }
+     } catch (err: any) {
+        setReturnError(err.message || "Failed to process return.");
+     } finally {
+        setReturnLoading(false);
+     }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -99,7 +162,17 @@ export default function TransactionDetailsPage() {
              <span className="font-bold text-sm uppercase tracking-wide">Back to Ledger</span>
            </button>
 
-           <div className="flex items-center gap-3">
+             <div className="flex items-center gap-3">
+             {!bill.isReturn && bill.returnStatus !== 'Full' && (
+               <button
+                 onClick={openReturnModal}
+                 className="flex items-center gap-2 px-5 py-2 bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 dark:bg-rose-900/20 dark:text-rose-400 dark:hover:bg-rose-900/40 rounded-xl font-bold text-xs uppercase tracking-widest transition-all active:scale-95 border border-rose-200 dark:border-rose-900/50"
+               >
+                 <Undo2 className="w-4 h-4" />
+                 Return Items
+               </button>
+             )}
+
              <div className={`px-4 py-2 rounded-xl border font-bold text-xs uppercase tracking-widest flex items-center gap-2 ${
                 bill.printInvoice 
                 ? 'bg-indigo-50 text-indigo-700 border-indigo-100 dark:bg-indigo-900/20 dark:text-indigo-300 dark:border-indigo-800'
@@ -124,20 +197,28 @@ export default function TransactionDetailsPage() {
            
            {/* Invoice Header */}
            <div className="p-8 border-b border-gray-100 dark:border-gray-800 bg-gradient-to-r from-gray-50/50 to-white dark:from-gray-900/50 dark:to-gray-900">
-              <div className="flex flex-col md:flex-row justify-between gap-6">
-                 <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                       <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/40 rounded-2xl flex items-center justify-center">
-                          <Hash className="w-6 h-6 text-blue-600" />
-                       </div>
-                       <div>
-                          <p className="text-xs font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">Transaction ID</p>
-                          <h1 className="text-2xl font-black text-gray-900 dark:text-white font-mono tracking-tight">
-                             {typeof id === 'string' ? id.slice(-8).toUpperCase() : id}
-                          </h1>
-                       </div>
-                    </div>
-                 </div>
+               <div className="flex flex-col md:flex-row justify-between gap-6">
+                  <div className="space-y-4">
+                     <div className="flex items-center gap-3">
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${bill.isReturn ? 'bg-rose-100 dark:bg-rose-900/40' : 'bg-blue-100 dark:bg-blue-900/40'}`}>
+                           {bill.isReturn ? <Undo2 className="w-6 h-6 text-rose-600" /> : <Hash className="w-6 h-6 text-blue-600" />}
+                        </div>
+                        <div>
+                           <p className={`text-xs font-bold uppercase tracking-widest ${bill.isReturn ? 'text-rose-600 dark:text-rose-400' : 'text-blue-600 dark:text-blue-400'}`}>
+                              {bill.isReturn ? 'Credit Note (Return)' : 'Transaction ID'}
+                           </p>
+                           <h1 className="text-2xl font-black text-gray-900 dark:text-white font-mono tracking-tight flex items-center gap-3">
+                              {typeof id === 'string' ? id.slice(-8).toUpperCase() : id}
+                              {bill.returnStatus === 'Full' && (
+                                 <span className="text-[10px] px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-500 rounded-lg uppercase tracking-widest font-bold">Fully Returned</span>
+                              )}
+                              {bill.returnStatus === 'Partial' && (
+                                 <span className="text-[10px] px-2 py-1 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg uppercase tracking-widest font-bold">Partially Returned</span>
+                              )}
+                           </h1>
+                        </div>
+                     </div>
+                  </div>
 
                  <div className="flex items-center gap-8">
                     <div className="space-y-1">
@@ -187,9 +268,16 @@ export default function TransactionDetailsPage() {
                                     </div>
                                  </td>
                                 <td className="px-6 py-4 text-center">
-                                   <span className="font-bold text-gray-900 dark:text-white text-sm">
-                                      {item.qty} <span className="text-gray-400 text-xs font-normal lowercase">{item.unitType}s</span>
-                                   </span>
+                                   <div className="flex flex-col items-center">
+                                      <span className="font-bold text-gray-900 dark:text-white text-sm">
+                                         {item.qty} <span className="text-gray-400 text-xs font-normal lowercase">{item.unitType}s</span>
+                                      </span>
+                                      {item.returnedQty > 0 && (
+                                         <span className="mt-1 text-[10px] font-bold text-rose-500 bg-rose-50 dark:bg-rose-900/30 px-2 py-0.5 rounded-full uppercase">
+                                            {item.returnedQty} Returned
+                                         </span>
+                                      )}
+                                   </div>
                                 </td>
                                 <td className="px-6 py-4 text-right">
                                    <span className="font-medium text-gray-600 dark:text-gray-400 text-sm">
@@ -238,6 +326,98 @@ export default function TransactionDetailsPage() {
 
         </div>
       </div>
+
+      {showReturnModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-900 rounded-3xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50/50 dark:bg-gray-800/20">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-rose-100 dark:bg-rose-900/40 flex items-center justify-center text-rose-600 rounded-xl">
+                  <Undo2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-gray-900 dark:text-white">Process Return</h3>
+                  <p className="text-xs text-gray-500 font-medium">Select quantities to return from this purchase.</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowReturnModal(false)}
+                className="p-2 hover:bg-gray-200 dark:hover:bg-gray-800 rounded-xl transition-colors"
+                disabled={returnLoading}
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 bg-white dark:bg-gray-900">
+              {returnError && (
+                <div className="mb-6 p-4 rounded-xl bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 flex items-start gap-3 text-red-700 dark:text-red-400 text-sm font-medium">
+                  <AlertCircle className="w-5 h-5 shrink-0" />
+                  <p>{returnError}</p>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                {returnItems.map((item, index) => (
+                  <div key={item.id} className="p-4 rounded-2xl border border-gray-100 dark:border-gray-800 flex flex-col sm:flex-row gap-4 justify-between items-start sm:items-center bg-gray-50/30 dark:bg-gray-800/10">
+                    <div>
+                      <p className="font-bold text-gray-900 dark:text-white">{item.name}</p>
+                      <p className="text-xs text-gray-500 uppercase tracking-widest">
+                        Batch: <span className="text-gray-900 dark:text-gray-300">{item.batchNumber}</span> • Max: {item.maxQty} {item.unitType}s
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-3 w-full sm:w-auto">
+                      <div className="flex-1 sm:flex-initial">
+                        <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Return Qty</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max={item.maxQty}
+                          value={item.returnQty === 0 ? '' : item.returnQty}
+                          onChange={(e) => {
+                            let val = parseInt(e.target.value) || 0;
+                            if (val > item.maxQty) val = item.maxQty;
+                            if (val < 0) val = 0;
+                            const newItems = [...returnItems];
+                            newItems[index].returnQty = val;
+                            setReturnItems(newItems);
+                          }}
+                          className="w-full sm:w-24 px-3 py-2 bg-white dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-xl font-mono text-sm focus:ring-2 focus:ring-rose-500 outline-none"
+                          placeholder="0"
+                        />
+                      </div>
+                      <div className="w-24 text-right">
+                         <label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Est. Refund</label>
+                         <p className="font-bold text-gray-900 dark:text-white font-mono">
+                           ₹{(item.unitTotal * item.returnQty).toFixed(2)}
+                         </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="p-6 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/30 flex justify-end gap-3">
+              <button
+                onClick={() => setShowReturnModal(false)}
+                className="px-6 py-2.5 rounded-xl font-bold text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-200 dark:hover:text-white dark:hover:bg-gray-700 transition-colors"
+                disabled={returnLoading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleReturnSubmit}
+                disabled={returnLoading}
+                className="px-6 py-2.5 rounded-xl font-bold text-sm bg-rose-600 hover:bg-rose-700 text-white shadow-lg shadow-rose-600/20 transition-all flex items-center gap-2 disabled:opacity-50"
+              >
+                {returnLoading && <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>}
+                Confirm Return
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -46,6 +46,17 @@ export async function POST(req: Request) {
       path: "/",
     });
 
+    // Set Frontend-accessible cookie for synchronous UI flash prevention
+    response.cookies.set({
+      name: "is_logged_in",
+      value: "1",
+      httpOnly: false,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 86400, // 1 day
+      path: "/",
+    });
+
     return response;
   } catch (error: any) {
     console.error("Login Error:", error);

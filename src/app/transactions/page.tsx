@@ -30,6 +30,7 @@ type Transaction = {
   gstPercent?: number;
   gstEnabled: boolean;
   printInvoice?: boolean;
+  isReturn?: boolean;
   items: Array<{
     name: string;
     batchNumber: string;
@@ -263,10 +264,10 @@ export default function TransactionsPage() {
             </thead>
             <tbody className="divide-y divide-border">
               {filteredTransactions.map((t) => (
-                <tr key={t._id} className="hover:bg-muted/50 transition-colors group">
+                <tr key={t._id} className={`hover:bg-muted/50 transition-colors group ${t.isReturn ? 'bg-red-50/30 dark:bg-red-950/20' : ''}`}>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
-                       <div className="text-sm font-medium text-foreground">
+                       <div className={`text-sm font-medium ${t.isReturn ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
                          {new Date(t.createdAt).toLocaleDateString()}
                        </div>
                        {/* @ts-ignore - isUnsynced is custom injected property for offline items */}
@@ -274,6 +275,11 @@ export default function TransactionsPage() {
                           <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
                              <CheckCircle2 size={10} />
                              Unsynced
+                          </span>
+                       )}
+                       {t.isReturn && (
+                          <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider">
+                             Refund
                           </span>
                        )}
                     </div>
@@ -294,11 +300,11 @@ export default function TransactionsPage() {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <div className="text-sm font-bold text-foreground">
-                      ₹{t.grandTotal.toFixed(2)}
+                    <div className={`text-sm font-bold ${t.isReturn ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
+                      {t.isReturn ? '-' : ''}₹{Math.abs(t.grandTotal).toFixed(2)}
                     </div>
                     <div className="text-[10px] text-muted-foreground">
-                      Tax: ₹{t.gstAmount.toFixed(2)}
+                      Tax: {t.isReturn ? '-' : ''}₹{Math.abs(t.gstAmount).toFixed(2)}
                     </div>
                   </td>
                   <td className="px-6 py-4 text-center">

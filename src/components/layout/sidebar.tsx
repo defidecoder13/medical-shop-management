@@ -18,51 +18,36 @@ import {
   ChevronRight, 
   LogOut,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  Truck
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
-const routes = [
+const navigationGroups = [
   {
-    label: "Dashboard",
-    icon: LayoutDashboard,
-    href: "/",
+    group: "Main Menu",
+    routes: [
+      { label: "Dashboard", icon: LayoutDashboard, href: "/" },
+      { label: "New Bill", icon: Receipt, href: "/billing" },
+      { label: "Transactions", icon: History, href: "/transactions" },
+    ]
   },
   {
-    label: "New Bill",
-    icon: Receipt,
-    href: "/billing",
+    group: "Inventory",
+    routes: [
+      { label: "Stock Items", icon: Package, href: "/inventory" },
+      { label: "Low Stock", icon: AlertTriangle, href: "/low-stock" },
+      { label: "Supplier Returns", icon: Truck, href: "/supplier-returns" },
+      { label: "Expiry Tracker", icon: CalendarClock, href: "/expiry" },
+    ]
   },
   {
-    label: "Transactions",
-    icon: History,
-    href: "/transactions",
-  },
-  {
-    label: "Inventory",
-    icon: Package,
-    href: "/inventory",
-  },
-  {
-    label: "Low Stock",
-    icon: AlertTriangle,
-    href: "/low-stock",
-  },
-  {
-    label: "Expiry Tracker",
-    icon: CalendarClock,
-    href: "/expiry",
-  },
-  {
-    label: "Reports",
-    icon: BarChart3,
-    href: "/sales-report",
-  },
-  {
-    label: "Settings",
-    icon: Settings,
-    href: "/settings",
-  },
+    group: "Business",
+    routes: [
+      { label: "Reports", icon: BarChart3, href: "/sales-report" },
+      { label: "Settings", icon: Settings, href: "/settings" },
+    ]
+  }
 ];
 
 export const Sidebar = () => {
@@ -113,26 +98,43 @@ export const Sidebar = () => {
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2 space-y-1">
-        {routes.map((route) => {
-          const isActive = pathname === route.href;
-          return (
-            <Link
-              key={route.href}
-              href={route.href}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
-                isActive 
-                  ? "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 shadow-sm" 
-                  : "text-muted-foreground hover:bg-secondary hover:text-foreground"
-              )}
-              title={collapsed ? route.label : undefined}
-            >
-              <route.icon size={18} className={cn(isActive ? "text-indigo-600 dark:text-indigo-400" : "text-muted-foreground")} />
-              {!collapsed && <span>{route.label}</span>}
-            </Link>
-          );
-        })}
+      <nav className="flex-1 overflow-y-auto py-6 px-3 space-y-6">
+        {navigationGroups.map((section, sectionIdx) => (
+          <div key={sectionIdx} className="space-y-1">
+            {!collapsed && (
+              <div className="px-3 mb-2 text-[10px] font-bold tracking-widest text-muted-foreground/70 uppercase">
+                {section.group}
+              </div>
+            )}
+            {section.routes.map((route) => {
+              const isActive = pathname === route.href;
+              return (
+                <Link
+                  key={route.href}
+                  href={route.href}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group",
+                    isActive 
+                      ? "bg-indigo-600 shadow-md shadow-indigo-600/20 text-white" 
+                      : "text-muted-foreground hover:bg-indigo-50 dark:hover:bg-indigo-900/20 hover:text-indigo-600 dark:hover:text-indigo-400"
+                  )}
+                  title={collapsed ? route.label : undefined}
+                >
+                  <route.icon 
+                    size={18} 
+                    className={cn(
+                      "transition-colors",
+                      isActive 
+                        ? "text-white" 
+                        : "text-muted-foreground group-hover:text-indigo-600 dark:group-hover:text-indigo-400"
+                    )} 
+                  />
+                  {!collapsed && <span>{route.label}</span>}
+                </Link>
+              );
+            })}
+          </div>
+        ))}
       </nav>
 
       {/* Footer Actions */}

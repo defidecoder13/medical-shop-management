@@ -13,11 +13,14 @@ import {
   ArrowUpDown,
   CheckCircle2,
   AlertCircle, 
-  Loader2
+  Loader2,
+  Upload,
+  Download
 } from "lucide-react";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
+import * as xlsx from "xlsx";
 
 type Medicine = {
   _id?: string;
@@ -61,6 +64,8 @@ export default function InventoryPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
 
   // Autocomplete State
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -110,6 +115,87 @@ export default function InventoryPage() {
     } catch (error) {
       console.error("Failed to fetch medicines", error);
     }
+  };
+
+  const downloadTemplate = () => {
+    const ws = xlsx.utils.json_to_sheet([{
+      Name: "Dolo 650",
+      Brand: "Micro Labs",
+      "Batch Number": "BATCH123",
+      "Expiry Date": "2026-12-31",
+      "Strips Qty": 10,
+      "Tablets Per Strip": 15,
+      "Cost Price": 20.00,
+      "MRP": 30.00,
+      Rack: "A1",
+      Composition: "Paracetamol 650mg",
+      "HSN Code": "3004",
+      "GST Percent": 5
+    }]);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, "Template");
+    xlsx.writeFile(wb, "Purchase_Template.xlsx");
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploading(true);
+    setMessage(null);
+
+    const reader = new FileReader();
+    reader.onload = async (evt) => {
+      try {
+        const bstr = evt.target?.result;
+        const wb = xlsx.read(bstr, { type: "binary" });
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+        const data = xlsx.utils.sheet_to_json(ws);
+
+        if (data.length === 0) throw new Error("File is empty");
+
+        const formattedPayload = data.map((row: any) => ({
+          name: row["Name"] || "",
+          brand: row["Brand"] || "",
+          batchNumber: row["Batch Number"] || "",
+          expiryDate: row["Expiry Date"] || "",
+          stock: Number(row["Strips Qty"]) || 0,
+          tabletsPerStrip: Number(row["Tablets Per Strip"]) || 0,
+          buyingPrice: Number(row["Cost Price"]) || 0,
+          sellingPrice: Number(row["MRP"]) || 0,
+          rackNumber: row["Rack"] || "",
+          composition: row["Composition"] || "",
+          hsnCode: row["HSN Code"] || "3004",
+          gstPercent: Number(row["GST Percent"]) || 5
+        }));
+
+        const res = await fetch("/api/inventory/bulk", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(formattedPayload)
+        });
+
+        const result = await res.json();
+        
+        if (!res.ok) throw new Error(result.error || "Failed to upload file");
+
+        let msg = `Successfully added ${result.added || 0} and updated ${result.updated || 0} items.`;
+        if (result.errors && result.errors.length > 0) {
+           msg += ` Experienced ${result.errors.length} errors.`;
+           console.warn("Bulk Upload Errors:", result.errors);
+        }
+
+        setMessage({ text: msg, type: 'success' });
+        fetchMedicines();
+      } catch (err: any) {
+         setMessage({ text: err.message || "Error parsing file", type: 'error' });
+      } finally {
+         setUploading(false);
+         if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    };
+    reader.readAsBinaryString(file);
   };
 
   useEffect(() => {
@@ -272,17 +358,43 @@ export default function InventoryPage() {
           <h2 className="text-2xl font-bold text-foreground">Inventory Management</h2>
           <p className="text-sm text-muted-foreground">Manage your medicine stock and pricing.</p>
         </div>
-        <button 
-          onClick={() => {
-            setForm(emptyMedicine);
-            setEditingId(null);
-            setShowForm(!showForm);
-          }}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors shadow-sm"
-        >
-          <Plus size={18} />
-          {showForm ? "Cancel" : "Add New Medicine"}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <button 
+            onClick={downloadTemplate}
+            className="flex items-center gap-2 bg-secondary text-foreground border border-border px-3 py-2.5 rounded-lg font-medium text-sm hover:bg-secondary/80 transition-colors shadow-sm"
+          >
+            <Download size={16} />
+            <span className="hidden sm:inline">Template</span>
+          </button>
+          
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleFileUpload} 
+            accept=".csv, .xlsx, .xls" 
+            className="hidden" 
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-3 py-2.5 rounded-lg font-medium text-sm hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors shadow-sm disabled:opacity-50"
+          >
+            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
+            <span className="hidden sm:inline">{uploading ? "Uploading..." : "Upload CSV"}</span>
+          </button>
+
+          <button 
+            onClick={() => {
+              setForm(emptyMedicine);
+              setEditingId(null);
+              setShowForm(!showForm);
+            }}
+            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors shadow-sm"
+          >
+            <Plus size={18} />
+            {showForm ? "Cancel" : "Add Medicine"}
+          </button>
+        </div>
       </div>
 
       {message && (

@@ -12,6 +12,7 @@ const BillItemSchema = new Schema(
     sellingPrice: Number, // MRP at time of sale
     buyingPrice: Number,  // Cost Price at time of sale
     total: Number,
+    returnedQty: { type: Number, default: 0 },
   },
   { _id: false }
 );
@@ -27,6 +28,12 @@ const BillSchema = new Schema(
     grandTotal: Number,
     gstEnabled: Boolean,
     printInvoice: Boolean,
+    patientName: String,
+    patientPhone: String,
+    doctorName: String,
+    isReturn: { type: Boolean, default: false },
+    returnStatus: { type: String, enum: ["None", "Partial", "Full"], default: "None" },
+    originalBillId: { type: Schema.Types.ObjectId, ref: "Bill" },
   },
   { timestamps: true }
 );
