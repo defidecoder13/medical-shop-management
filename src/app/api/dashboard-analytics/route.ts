@@ -2,7 +2,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
-import Medicine from "@/src/models/Medicine";
+import MedicineBatch from "@/src/models/MedicineBatch";
 
 export async function GET(request: Request) {
     try {
@@ -11,15 +11,15 @@ export async function GET(request: Request) {
         const range = searchParams.get('range') || '7d';
 
         // Parallel Fetching
-        const [bills, medicines] = await Promise.all([
+        const [bills, batches] = await Promise.all([
             Bill.find({}).sort({ createdAt: -1 }),
-            Medicine.find({})
+            MedicineBatch.find({})
         ]);
 
         // 1. Calculate Summary Stats
         const totalSales = bills.reduce((sum, bill) => sum + (bill.grandTotal || 0), 0);
         const totalOrders = bills.length;
-        const lowStockItems = medicines.filter(m => (m.stock || 0) <= 10).length;
+        const lowStockItems = batches.filter(b => (b.stock || 0) <= 10).length;
 
         // Check expiry
         const today = new Date();
@@ -27,9 +27,9 @@ export async function GET(request: Request) {
         nextMonth.setMonth(today.getMonth() + 1);
 
         let expiring = 0;
-        medicines.forEach(m => {
-            if (m.expiryDate) {
-                const exp = new Date(m.expiryDate);
+        batches.forEach(b => {
+            if (b.expiryDate) {
+                const exp = new Date(b.expiryDate);
                 if (exp <= nextMonth) expiring++;
             }
         });

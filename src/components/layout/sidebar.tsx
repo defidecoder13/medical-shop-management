@@ -19,7 +19,8 @@ import {
   LogOut,
   Plus,
   AlertTriangle,
-  Truck
+  Truck,
+  Landmark
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
@@ -45,6 +46,7 @@ const navigationGroups = [
     group: "Business",
     routes: [
       { label: "Reports", icon: BarChart3, href: "/sales-report" },
+      { label: "Accounting", icon: Landmark, href: "/accounting" },
       { label: "Settings", icon: Settings, href: "/settings" },
     ]
   }

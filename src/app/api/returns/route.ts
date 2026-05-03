@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
-import Medicine from "@/src/models/Medicine";
+import MedicineBatch from "@/src/models/MedicineBatch";
+import { createReturnJournalEntry } from "@/src/lib/accounting";
 
 export const runtime = "nodejs";
 
@@ -62,18 +63,23 @@ export async function POST(req: Request) {
             });
 
             // Update Medicine Stock
-            const medicine = await Medicine.findOne({ batchNumber: originalItem.batchNumber, name: originalItem.name });
-            if (medicine) {
+            // originalItem.batchNumber might be a comma-separated list due to FEFO (e.g. "B1, B2")
+            // We'll just return the physical stock to the first batch in the list for simplicity.
+            const primaryBatchNum = originalItem.batchNumber.split(',')[0].trim();
+            const batch = await MedicineBatch.findOne({ batchNumber: primaryBatchNum }).populate('medicineId');
+            
+            if (batch) {
+                const masterMedicine = batch.medicineId as any;
                 let stockToAdd = 0;
                 if (originalItem.unitType === 'strip') {
                     stockToAdd = returnReq.returnQty;
                 } else {
-                    stockToAdd = returnReq.returnQty / (medicine.tabletsPerStrip || 1);
+                    stockToAdd = returnReq.returnQty / (masterMedicine.tabletsPerStrip || 1);
                 }
 
-                medicine.stock += stockToAdd;
-                medicine.totalTabletsInStock = medicine.stock * (medicine.tabletsPerStrip || 1);
-                await medicine.save();
+                batch.stock += stockToAdd;
+                batch.totalTabletsInStock = batch.stock * (masterMedicine.tabletsPerStrip || 1);
+                await batch.save();
             }
         }
 
@@ -122,6 +128,9 @@ export async function POST(req: Request) {
             patientPhone: originalBill.patientPhone,
             doctorName: originalBill.doctorName,
         });
+
+        // 🏦 ACCOUNTING: Create Double Entry Journal
+        await createReturnJournalEntry(returnBill);
 
         return NextResponse.json({ success: true, returnBill, originalBill });
     } catch (error) {

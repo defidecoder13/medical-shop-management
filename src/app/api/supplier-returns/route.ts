@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import SupplierReturn from "@/src/models/SupplierReturn";
-import Medicine from "@/src/models/Medicine";
+import MedicineBatch from "@/src/models/MedicineBatch";
+import { createSupplierReturnJournalEntry } from "@/src/lib/accounting";
 
 export const runtime = "nodejs";
 
@@ -42,18 +43,20 @@ export async function POST(req: Request) {
         let totalRefundAmount = 0;
         const returnItems = [];
 
-        // Validations and calculations
         for (const item of items) {
-            const medicine = await Medicine.findById(item.medicineId);
-            if (!medicine) {
-                return NextResponse.json({ error: `Medicine not found for ID: ${item.medicineId}` }, { status: 400 });
+            // In Supplier Returns, you return a specific batch, so item.medicineId is the Batch ID
+            const batch = await MedicineBatch.findById(item.medicineId).populate('medicineId');
+            if (!batch) {
+                return NextResponse.json({ error: `Batch not found for ID: ${item.medicineId}` }, { status: 400 });
             }
+
+            const masterMedicine = batch.medicineId;
 
             // Save state for rollback
             updatedMeds.push({
-                _id: medicine._id.toString(),
-                stock: medicine.stock,
-                totalTabletsInStock: medicine.totalTabletsInStock,
+                _id: batch._id.toString(),
+                stock: batch.stock,
+                totalTabletsInStock: batch.totalTabletsInStock,
             });
 
             let stockToDeduct = 0;
@@ -61,29 +64,29 @@ export async function POST(req: Request) {
 
             if (item.unitType === 'strip') {
                 stockToDeduct = item.qty;
-                costPricePerUnit = medicine.buyingPricePerStrip || 0;
+                costPricePerUnit = batch.buyingPricePerStrip || 0;
             } else {
-                const stripsEquivalent = item.qty / (medicine.tabletsPerStrip || 1);
+                const stripsEquivalent = item.qty / (masterMedicine.tabletsPerStrip || 1);
                 stockToDeduct = stripsEquivalent;
-                costPricePerUnit = (medicine.buyingPricePerStrip || 0) / (medicine.tabletsPerStrip || 1);
+                costPricePerUnit = (batch.buyingPricePerStrip || 0) / (masterMedicine.tabletsPerStrip || 1);
             }
 
-            if (medicine.stock < stockToDeduct) {
-                return NextResponse.json({ error: `Insufficient stock to return ${item.name}. Available: ${medicine.stock} strips.` }, { status: 400 });
+            if (batch.stock < stockToDeduct) {
+                return NextResponse.json({ error: `Insufficient stock to return ${item.name} from batch ${batch.batchNumber}. Available: ${batch.stock} strips.` }, { status: 400 });
             }
 
             // Subtract the returned items from actual main inventory
-            medicine.stock -= stockToDeduct;
-            medicine.totalTabletsInStock = medicine.stock * (medicine.tabletsPerStrip || 1);
-            await medicine.save();
+            batch.stock -= stockToDeduct;
+            batch.totalTabletsInStock = batch.stock * (masterMedicine.tabletsPerStrip || 1);
+            await batch.save();
 
             const itemTotal = item.qty * costPricePerUnit;
             totalRefundAmount += itemTotal;
 
             returnItems.push({
-                medicineId: medicine._id,
-                name: medicine.name,
-                batchNumber: medicine.batchNumber,
+                medicineId: batch._id,
+                name: masterMedicine.name,
+                batchNumber: batch.batchNumber,
                 unitType: item.unitType,
                 qty: item.qty,
                 buyingPrice: costPricePerUnit,
@@ -100,11 +103,14 @@ export async function POST(req: Request) {
             totalRefundAmount: roundedTotal
         });
 
+        // 🏦 ACCOUNTING: Create Double Entry Journal
+        await createSupplierReturnJournalEntry(supplierReturn);
+
         return NextResponse.json({ success: true, supplierReturn });
     } catch (error) {
         // Rollback
         for (const m of updatedMeds) {
-            await Medicine.findByIdAndUpdate(m._id, { stock: m.stock, totalTabletsInStock: m.totalTabletsInStock });
+            await MedicineBatch.findByIdAndUpdate(m._id, { stock: m.stock, totalTabletsInStock: m.totalTabletsInStock });
         }
         console.error("SUPPLIER RETURN ERROR", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

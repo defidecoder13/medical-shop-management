@@ -6,19 +6,11 @@ const MedicineSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     brand: String,
-    batchNumber: { type: String, required: true },
-    expiryDate: { type: Date, required: true },
-
-    //  STOCK LOGIC
-    stock: { type: Number, required: true }, // STRIPS
+    
+    // PACKAGING
     tabletsPerStrip: { type: Number, required: true },
 
-    // DERIVED & MUTATED ON SALE
-    totalTabletsInStock: { type: Number, required: true },
-
-    buyingPricePerStrip: { type: Number, required: true }, // COST PRICE
-    sellingPricePerStrip: { type: Number, required: true }, // MRP (New Field)
-    rackNumber: { type: String }, // New Field
+    // GENERAL INFO
     composition: { type: String }, // Generic Name / Salt
     hsnCode: { type: String }, // HSN Code
     gstPercent: { type: Number, default: 5 },
@@ -30,9 +22,7 @@ const MedicineSchema = new mongoose.Schema(
 MedicineSchema.index({
   name: "text",
   brand: "text",
-  composition: "text",
-  batchNumber: "text",
-  rackNumber: "text"
+  composition: "text"
 });
 
 // Prevent Mongoose overwrite warning & force new schema in dev

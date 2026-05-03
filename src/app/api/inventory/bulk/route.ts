@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Medicine from "@/src/models/Medicine";
+import MedicineBatch from "@/src/models/MedicineBatch";
 
 export const dynamic = "force-dynamic";
 
@@ -45,49 +46,64 @@ export async function POST(req: Request) {
                 continue;
             }
 
-            // Check if exact medicine and batch exists
-            const existing = await Medicine.findOne({
-                name: { $regex: `^${name}$`, $options: "i" },
+            // 1. Find or Create Medicine Master
+            let medicine = await Medicine.findOne({
+                name: { $regex: `^${name}$`, $options: "i" }
+            });
+
+            if (!medicine) {
+                medicine = await Medicine.create({
+                    name,
+                    brand: brand || "",
+                    tabletsPerStrip,
+                    composition,
+                    hsnCode,
+                    gstPercent: Number.isNaN(Number(gstPercent)) ? 5 : Number(gstPercent),
+                });
+            } else {
+                // Optionally update master fields if provided
+                if (brand) medicine.brand = brand;
+                if (composition) medicine.composition = composition;
+                await medicine.save();
+            }
+
+            // 2. Find or Create MedicineBatch
+            const existingBatch = await MedicineBatch.findOne({
+                medicineId: medicine._id,
                 batchNumber: { $regex: `^${batchNumber}$`, $options: "i" },
             });
 
-            if (existing) {
+            if (existingBatch) {
                 // EXACT MATCH: Add Stock rather than overwrite
-                existing.stock += stock;
-                existing.totalTabletsInStock = existing.stock * existing.tabletsPerStrip; // Re-calc with existing tabletsPerStrip to be safe
+                existingBatch.stock += stock;
+                existingBatch.totalTabletsInStock = existingBatch.stock * medicine.tabletsPerStrip;
 
                 // Update prices only if explicitly provided in CSV greater than 0
                 if (!Number.isNaN(buyingPricePerStrip) && buyingPricePerStrip > 0) {
-                    existing.buyingPricePerStrip = buyingPricePerStrip;
+                    existingBatch.buyingPricePerStrip = buyingPricePerStrip;
                 }
                 if (!Number.isNaN(sellingPricePerStrip) && sellingPricePerStrip > 0) {
-                    existing.sellingPricePerStrip = sellingPricePerStrip;
+                    existingBatch.sellingPricePerStrip = sellingPricePerStrip;
                 }
 
                 // Update optional fields if provided
-                if (rackNumber) existing.rackNumber = rackNumber;
-                if (composition) existing.composition = composition;
-                if (brand) existing.brand = brand;
+                if (rackNumber) existingBatch.rackNumber = rackNumber;
+                if (expiryDate) existingBatch.expiryDate = new Date(expiryDate);
 
-                await existing.save();
+                await existingBatch.save();
                 updatedCount++;
             } else {
                 // NEW BATCH
-                const totalTabletsInStock = stock * tabletsPerStrip;
-                await Medicine.create({
-                    name,
-                    brand: brand || "",
+                const totalTabletsInStock = stock * medicine.tabletsPerStrip;
+                await MedicineBatch.create({
+                    medicineId: medicine._id,
                     batchNumber,
                     expiryDate: new Date(expiryDate),
                     stock,
-                    tabletsPerStrip,
                     totalTabletsInStock,
                     buyingPricePerStrip: Number.isNaN(buyingPricePerStrip) ? 0 : buyingPricePerStrip,
                     sellingPricePerStrip: Number.isNaN(sellingPricePerStrip) ? 0 : sellingPricePerStrip,
-                    gstPercent: Number.isNaN(Number(gstPercent)) ? 5 : Number(gstPercent),
                     rackNumber,
-                    composition,
-                    hsnCode,
                 });
                 addedCount++;
             }

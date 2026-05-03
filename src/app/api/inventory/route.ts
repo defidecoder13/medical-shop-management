@@ -1,13 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Medicine from "@/src/models/Medicine";
+import MedicineBatch from "@/src/models/MedicineBatch";
 
 export const dynamic = "force-dynamic";
 
-/**
- * GET /api/inventory
- * Search by name / brand / batch / rackNumber
- */
 export async function GET(req: Request) {
   try {
     await connectDB();
@@ -15,34 +12,59 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
 
-    let query: any = {};
+    let batchQuery: any = {};
+    let medicineQuery: any = {};
 
     if (q) {
-      query = {
+      const regex = new RegExp(q, "i");
+      medicineQuery = {
         $or: [
-          { name: { $regex: q, $options: "i" } },
-          { brand: { $regex: q, $options: "i" } },
-          { batchNumber: { $regex: q, $options: "i" } },
-          { rackNumber: { $regex: q, $options: "i" } }, // Added rack search
-          { composition: { $regex: q, $options: "i" } }, // Generic Search
+          { name: regex },
+          { brand: regex },
+          { composition: regex },
+        ],
+      };
+
+      const matchingMedicines = await Medicine.find(medicineQuery).select("_id");
+      const medicineIds = matchingMedicines.map(m => m._id);
+
+      batchQuery = {
+        $or: [
+          { batchNumber: regex },
+          { rackNumber: regex },
+          { medicineId: { $in: medicineIds } },
         ],
       };
     }
 
-    const medicines = await Medicine.find(query).sort({ createdAt: -1 }).lean();
+    const batches = await MedicineBatch.find(batchQuery)
+      .populate("medicineId")
+      .sort({ createdAt: -1 })
+      .lean();
 
-    // Ensure safe data return
-    const safeMedicines = medicines.map((med: any) => ({
-      ...med,
-      buyingPricePerStrip: med.buyingPricePerStrip || med.buyingPrice || 0,
-      sellingPricePerStrip: med.sellingPricePerStrip || med.mrp || med.sellingPrice || 0,
-      rackNumber: med.rackNumber || "",
-      composition: med.composition || "",
-      hsnCode: med.hsnCode || "",
-      stock: med.stock || 0,
-    }));
+    // Map to the flat structure expected by the frontend
+    const safeBatches = batches.map((batch: any) => {
+      const med = batch.medicineId || {};
+      return {
+        _id: batch._id,
+        medicineId: med._id,
+        name: med.name || "",
+        brand: med.brand || "",
+        batchNumber: batch.batchNumber || "",
+        expiryDate: batch.expiryDate || "",
+        stock: batch.stock || 0,
+        tabletsPerStrip: med.tabletsPerStrip || 0,
+        buyingPricePerStrip: batch.buyingPricePerStrip || 0,
+        sellingPricePerStrip: batch.sellingPricePerStrip || 0,
+        rackNumber: batch.rackNumber || "",
+        composition: med.composition || "",
+        hsnCode: med.hsnCode || "3004",
+        gstPercent: med.gstPercent || 5,
+        totalTabletsInStock: batch.totalTabletsInStock || 0,
+      };
+    });
 
-    return NextResponse.json(safeMedicines);
+    return NextResponse.json(safeBatches);
   } catch (error) {
     console.error("INVENTORY GET ERROR:", error);
     return NextResponse.json(
@@ -68,8 +90,8 @@ export async function POST(req: Request) {
 
     const stock = Number(body.stock);
     const tabletsPerStrip = Number(body.tabletsPerStrip);
-    const buyingPricePerStrip = Number(body.buyingPrice); // COST
-    const sellingPricePerStrip = Number(body.sellingPrice); // MRP (New)
+    const buyingPricePerStrip = Number(body.buyingPrice); 
+    const sellingPricePerStrip = Number(body.sellingPrice); 
 
     const {
       name,
@@ -77,9 +99,9 @@ export async function POST(req: Request) {
       batchNumber,
       expiryDate,
       gstPercent,
-      rackNumber, // New
-      composition, // New
-      hsnCode, // HSN
+      rackNumber, 
+      composition, 
+      hsnCode, 
     } = body;
 
     if (
@@ -97,49 +119,53 @@ export async function POST(req: Request) {
       );
     }
 
-    if (stock <= 0 || tabletsPerStrip <= 0 || buyingPricePerStrip <= 0 || sellingPricePerStrip <= 0) {
-      return NextResponse.json(
-        { error: "Stock, tablets, cost, and MRP must be > 0" },
-        { status: 400 }
-      );
+    // 1. Find or Create Medicine Master
+    let medicine = await Medicine.findOne({
+      name: { $regex: `^${name}$`, $options: "i" }
+    });
+
+    if (!medicine) {
+      medicine = await Medicine.create({
+        name,
+        brand,
+        tabletsPerStrip,
+        composition: composition || "",
+        hsnCode: hsnCode || "3004",
+        gstPercent: gstPercent || 5,
+      });
     }
 
-    // 🔐 Duplicate batch safety
-    const existing = await Medicine.findOne({
-      name: { $regex: `^${name}$`, $options: "i" },
+    // 2. Prevent Duplicate Batch for the same medicine
+    const existingBatch = await MedicineBatch.findOne({
+      medicineId: medicine._id,
       batchNumber: { $regex: `^${batchNumber}$`, $options: "i" },
     });
 
-    if (existing) {
+    if (existingBatch) {
       return NextResponse.json(
         { error: "This batch already exists for this medicine" },
         { status: 400 }
       );
     }
 
-    const totalTabletsInStock = stock * tabletsPerStrip;
+    const totalTabletsInStock = stock * medicine.tabletsPerStrip; // Use master's tabletsPerStrip
 
-    const medicine = await Medicine.create({
-      name,
-      brand,
+    const batch = await MedicineBatch.create({
+      medicineId: medicine._id,
       batchNumber,
       expiryDate,
       stock,
-      tabletsPerStrip,
       totalTabletsInStock,
       buyingPricePerStrip,
       sellingPricePerStrip,
-      gstPercent,
       rackNumber: rackNumber || "",
-      composition: composition || "",
-      hsnCode: hsnCode || "3004",
     });
 
-    return NextResponse.json(medicine);
+    return NextResponse.json(batch);
   } catch (error) {
     console.error("INVENTORY POST ERROR:", error);
     return NextResponse.json(
-      { error: "Failed to add medicine" },
+      { error: "Failed to add medicine batch" },
       { status: 500 }
     );
   }
@@ -158,81 +184,61 @@ export async function PUT(req: Request) {
     await connectDB();
 
     const body = await req.json();
-    const { _id } = body;
+    const { _id } = body; // This is the MedicineBatch _id
 
     if (!_id) {
       return NextResponse.json(
-        { error: "Medicine ID required" },
+        { error: "Batch ID required" },
         { status: 400 }
       );
     }
 
-    const med = await Medicine.findById(_id);
+    const batch = await MedicineBatch.findById(_id).populate('medicineId');
 
-    if (!med) {
+    if (!batch) {
       return NextResponse.json(
-        { error: "Medicine not found" },
+        { error: "Batch not found" },
         { status: 404 }
       );
     }
 
-    // ❌ tabletsPerStrip is IMMUTABLE
-    if (
-      body.tabletsPerStrip &&
-      body.tabletsPerStrip !== med.tabletsPerStrip
-    ) {
-      return NextResponse.json(
-        { error: "Tablets per strip cannot be changed" },
-        { status: 400 }
-      );
+    const medicine = batch.medicineId;
+
+    // UPDATE BATCH FIELDS
+    if (typeof body.stock === "number" && body.stock >= 0) {
+      batch.stock = body.stock;
+      batch.totalTabletsInStock = body.stock * medicine.tabletsPerStrip;
+    }
+    
+    if (body.batchNumber !== undefined) batch.batchNumber = body.batchNumber;
+    if (body.expiryDate !== undefined) batch.expiryDate = body.expiryDate;
+    if (body.rackNumber !== undefined) batch.rackNumber = body.rackNumber;
+
+    if (typeof body.buyingPrice === "number" && body.buyingPrice > 0) {
+      batch.buyingPricePerStrip = body.buyingPrice;
+    }
+    if (typeof body.sellingPrice === "number" && body.sellingPrice > 0) {
+      batch.sellingPricePerStrip = body.sellingPrice;
     }
 
-    // ✅ Stock update → recalc tablets
-    if (typeof body.stock === "number") {
-      if (body.stock < 0) {
-        return NextResponse.json(
-          { error: "Stock cannot be negative" },
-          { status: 400 }
-        );
-      }
+    // UPDATE MASTER MEDICINE FIELDS
+    let masterChanged = false;
+    if (body.name !== undefined && body.name !== medicine.name) { medicine.name = body.name; masterChanged = true; }
+    if (body.brand !== undefined && body.brand !== medicine.brand) { medicine.brand = body.brand; masterChanged = true; }
+    if (body.composition !== undefined && body.composition !== medicine.composition) { medicine.composition = body.composition; masterChanged = true; }
+    if (body.hsnCode !== undefined && body.hsnCode !== medicine.hsnCode) { medicine.hsnCode = body.hsnCode; masterChanged = true; }
+    if (typeof body.gstPercent === "number" && body.gstPercent !== medicine.gstPercent) { medicine.gstPercent = body.gstPercent; masterChanged = true; }
 
-      med.stock = body.stock;
-      med.totalTabletsInStock =
-        body.stock * med.tabletsPerStrip;
+    await batch.save();
+    if (masterChanged) {
+      await medicine.save();
     }
 
-    // ✅ Safe editable fields
-    if (body.name !== undefined) med.name = body.name;
-    if (body.brand !== undefined) med.brand = body.brand;
-    if (body.batchNumber !== undefined)
-      med.batchNumber = body.batchNumber;
-    if (body.expiryDate !== undefined)
-      med.expiryDate = body.expiryDate;
-
-    // Updated price fields
-    if (typeof body.buyingPrice === "number") {
-      if (body.buyingPrice <= 0) return NextResponse.json({ error: "Cost Price must be > 0" }, { status: 400 });
-      med.buyingPricePerStrip = body.buyingPrice;
-    }
-    if (typeof body.sellingPrice === "number") {
-      if (body.sellingPrice <= 0) return NextResponse.json({ error: "MRP must be > 0" }, { status: 400 });
-      med.sellingPricePerStrip = body.sellingPrice;
-    }
-
-    if (body.rackNumber !== undefined) med.rackNumber = body.rackNumber;
-    if (body.composition !== undefined) med.composition = body.composition;
-    if (body.hsnCode !== undefined) med.hsnCode = body.hsnCode;
-
-    if (typeof body.gstPercent === "number")
-      med.gstPercent = body.gstPercent;
-
-    await med.save();
-
-    return NextResponse.json(med);
+    return NextResponse.json(batch);
   } catch (error) {
     console.error("INVENTORY PUT ERROR:", error);
     return NextResponse.json(
-      { error: "Failed to update medicine" },
+      { error: "Failed to update batch" },
       { status: 500 }
     );
   }

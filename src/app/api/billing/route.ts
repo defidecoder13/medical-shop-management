@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
-import Medicine from "@/src/models/Medicine";
+import MedicineBatch from "@/src/models/MedicineBatch";
 import Bill from "@/src/models/Bill";
 import Settings from "@/src/models/Settings";
+import { createSaleJournalEntry } from "@/src/lib/accounting";
 
 export async function POST(req: Request) {
-  // 🔁 Keep original medicine states for rollback
-  const updatedMeds: {
+  // 🔁 Keep original batch states for rollback
+  const updatedBatches: {
     _id: string;
     stock: number;
     totalTabletsInStock: number;
@@ -40,66 +41,88 @@ export async function POST(req: Request) {
     const billItems: any[] = [];
 
     for (const item of items) {
-      const medicine = await Medicine.findById(item.medicineId);
+      // item.medicineId from the frontend is actually the Batch ID because of the flattened UI
+      const requestedBatch = await MedicineBatch.findById(item.medicineId).populate('medicineId');
 
-      if (!medicine) {
+      if (!requestedBatch) {
         return NextResponse.json(
-          { error: `Medicine not found: ${item.name}` },
+          { error: `Item/Batch not found: ${item.name}` },
           { status: 400 }
         );
       }
 
-      // 🔐 Save state for rollback
-      updatedMeds.push({
-        _id: medicine._id.toString(),
-        stock: medicine.stock,
-        totalTabletsInStock: medicine.totalTabletsInStock,
-      });
+      const masterMedicine = requestedBatch.medicineId;
 
-      // Check stock
-      let stockToDeduct = 0;
+      // Calculate total tablets requested
+      let tabletsRequested = 0;
       if (item.unitType === "strip") {
-        stockToDeduct = item.qty;
+        tabletsRequested = item.qty * masterMedicine.tabletsPerStrip;
       } else {
-        stockToDeduct = item.qty / (medicine.tabletsPerStrip || 1);
+        tabletsRequested = item.qty;
       }
 
-      if (medicine.stock < stockToDeduct) {
+      // Query all batches for this master medicine, sorted by expiry Date ascending (FEFO)
+      const allBatches = await MedicineBatch.find({ 
+        medicineId: masterMedicine._id, 
+        totalTabletsInStock: { $gt: 0 } 
+      }).sort({ expiryDate: 1 });
+
+      const totalAvailable = allBatches.reduce((sum, b) => sum + b.totalTabletsInStock, 0);
+      if (totalAvailable < tabletsRequested) {
         return NextResponse.json(
-          { error: `Insufficient stock for: ${item.name}` },
+          { error: `Insufficient total stock for: ${masterMedicine.name}. Available: ${totalAvailable} tablets.` },
           { status: 400 }
         );
       }
 
-      // Decrement stock
-      medicine.stock -= stockToDeduct;
-      // Also update totalTabletsInStock for consistency
-      medicine.totalTabletsInStock = medicine.stock * (medicine.tabletsPerStrip || 1);
-      await medicine.save();
+      let remainingTabletsToDeduct = tabletsRequested;
+      let totalCostAccumulated = 0;
+      const batchesUsed = [];
 
-      // Calculate Buying Price for this item (Unit Cost)
-      let unitBuyingPrice = 0;
-      if (item.unitType === "strip") {
-        unitBuyingPrice = medicine.buyingPricePerStrip || 0;
-      } else {
-        // Cost per tablet
-        unitBuyingPrice = (medicine.buyingPricePerStrip || 0) / (medicine.tabletsPerStrip || 1);
+      // 🔐 Apply FEFO (First Expire, First Out) Deduction
+      for (const batch of allBatches) {
+        if (remainingTabletsToDeduct <= 0) break;
+
+        // Save state for rollback
+        updatedBatches.push({
+          _id: batch._id.toString(),
+          stock: batch.stock,
+          totalTabletsInStock: batch.totalTabletsInStock,
+        });
+
+        const tabletsToDeductFromThisBatch = Math.min(batch.totalTabletsInStock, remainingTabletsToDeduct);
+        
+        batch.totalTabletsInStock -= tabletsToDeductFromThisBatch;
+        batch.stock = batch.totalTabletsInStock / masterMedicine.tabletsPerStrip;
+        await batch.save();
+
+        remainingTabletsToDeduct -= tabletsToDeductFromThisBatch;
+
+        // Calculate cost for this portion
+        const unitCostPerTablet = batch.buyingPricePerStrip / masterMedicine.tabletsPerStrip;
+        totalCostAccumulated += (tabletsToDeductFromThisBatch * unitCostPerTablet);
+
+        batchesUsed.push(batch.batchNumber);
       }
 
-      // Recalculate item total to be safe
       const itemTotal = item.sellingPrice * item.qty;
       subTotal += itemTotal;
 
+      // Calculate the average buying price per sold unit (strip or tablet)
+      const avgBuyingPrice = item.unitType === "strip" 
+        ? totalCostAccumulated / item.qty
+        : totalCostAccumulated / item.qty;
+
       billItems.push({
-        name: medicine.name, // Take from DB for absolute certainty
-        batchNumber: medicine.batchNumber, // Take from DB for absolute certainty
-        brand: medicine.brand, // For Short MFG
-        expiryDate: medicine.expiryDate, // For Exp.
-        hsnCode: medicine.hsnCode, // HSN
+        name: masterMedicine.name,
+        brand: masterMedicine.brand,
+        batchNumber: batchesUsed.join(", "), // Log all batches used in FEFO
+        expiryDate: requestedBatch.expiryDate, 
+        hsnCode: masterMedicine.hsnCode,
         unitType: item.unitType,
         qty: item.qty,
         sellingPrice: item.sellingPrice,
-        buyingPrice: unitBuyingPrice,
+        buyingPrice: avgBuyingPrice,
         total: itemTotal,
       });
     }
@@ -133,13 +156,16 @@ export async function POST(req: Request) {
       doctorName,
     });
 
+    // 🏦 ACCOUNTING: Create Double Entry Journal
+    await createSaleJournalEntry(bill);
+
     return NextResponse.json(bill);
   } catch (error) {
-    // 🔁 ROLLBACK MEDICINE STOCK
-    for (const m of updatedMeds) {
-      await Medicine.findByIdAndUpdate(m._id, {
-        stock: m.stock,
-        totalTabletsInStock: m.totalTabletsInStock,
+    // 🔁 ROLLBACK BATCH STOCK ON ERROR
+    for (const b of updatedBatches) {
+      await MedicineBatch.findByIdAndUpdate(b._id, {
+        stock: b.stock,
+        totalTabletsInStock: b.totalTabletsInStock,
       });
     }
 

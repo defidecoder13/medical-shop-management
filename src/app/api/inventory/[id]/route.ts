@@ -1,7 +1,7 @@
 
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
-import Medicine from "@/src/models/Medicine";
+import MedicineBatch from "@/src/models/MedicineBatch";
 
 export async function GET(
     request: Request,
@@ -10,19 +10,19 @@ export async function GET(
     try {
         const { id } = await params;
         await connectDB();
-        const medicine = await Medicine.findById(id);
+        const batch = await MedicineBatch.findById(id).populate('medicineId');
 
-        if (!medicine) {
+        if (!batch) {
             return NextResponse.json(
-                { error: "Medicine not found" },
+                { error: "Batch not found" },
                 { status: 404 }
             );
         }
 
-        return NextResponse.json(medicine);
+        return NextResponse.json(batch);
     } catch (error) {
         return NextResponse.json(
-            { error: "Failed to fetch medicine" },
+            { error: "Failed to fetch medicine batch" },
             { status: 500 }
         );
     }
@@ -37,30 +37,30 @@ export async function DELETE(
 
         if (!id) {
             return NextResponse.json(
-                { error: "Medicine ID is required" },
+                { error: "Batch ID is required" },
                 { status: 400 }
             );
         }
 
         await connectDB();
 
-        const deletedMedicine = await Medicine.findByIdAndDelete(id);
+        const deletedBatch = await MedicineBatch.findByIdAndDelete(id);
 
-        if (!deletedMedicine) {
+        if (!deletedBatch) {
             return NextResponse.json(
-                { error: "Medicine not found" },
+                { error: "Batch not found" },
                 { status: 404 }
             );
         }
 
         return NextResponse.json(
-            { message: "Medicine deleted successfully", id },
+            { message: "Batch deleted successfully", id },
             { status: 200 }
         );
     } catch (error) {
-        console.error("DELETE MEDICINE ERROR:", error);
+        console.error("DELETE BATCH ERROR:", error);
         return NextResponse.json(
-            { error: "Failed to delete medicine" },
+            { error: "Failed to delete medicine batch" },
             { status: 500 }
         );
     }

@@ -1,22 +1,22 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
-import Medicine from "@/src/models/Medicine";
+import MedicineBatch from "@/src/models/MedicineBatch";
 
 export async function GET() {
   try {
     await connectDB();
 
-    const medicines = await Medicine.find({});
+    const batches = await MedicineBatch.find({});
 
     const today = new Date();
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
 
     // Count expired items
-    const expiredItems = medicines.filter(med => new Date(med.expiryDate) < today);
+    const expiredItems = batches.filter(b => new Date(b.expiryDate) < today);
 
     // Count items expiring this month
-    const expiringThisMonth = medicines.filter(med => {
-      const expiryDate = new Date(med.expiryDate);
+    const expiringThisMonth = batches.filter(b => {
+      const expiryDate = new Date(b.expiryDate);
       return expiryDate >= today && expiryDate <= endOfMonth;
     });
 
