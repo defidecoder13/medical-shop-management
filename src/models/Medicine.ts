@@ -6,6 +6,7 @@ const MedicineSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     brand: String,
+    barcode: { type: String }, // NEW: Barcode Scanner Support
     
     // PACKAGING
     tabletsPerStrip: { type: Number, required: true },

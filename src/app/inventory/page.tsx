@@ -37,6 +37,7 @@ type Medicine = {
   hsnCode?: string;
   gstPercent: number;
   totalTabletsInStock?: number;
+  barcode?: string;
 };
 
 const emptyMedicine: Medicine = {
@@ -52,6 +53,7 @@ const emptyMedicine: Medicine = {
   composition: "",
   hsnCode: "3004",
   gstPercent: 5,
+  barcode: "",
 };
 
 export default function InventoryPage() {
@@ -460,6 +462,15 @@ export default function InventoryPage() {
                 placeholder="e.g. Micro Labs" 
                 value={form.brand}
                 onChange={e => setForm({...form, brand: e.target.value})}
+                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-xs font-semibold text-muted-foreground uppercase">Barcode (Optional)</label>
+              <input 
+                placeholder="Scan or type barcode" 
+                value={form.barcode || ''}
+                onChange={e => setForm({...form, barcode: e.target.value})}
                 className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
               />
             </div>

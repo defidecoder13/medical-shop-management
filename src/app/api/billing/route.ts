@@ -159,6 +159,29 @@ export async function POST(req: Request) {
     // 🏦 ACCOUNTING: Create Double Entry Journal
     await createSaleJournalEntry(bill);
 
+    // 🧑‍⚕️ PATIENT CRM: Update or Create Patient Record
+    if (patientPhone) {
+      // Lazy load to prevent cyclic dependencies if any
+      const Patient = (await import("@/src/models/Patient")).default;
+      
+      let patient = await Patient.findOne({ phone: patientPhone });
+      if (patient) {
+        // Update total spent and latest doctor
+        patient.totalSpent += roundedGrandTotal;
+        if (patientName) patient.name = patientName;
+        if (doctorName) patient.doctorName = doctorName;
+        await patient.save();
+      } else {
+        // Create brand new profile
+        await Patient.create({
+          name: patientName || "Guest",
+          phone: patientPhone,
+          doctorName: doctorName || "",
+          totalSpent: roundedGrandTotal
+        });
+      }
+    }
+
     return NextResponse.json(bill);
   } catch (error) {
     // 🔁 ROLLBACK BATCH STOCK ON ERROR

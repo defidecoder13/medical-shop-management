@@ -71,9 +71,11 @@ function BillingContent() {
   const [discountPercent, setDiscountPercent] = useState<number | "">("");
   const [patientName, setPatientName] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
+  const debouncedPhone = useDebounce(patientPhone, 500);
   const [doctorName, setDoctorName] = useState("");
+  const [regularMedicines, setRegularMedicines] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
+  const [message, setMessage] = useState<{text: string, type: 'success' | 'error' | 'info'} | null>(null);
   
   const [subTotal, setSubTotal] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
@@ -181,6 +183,34 @@ function BillingContent() {
       .catch((err) => console.error(err));
   }, [debouncedSearch]);
 
+  // Handle Patient Autofill
+  useEffect(() => {
+    if (!debouncedPhone || debouncedPhone.length < 5) {
+      setRegularMedicines([]);
+      return;
+    }
+    const fetchPatient = async () => {
+      try {
+        const patients = await apiClient.get(`/api/patients?search=${debouncedPhone}`);
+        if (patients && patients.length > 0) {
+           const p = patients[0];
+           if (p.phone === debouncedPhone) {
+              if (!patientName) setPatientName(p.name || "");
+              if (!doctorName) setDoctorName(p.doctorName || "");
+              if (p.regularMedicines?.length > 0) {
+                 setRegularMedicines(p.regularMedicines);
+              }
+           }
+        } else {
+           setRegularMedicines([]);
+        }
+      } catch (err) {
+        console.error("Failed to fetch patient details", err);
+      }
+    };
+    fetchPatient();
+  }, [debouncedPhone]);
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
@@ -223,6 +253,34 @@ function BillingContent() {
     setGrandTotal(roundedFinalTotal);
   }, [cart, discountPercent, gstEnabled, gstPercent]);
 
+  const handleBarcodeScan = async (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && search.trim() !== '') {
+      e.preventDefault();
+      try {
+        setLoading(true);
+        // Fast fetch bypasses debounce - perfectly suited for barcode scanners!
+        const res = await apiClient.get(`/api/inventory?q=${search}`);
+        if (res && res.length > 0) {
+          // Find first valid batch (stock > 0, unexpired)
+          const validBatch = res.find((b: any) => b.stock > 0 && new Date(b.expiryDate) > new Date());
+          if (validBatch) {
+             addToCart(validBatch);
+          } else {
+             setMessage({ text: 'Scanned item is out of stock or expired!', type: 'error' });
+             setTimeout(() => setMessage(null), 3000);
+          }
+        } else {
+          setMessage({ text: 'Barcode not found in inventory!', type: 'error' });
+          setTimeout(() => setMessage(null), 3000);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const addToCart = (med: Medicine) => {
     // 1. Check for Expiry (Emergency Mode)
     if (new Date(med.expiryDate) < new Date()) {
@@ -261,6 +319,66 @@ function BillingContent() {
       },
     ]);
     setSearch("");
+  };
+
+  const loadRegularMedicines = async () => {
+    if (regularMedicines.length === 0) return;
+    
+    setLoading(true);
+    try {
+       const ids = regularMedicines.map(r => r.medicineId).join(',');
+       const batches = await apiClient.get(`/api/inventory?ids=${ids}`);
+       
+       if (batches && batches.length > 0) {
+          // Group by medicineId and pick the first available batch for each
+          const uniqueMeds = new Map();
+          for (const batch of batches) {
+             if (!uniqueMeds.has(batch.medicineId) && batch.stock > 0 && new Date(batch.expiryDate) > new Date()) {
+                uniqueMeds.set(batch.medicineId, batch);
+             }
+          }
+          
+          let addedCount = 0;
+          const currentCartIds = new Set(cart.map(c => c.medicineId));
+          const newItems: CartItem[] = [];
+
+          uniqueMeds.forEach((med) => {
+             if (!currentCartIds.has(med._id)) {
+                const sellingPrice = med.sellingPricePerStrip || med.sellingPrice || 0;
+                const tabletsPerStrip = med.tabletsPerStrip || 1;
+                const tabletPrice = sellingPrice > 0 ? Number((sellingPrice / tabletsPerStrip).toFixed(2)) : 0;
+                
+                // Find dosage instructions if any
+                const regData = regularMedicines.find(r => r.medicineId === med.medicineId);
+
+                newItems.push({
+                   medicineId: med._id,
+                   name: med.name,
+                   batchNumber: med.batchNumber,
+                   stripQty: 1, // Default to 1 strip for regular medicines
+                   tabletQty: 0,
+                   stripSellingPrice: sellingPrice,
+                   tabletSellingPrice: tabletPrice,
+                   mrp: sellingPrice,
+                   stock: med.stock,
+                   rackNumber: med.rackNumber || "",
+                });
+                addedCount++;
+             }
+          });
+
+          if (addedCount > 0) {
+             setCart(prev => [...prev, ...newItems]);
+             setMessage({ text: `Loaded ${addedCount} regular medicines`, type: 'info' });
+          } else {
+             setMessage({ text: "All active medicines are already in the cart or out of stock", type: 'error' });
+          }
+       }
+    } catch (err) {
+       setMessage({ text: "Failed to load medicines", type: 'error' });
+    }
+    setLoading(false);
+    setTimeout(() => setMessage(null), 3000);
   };
 
   const updateItem = (id: string, field: keyof CartItem, value: any) => {
@@ -441,9 +559,11 @@ function BillingContent() {
             <div className="relative">
               <input
                 className="w-full bg-secondary/50 border border-border px-10 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all text-foreground placeholder:text-muted-foreground"
-                placeholder="Search by name, brand or batch..."
+                placeholder="Scan Barcode or Search by name, brand, batch..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
+                onKeyDown={handleBarcodeScan}
+                autoFocus
               />
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
             </div>
@@ -525,9 +645,9 @@ function BillingContent() {
                     {/* Left Accent Bar */}
                     <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                    <div className="flex justify-between items-start pr-8">
-                      <div className="space-y-1.5">
-                        <div className="font-semibold text-foreground text-[15px] flex items-center gap-2">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <div className="font-bold text-foreground text-[15px] flex items-center gap-2">
                           {item.name}
                           {item.stock < 10 && (
                             <span className="px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-[9px] font-bold uppercase tracking-wider">
@@ -535,17 +655,17 @@ function BillingContent() {
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
-                          <span className="text-muted-foreground/80 font-medium">Batch: <span className="text-foreground">{item.batchNumber}</span></span>
+                        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+                          <span className="text-muted-foreground font-medium">Batch: <span className="text-foreground font-semibold">{item.batchNumber}</span></span>
                           <span className="w-1 h-1 rounded-full bg-border" />
-                          <span className="text-muted-foreground/80 font-medium">
-                            Stock: <span className={item.stock < 10 ? "text-rose-500 font-bold" : "text-foreground"}>{item.stock}</span>
+                          <span className="text-muted-foreground font-medium">
+                            Stock: <span className={item.stock < 10 ? "text-rose-500 font-bold" : "text-foreground font-semibold"}>{item.stock}</span>
                           </span>
                           {item.rackNumber && (
                             <>
                               <span className="w-1 h-1 rounded-full bg-border" />
-                              <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded text-[10px] tracking-wide uppercase">
-                                <Package size={12} strokeWidth={2.5} />
+                              <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded tracking-wide uppercase">
+                                <Package size={10} strokeWidth={2.5} />
                                 Rack {item.rackNumber}
                               </div>
                             </>
@@ -555,77 +675,63 @@ function BillingContent() {
 
                       <button
                         onClick={() => removeItem(item.medicineId)}
-                        className="absolute right-3 top-4 text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 p-1.5 rounded-md transition-colors"
+                        className="text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 p-2 rounded-lg transition-colors flex-shrink-0"
                         title="Remove Item"
                       >
                         <Trash2 size={16} strokeWidth={2} />
                       </button>
                     </div>
                     
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-                      {/* Strip Input */}
-                      <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-secondary/40 border border-border/50">
-                        <div className="flex justify-between items-center px-1">
-                          <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />
-                            Strips
-                          </label>
-                          <span className="text-[11px] font-semibold text-foreground/80 tabular-nums">MRP: ₹{item.stripSellingPrice}/ea</span>
+                    <div className="flex flex-col gap-2 mt-2">
+                      {/* Strip Input Row */}
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 border border-border/50 hover:border-primary/20 transition-colors">
+                        <div className="flex items-center gap-2 w-24">
+                          <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />
+                          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Strips</span>
                         </div>
-                        <div className="relative flex items-center shadow-sm rounded-md overflow-hidden border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all bg-background">
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="Qty"
-                            className="w-full bg-transparent px-3 py-1.5 text-sm outline-none text-foreground font-semibold placeholder:font-normal placeholder:text-muted-foreground/50 tabular-nums"
-                            value={item.stripQty || ''}
-                            onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
-                          />
-                          <AnimatePresence>
-                            {item.stripQty > 0 && typeof item.stripSellingPrice === 'number' && (
-                              <motion.div 
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                className="absolute right-2 px-1.5 py-0.5 rounded bg-blue-50 text-[10px] font-bold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 pointer-events-none tabular-nums"
-                              >
-                                ₹{(item.stripQty * item.stripSellingPrice).toFixed(2)}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                        <div className="flex items-center gap-3 flex-1 justify-end">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="Qty"
+                              className="w-16 bg-background border border-border rounded-md px-2 py-1 text-sm font-semibold text-center focus:ring-2 focus:ring-primary outline-none tabular-nums"
+                              value={item.stripQty || ''}
+                              onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="w-16 text-right">
+                             <span className="text-[11px] font-medium text-muted-foreground">x ₹{item.stripSellingPrice}</span>
+                          </div>
+                          <div className="w-20 text-right">
+                             <span className="text-sm font-bold text-foreground">₹{((item.stripQty || 0) * (item.stripSellingPrice || 0)).toFixed(2)}</span>
+                          </div>
                         </div>
                       </div>
                       
-                      {/* Tablet Input */}
-                      <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-secondary/40 border border-border/50">
-                        <div className="flex justify-between items-center px-1">
-                          <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            Tablets
-                          </label>
-                          <span className="text-[11px] font-semibold text-foreground/80 tabular-nums">MRP: ₹{item.tabletSellingPrice}/ea</span>
+                      {/* Tablet Input Row */}
+                      <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 border border-border/50 hover:border-primary/20 transition-colors">
+                        <div className="flex items-center gap-2 w-24">
+                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Tablets</span>
                         </div>
-                        <div className="relative flex items-center shadow-sm rounded-md overflow-hidden border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all bg-background">
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="Qty"
-                            className="w-full bg-transparent px-3 py-1.5 text-sm outline-none text-foreground font-semibold placeholder:font-normal placeholder:text-muted-foreground/50 tabular-nums"
-                            value={item.tabletQty || ''}
-                            onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
-                          />
-                          <AnimatePresence>
-                            {item.tabletQty > 0 && typeof item.tabletSellingPrice === 'number' && (
-                              <motion.div 
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                className="absolute right-2 px-1.5 py-0.5 rounded bg-emerald-50 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 pointer-events-none tabular-nums"
-                              >
-                                ₹{(item.tabletQty * item.tabletSellingPrice).toFixed(2)}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
+                        <div className="flex items-center gap-3 flex-1 justify-end">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="Qty"
+                              className="w-16 bg-background border border-border rounded-md px-2 py-1 text-sm font-semibold text-center focus:ring-2 focus:ring-primary outline-none tabular-nums"
+                              value={item.tabletQty || ''}
+                              onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
+                            />
+                          </div>
+                          <div className="w-16 text-right">
+                             <span className="text-[11px] font-medium text-muted-foreground">x ₹{item.tabletSellingPrice}</span>
+                          </div>
+                          <div className="w-20 text-right">
+                             <span className="text-sm font-bold text-foreground">₹{((item.tabletQty || 0) * (item.tabletSellingPrice || 0)).toFixed(2)}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -664,11 +770,21 @@ function BillingContent() {
               />
               <input 
                 type="tel" 
-                placeholder="Patient Phone" 
+                placeholder="Patient Phone (Auto-fills if exists)" 
                 value={patientPhone} 
                 onChange={(e) => setPatientPhone(e.target.value)} 
                 className="w-full bg-background border border-border px-3 py-2 rounded-md text-sm outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50 text-foreground" 
               />
+              {regularMedicines.length > 0 && (
+                 <button 
+                   onClick={loadRegularMedicines}
+                   disabled={loading}
+                   className="w-full mt-2 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+                 >
+                    <Package size={14} />
+                    Load Active Prescriptions ({regularMedicines.length})
+                 </button>
+              )}
             </div>
 
             <div className="space-y-4 text-sm">

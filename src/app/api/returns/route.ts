@@ -30,22 +30,23 @@ export async function POST(req: Request) {
 
         // Process Return Updates
         for (const returnReq of returnedItems) {
-            if (returnReq.returnQty <= 0) continue;
+            const returnQtyNum = Number(returnReq.returnQty);
+            if (isNaN(returnQtyNum) || returnQtyNum <= 0) continue;
 
             const originalItem = originalBill.items.find((item: any) => item.batchNumber === returnReq.batchNumber && item.name === returnReq.name);
             if (!originalItem) continue;
 
             const maxReturnable = (originalItem.qty || 0) - (originalItem.returnedQty || 0);
-            if (returnReq.returnQty > maxReturnable) {
-                return NextResponse.json({ error: `Cannot return ${returnReq.returnQty} of ${originalItem.name}. Maximum is ${maxReturnable}` }, { status: 400 });
+            if (returnQtyNum > maxReturnable) {
+                return NextResponse.json({ error: `Cannot return ${returnQtyNum} of ${originalItem.name}. Maximum is ${maxReturnable}` }, { status: 400 });
             }
 
             // Math matches original billing structure exactly
-            const itemSubTotalToReturn = (originalItem.sellingPrice || 0) * returnReq.returnQty;
+            const itemSubTotalToReturn = (originalItem.sellingPrice || 0) * returnQtyNum;
             returnSubTotal += itemSubTotalToReturn;
 
             // Update original item tracker
-            originalItem.returnedQty = (originalItem.returnedQty || 0) + returnReq.returnQty;
+            originalItem.returnedQty = (originalItem.returnedQty || 0) + returnQtyNum;
 
             // New Bill entry
             newBillItems.push({
@@ -55,7 +56,7 @@ export async function POST(req: Request) {
                 batchNumber: originalItem.batchNumber,
                 hsnCode: originalItem.hsnCode,
                 unitType: originalItem.unitType,
-                qty: returnReq.returnQty,
+                qty: returnQtyNum,
                 sellingPrice: originalItem.sellingPrice,
                 buyingPrice: originalItem.buyingPrice,
                 total: itemSubTotalToReturn, // Positive here, scaled negative at the Bill level
@@ -65,20 +66,22 @@ export async function POST(req: Request) {
             // Update Medicine Stock
             // originalItem.batchNumber might be a comma-separated list due to FEFO (e.g. "B1, B2")
             // We'll just return the physical stock to the first batch in the list for simplicity.
-            const primaryBatchNum = originalItem.batchNumber.split(',')[0].trim();
+            const primaryBatchNum = originalItem.batchNumber?.split(',')[0].trim() || '';
             const batch = await MedicineBatch.findOne({ batchNumber: primaryBatchNum }).populate('medicineId');
             
             if (batch) {
                 const masterMedicine = batch.medicineId as any;
+                const tabletsPerStrip = masterMedicine?.tabletsPerStrip || 1;
+                
                 let stockToAdd = 0;
                 if (originalItem.unitType === 'strip') {
-                    stockToAdd = returnReq.returnQty;
+                    stockToAdd = returnQtyNum;
                 } else {
-                    stockToAdd = returnReq.returnQty / (masterMedicine.tabletsPerStrip || 1);
+                    stockToAdd = returnQtyNum / tabletsPerStrip;
                 }
 
                 batch.stock += stockToAdd;
-                batch.totalTabletsInStock = batch.stock * (masterMedicine.tabletsPerStrip || 1);
+                batch.totalTabletsInStock = batch.stock * tabletsPerStrip;
                 await batch.save();
             }
         }

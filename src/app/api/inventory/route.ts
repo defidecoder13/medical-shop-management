@@ -11,17 +11,22 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
+    const idsParam = searchParams.get("ids"); // Comma-separated medicine IDs
 
     let batchQuery: any = {};
     let medicineQuery: any = {};
 
-    if (q) {
+    if (idsParam) {
+      const ids = idsParam.split(',').filter(id => id.trim() !== '');
+      batchQuery = { medicineId: { $in: ids } };
+    } else if (q) {
       const regex = new RegExp(q, "i");
       medicineQuery = {
         $or: [
           { name: regex },
           { brand: regex },
           { composition: regex },
+          { barcode: q }, // NEW: Check if q is exactly a barcode
         ],
       };
 
@@ -96,6 +101,7 @@ export async function POST(req: Request) {
     const {
       name,
       brand,
+      barcode,
       batchNumber,
       expiryDate,
       gstPercent,
@@ -128,11 +134,15 @@ export async function POST(req: Request) {
       medicine = await Medicine.create({
         name,
         brand,
+        barcode: barcode || "",
         tabletsPerStrip,
         composition: composition || "",
         hsnCode: hsnCode || "3004",
         gstPercent: gstPercent || 5,
       });
+    } else if (barcode && medicine.barcode !== barcode) {
+      medicine.barcode = barcode;
+      await medicine.save();
     }
 
     // 2. Prevent Duplicate Batch for the same medicine
@@ -225,6 +235,7 @@ export async function PUT(req: Request) {
     let masterChanged = false;
     if (body.name !== undefined && body.name !== medicine.name) { medicine.name = body.name; masterChanged = true; }
     if (body.brand !== undefined && body.brand !== medicine.brand) { medicine.brand = body.brand; masterChanged = true; }
+    if (body.barcode !== undefined && body.barcode !== medicine.barcode) { medicine.barcode = body.barcode; masterChanged = true; }
     if (body.composition !== undefined && body.composition !== medicine.composition) { medicine.composition = body.composition; masterChanged = true; }
     if (body.hsnCode !== undefined && body.hsnCode !== medicine.hsnCode) { medicine.hsnCode = body.hsnCode; masterChanged = true; }
     if (typeof body.gstPercent === "number" && body.gstPercent !== medicine.gstPercent) { medicine.gstPercent = body.gstPercent; masterChanged = true; }

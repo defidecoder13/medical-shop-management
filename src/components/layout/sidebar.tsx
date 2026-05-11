@@ -45,6 +45,7 @@ const navigationGroups = [
   {
     group: "Business",
     routes: [
+      { label: "Patients CRM", icon: Users, href: "/patients" },
       { label: "Reports", icon: BarChart3, href: "/sales-report" },
       { label: "Accounting", icon: Landmark, href: "/accounting" },
       { label: "Settings", icon: Settings, href: "/settings" },

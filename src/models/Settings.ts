@@ -5,6 +5,8 @@ const SettingsSchema = new mongoose.Schema(
     shopName: { type: String, required: true },
     address: { type: String },
     phone: { type: String },
+    dlNumber: { type: String },
+    pharmacistName: { type: String },
 
     gstEnabled: { type: Boolean, default: false },
     gstNumber: { type: String, default: null },
@@ -15,5 +17,8 @@ const SettingsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-export default mongoose.models.Settings ||
-  mongoose.model("Settings", SettingsSchema);
+if (mongoose.models.Settings) {
+  delete mongoose.models.Settings;
+}
+
+export default mongoose.model("Settings", SettingsSchema);
