@@ -320,6 +320,43 @@ export default function InventoryPage() {
     }
   };
 
+  const handleBarcodeChange = (val: string) => {
+    let updatedForm = { ...form, barcode: val };
+
+    // GS1 DataMatrix Parser (e.g., 01<14-GTIN>17<YYMMDD>10<BATCH>)
+    if (val.startsWith("01") && val.length > 20) {
+      try {
+        const gtin = val.substring(2, 16);
+        const expiryIndicator = val.substring(16, 18);
+        
+        if (expiryIndicator === "17") {
+          const expiryYYMMDD = val.substring(18, 24);
+          const yy = "20" + expiryYYMMDD.substring(0, 2);
+          const mm = expiryYYMMDD.substring(2, 4);
+          const dd = expiryYYMMDD.substring(4, 6);
+          const formattedExpiry = `${yy}-${mm}-${dd}`;
+          
+          const batchIndicator = val.substring(24, 26);
+          if (batchIndicator === "10") {
+             const batchRaw = val.substring(26);
+             const batchNumber = batchRaw.split(/\x1D/)[0]; // Split by GS separator if present
+             
+             updatedForm = {
+               ...updatedForm,
+               barcode: gtin,
+               expiryDate: formattedExpiry,
+               batchNumber: batchNumber
+             };
+          }
+        }
+      } catch (e) {
+        console.error("GS1 Parse Error", e);
+      }
+    }
+    
+    setForm(updatedForm);
+  };
+
   const filteredMeds = medicines
     .filter(m => {
        const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -470,7 +507,7 @@ export default function InventoryPage() {
               <input 
                 placeholder="Scan or type barcode" 
                 value={form.barcode || ''}
-                onChange={e => setForm({...form, barcode: e.target.value})}
+                onChange={e => handleBarcodeChange(e.target.value)}
                 className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
               />
             </div>
