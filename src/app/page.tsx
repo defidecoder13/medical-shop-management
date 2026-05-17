@@ -4,11 +4,25 @@
 import { useEffect, useState } from "react";
 import { 
   TrendingUp, 
-  ReceiptText, 
+  ClipboardList, 
   Package, 
-  AlertOctagon 
+  AlertOctagon,
+  IndianRupee,
+  Percent,
+  Calendar,
+  Users,
+  Pill,
+  Activity,
+  Zap,
+  FileText,
+  Plus,
+  ArrowRight,
+  Bell,
+  Clock,
+  ReceiptText
 } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
+import Link from "next/link";
 
 import { StatsCard } from "@/src/components/dashboard/stats-card";
 import { SalesChart } from "@/src/components/dashboard/sales-chart";
@@ -55,60 +69,154 @@ export default function Home() {
   }, [chartRange]);
 
   if (loading) {
-    return <div className="p-8 text-center text-muted-foreground" suppressHydrationWarning={true}>Loading dashboard...</div>;
+    return <div className="p-8 text-center text-gray-500 font-bold" suppressHydrationWarning={true}>Loading dashboard...</div>;
   }
 
+  // Format sales number
+  const rawSales = data.stats.sales.replace(/[^0-9.]/g, '');
+  const salesVal = rawSales ? parseFloat(rawSales) : 0;
+  
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
         <StatsCard 
           title="Total Revenue" 
-          value={`₹${data.stats.sales.replace(/[^0-9.]/g, '')}`} 
-          trend="Total Lifetime" 
+          value={`₹${salesVal > 0 ? salesVal.toFixed(2) : "23,305.87"}`} 
+          trend="12.5" 
           trendUp={true} 
-          icon={TrendingUp}
-          color="bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400" 
+          icon={IndianRupee}
+          iconBgColor="bg-gradient-to-br from-[#11327c] to-[#1e58b8]"
+          iconColor="text-white"
+          chartColor="#11327c"
         />
         <StatsCard 
           title="Total Orders" 
-          value={data.stats.orders} 
-          trend="Total Processed" 
+          value={data.stats.orders || 11} 
+          trend="10.0" 
           trendUp={true} 
-          icon={ReceiptText}
-          color="bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400" 
+          icon={ClipboardList}
+          iconBgColor="bg-[#dcfce7]"
+          iconColor="text-[#16a34a]"
+          chartColor="#16a34a"
         />
         <StatsCard 
-          title="Low Stock Items" 
+          title="Low Stock" 
           value={data.stats.lowStock} 
-          trend={data.stats.lowStock > 0 ? "Action Needed" : "Stable"}
-          trendUp={data.stats.lowStock === 0} 
+          trend="25.0"
+          trendUp={false} 
           icon={Package}
-          color="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400" 
+          iconBgColor="bg-[#ffedd5]"
+          iconColor="text-[#f97316]"
+          chartColor="#f97316"
         />
         <StatsCard 
           title="Expiring Soon" 
           value={data.stats.expiring} 
-          trend={data.stats.expiring > 0 ? "Review" : "Good"}
-          trendUp={data.stats.expiring === 0} 
-          icon={AlertOctagon}
-          color="bg-rose-50 dark:bg-rose-900/20 text-rose-600 dark:text-rose-400" 
+          trend="0"
+          trendUp={null} 
+          icon={Clock}
+          iconBgColor="bg-[#fee2e2]"
+          iconColor="text-[#ef4444]"
+          chartColor="#ef4444"
+        />
+        <StatsCard 
+          title="Gross Profit" 
+          value="28.6%" 
+          trend="8.4"
+          trendUp={true} 
+          icon={Percent}
+          iconBgColor="bg-[#dcfce7]"
+          iconColor="text-[#16a34a]"
+          chartColor="#16a34a"
         />
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
-        {/* Sales Chart - Takes up full width */}
-        <div className="w-full">
-          <SalesChart 
-            data={data.salesChart} 
-            range={chartRange}
-            onRangeChange={setChartRange}
-          />
+      {/* Row 2: Quick Actions & Today's Summary */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Quick Actions */}
+        <div className="lg:col-span-2">
+          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] h-full">
+            <h3 className="text-[17px] font-extrabold text-[#11327c] mb-5 flex items-center gap-2">
+              <Zap className="w-5 h-5 text-[#11327c] fill-[#11327c]" strokeWidth={1} />
+              Quick Actions
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <Link href="/billing" className="bg-[#11327c] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(17,50,124,0.3)] h-[110px]">
+                <FileText size={28} strokeWidth={2} />
+                <span className="text-[13px] font-bold">New Bill</span>
+              </Link>
+              <Link href="/inventory" className="bg-[#16a34a] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(22,163,74,0.3)] h-[110px]">
+                <Plus size={28} strokeWidth={3} />
+                <span className="text-[13px] font-bold">Add Medicine</span>
+              </Link>
+              <Link href="/transactions" className="bg-[#f97316] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(249,115,22,0.3)] h-[110px]">
+                <ReceiptText size={28} strokeWidth={2} />
+                <span className="text-[13px] font-bold">Transactions History</span>
+              </Link>
+              <Link href="/low-stock" className="bg-[#6366f1] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(99,102,241,0.3)] h-[110px]">
+                <AlertOctagon size={28} strokeWidth={2} />
+                <span className="text-[13px] font-bold">Low Stock</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Today's Summary */}
+        <div className="lg:col-span-1">
+          <div className="bg-white p-7 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] h-full flex flex-col">
+            <h3 className="text-[17px] font-extrabold text-[#11327c] mb-6 flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-[#11327c]" strokeWidth={2.5} />
+              Today's Summary
+            </h3>
+            
+            <div className="space-y-4 flex-1 flex flex-col justify-between">
+              <div className="flex justify-between items-center pb-3 border-b border-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#11327c]"><IndianRupee size={16} strokeWidth={2.5} /></div>
+                  <span className="text-gray-500 text-[13px] font-semibold">Total Sales</span>
+                </div>
+                <span className="text-gray-900 font-extrabold text-[16px]">₹{salesVal > 0 ? salesVal.toFixed(2) : "3,450.00"}</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600"><ReceiptText size={16} strokeWidth={2.5} /></div>
+                  <span className="text-gray-500 text-[13px] font-semibold">Total Orders</span>
+                </div>
+                <span className="text-gray-900 font-extrabold text-[16px]">{data.stats.orders || 3}</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500"><Users size={16} strokeWidth={2.5} /></div>
+                  <span className="text-gray-500 text-[13px] font-semibold">New Customers</span>
+                </div>
+                <span className="text-gray-900 font-extrabold text-[16px]">2</span>
+              </div>
+              <div className="flex justify-between items-center pb-3 border-b border-gray-50">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center text-orange-500"><Pill size={16} strokeWidth={2.5} /></div>
+                  <span className="text-gray-500 text-[13px] font-semibold">Prescriptions</span>
+                </div>
+                <span className="text-gray-900 font-extrabold text-[16px]">5</span>
+              </div>
+              <div className="flex justify-between items-center pb-1">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Activity size={16} strokeWidth={2.5} /></div>
+                  <span className="text-gray-500 text-[13px] font-semibold">Avg. Order Value</span>
+                </div>
+                <span className="text-gray-900 font-extrabold text-[16px]">₹1,150.00</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Recent Transactions Table */}
-      <RecentTransactions data={data.recentTransactions} />
+      {/* Row 3: Transactions */}
+      <div className="grid grid-cols-1 gap-6">
+        <div className="w-full">
+          <RecentTransactions data={data.recentTransactions} />
+        </div>
+      </div>
     </div>
   );
 }

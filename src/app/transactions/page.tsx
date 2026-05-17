@@ -194,53 +194,55 @@ export default function TransactionsPage() {
   
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+      <div className="h-[60vh] flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-[#11327c]/10 border-t-[#11327c] rounded-full animate-spin" />
+        <p className="text-[13px] font-bold text-[#11327c] animate-pulse">Loading Transactions...</p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
+    <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Transaction History</h2>
-          <p className="text-sm text-muted-foreground">View and manage past sales records.</p>
+          <h2 className="text-[26px] font-bold text-[#11327c] tracking-tight">Transaction History</h2>
+          <p className="text-[13px] text-gray-500 font-medium">View and manage past sales records.</p>
         </div>
 
         <div className="flex gap-3">
           <button
             onClick={exportToExcel}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-black text-[12px] uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-600/20 active:scale-[0.98]"
           >
-            <FileSpreadsheet size={18} />
+            <FileSpreadsheet size={18} strokeWidth={2.5} />
             Export to Excel
           </button>
         </div>
       </div>
 
-      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 text-muted-foreground" size={18} />
+      {/* Filters Bar */}
+      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
           <input 
             type="text" 
             placeholder="Search by ID, Date, Items, or Amount..."
-            className="w-full pl-10 pr-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-card transition-all text-foreground placeholder:text-muted-foreground"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 placeholder:text-gray-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div className="flex bg-secondary/50 p-1 rounded-lg border border-border">
+        <div className="flex bg-gray-50 p-1.5 rounded-xl border border-gray-200">
           {(["1d", "7d", "1m"] as const).map((range) => (
             <button
               key={range}
               onClick={() => setDateFilter(range)}
-              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
+              className={`px-5 py-2 text-[11px] font-black uppercase tracking-widest rounded-lg transition-all ${
                 dateFilter === range
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  ? "bg-[#11327c] text-white shadow-md shadow-[#11327c]/20"
+                  : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
               }`}
             >
               {range.toUpperCase()}
@@ -249,72 +251,81 @@ export default function TransactionsPage() {
         </div>
       </div>
 
-      {/* Transactions Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
-        <div className="flex-1 overflow-x-auto overflow-y-auto">
+      {/* Transactions Table Container */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-secondary/50 sticky top-0 border-b border-border z-10">
-              <tr>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Date & Time</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Transaction ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Items</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Amount</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-center">Actions</th>
+            <thead>
+              <tr className="bg-[#f8fafc] border-b border-gray-100">
+                <th className="px-7 py-5 text-[11px] font-black text-gray-400 uppercase tracking-[0.15em]">Date & Time</th>
+                <th className="px-7 py-5 text-[11px] font-black text-gray-400 uppercase tracking-[0.15em]">Transaction ID</th>
+                <th className="px-7 py-5 text-[11px] font-black text-gray-400 uppercase tracking-[0.15em]">Items</th>
+                <th className="px-7 py-5 text-[11px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">Amount</th>
+                <th className="px-7 py-5 text-[11px] font-black text-gray-400 uppercase tracking-[0.15em] text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-gray-50">
               {filteredTransactions.map((t) => (
-                <tr key={t._id} className={`hover:bg-muted/50 transition-colors group ${t.isReturn ? 'bg-red-50/30 dark:bg-red-950/20' : ''}`}>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                       <div className={`text-sm font-medium ${t.isReturn ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
-                         {new Date(t.createdAt).toLocaleDateString()}
+                <tr key={t._id} className={`hover:bg-[#f8fafc]/80 transition-colors group ${t.isReturn ? 'bg-rose-50/20' : ''}`}>
+                  <td className="px-7 py-5">
+                    <div className="flex flex-col gap-0.5">
+                       <div className={`text-[13.5px] font-black tracking-tight ${t.isReturn ? 'text-rose-600' : 'text-[#11327c]'}`}>
+                         {format(new Date(t.createdAt), "dd MMM, yyyy")}
                        </div>
-                       {/* @ts-ignore - isUnsynced is custom injected property for offline items */}
-                       {t.isUnsynced && (
-                          <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 text-[10px] font-bold uppercase tracking-wider flex items-center gap-1">
-                             <CheckCircle2 size={10} />
-                             Unsynced
-                          </span>
-                       )}
-                       {t.isReturn && (
-                          <span className="px-2 py-0.5 rounded-full bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-[10px] font-bold uppercase tracking-wider">
-                             Refund
-                          </span>
-                       )}
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      {new Date(t.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                       <div className="flex items-center gap-2 mt-1">
+                          <div className="text-[11px] text-gray-400 font-bold uppercase tracking-tight">
+                            {format(new Date(t.createdAt), "hh:mm a")}
+                          </div>
+                          {/* @ts-ignore - isUnsynced is custom property */}
+                          {t.isUnsynced && (
+                             <span className="px-2 py-0.5 rounded-md bg-amber-50 text-amber-600 border border-amber-100 text-[9px] font-black uppercase tracking-wider flex items-center gap-1">
+                                <CheckCircle2 size={10} strokeWidth={3} />
+                                Unsynced
+                             </span>
+                          )}
+                          {t.isReturn && (
+                             <span className="px-2 py-0.5 rounded-md bg-rose-50 text-rose-600 border border-rose-100 text-[9px] font-black uppercase tracking-wider">
+                                Refund
+                             </span>
+                          )}
+                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-xs font-mono text-muted-foreground">
-                    {t._id.slice(-8).toUpperCase()}
+                  <td className="px-7 py-5">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-500 rounded-lg text-[11px] font-black font-mono tracking-wider">
+                      #{t._id.slice(-8).toUpperCase()}
+                    </span>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1">
-                      {t.items.map((item, index) => (
-                        <div key={index} className="text-sm text-foreground">
-                          {item.name} <span className="text-xs text-muted-foreground">x{item.qty}</span>
+                  <td className="px-7 py-5">
+                    <div className="flex flex-col gap-1.5">
+                      {t.items.slice(0, 2).map((item, index) => (
+                        <div key={index} className="text-[13px] font-bold text-gray-700 leading-tight">
+                          {item.name} <span className="text-[11px] text-gray-400 ml-1 font-black">× {item.qty}</span>
                         </div>
                       ))}
+                      {t.items.length > 2 && (
+                        <div className="text-[11px] font-black text-[#11327c] uppercase tracking-widest opacity-60">
+                          + {t.items.length - 2} more items
+                        </div>
+                      )}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className={`text-sm font-bold ${t.isReturn ? 'text-red-600 dark:text-red-400' : 'text-foreground'}`}>
+                  <td className="px-7 py-5 text-right">
+                    <div className={`text-[15px] font-black tracking-tight ${t.isReturn ? 'text-rose-600' : 'text-[#11327c]'}`}>
                       {t.isReturn ? '-' : ''}₹{Math.abs(t.grandTotal).toFixed(2)}
                     </div>
-                    <div className="text-[10px] text-muted-foreground">
-                      Tax: {t.isReturn ? '-' : ''}₹{Math.abs(t.gstAmount).toFixed(2)}
+                    <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                      Tax: ₹{Math.abs(t.gstAmount).toFixed(2)}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-center">
+                  <td className="px-7 py-5 text-center">
                     <div className="flex items-center justify-center gap-2">
                       <Link
                         href={`/transactions/${t._id}`}
-                        className="p-1.5 text-muted-foreground hover:text-primary rounded hover:bg-primary/10 transition-all"
+                        className="w-9 h-9 flex items-center justify-center text-gray-400 hover:text-[#11327c] hover:bg-[#11327c]/5 rounded-xl transition-all border border-transparent hover:border-[#11327c]/10 active:scale-95"
                         title="View Details"
                       >
-                        <Eye size={18} />
+                        <Eye size={18} strokeWidth={2.5} />
                       </Link>
                     </div>
                   </td>
@@ -322,10 +333,13 @@ export default function TransactionsPage() {
               ))}
               {filteredTransactions.length === 0 && (
                 <tr>
-                   <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
-                      <div className="flex flex-col items-center gap-2">
-                        <Search size={24} className="opacity-50" />
-                        <p>No transactions found.</p>
+                   <td colSpan={5} className="px-7 py-24 text-center">
+                      <div className="flex flex-col items-center gap-3 opacity-20">
+                        <Search size={48} strokeWidth={1} className="text-gray-400" />
+                        <div className="space-y-1">
+                          <p className="text-gray-600 font-black text-sm uppercase tracking-widest">No Records Found</p>
+                          <p className="text-gray-400 font-medium text-xs">Try adjusting your search or filters</p>
+                        </div>
                       </div>
                    </td>
                 </tr>
@@ -333,8 +347,8 @@ export default function TransactionsPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-4 bg-secondary/30 border-t border-border text-xs text-muted-foreground flex justify-between items-center">
-           <span>Showing {filteredTransactions.length} records</span>
+        <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 flex justify-between items-center">
+           <span>Total Transactions: <span className="text-[#11327c] ml-1">{filteredTransactions.length}</span></span>
         </div>
       </div>
     </div>

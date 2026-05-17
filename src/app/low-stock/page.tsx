@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { apiClient } from "@/src/lib/apiClient";
+import { format } from "date-fns";
 
 interface Medicine {
   _id: string;
@@ -70,14 +71,14 @@ export default function LowStockPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
+      <div className="min-h-screen bg-gray-50/50 py-8">
         <div className="max-w-6xl mx-auto px-4 space-y-8">
           <div className="animate-pulse space-y-8">
-            <div className="h-10 bg-gray-200 dark:bg-gray-800 rounded-xl w-48"></div>
-            <div className="h-32 bg-gray-200 dark:bg-gray-800 rounded-3xl w-full"></div>
+            <div className="h-10 bg-gray-200 rounded-xl w-48"></div>
+            <div className="h-32 bg-gray-200 rounded-3xl w-full"></div>
             <div className="space-y-4">
                {[...Array(5)].map((_, i) => (
-                 <div key={i} className="h-16 bg-gray-200 dark:bg-gray-800 rounded-2xl w-full"></div>
+                 <div key={i} className="h-16 bg-gray-200 rounded-2xl w-full"></div>
                ))}
             </div>
           </div>
@@ -87,191 +88,184 @@ export default function LowStockPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50 dark:bg-gray-950/50 py-8">
-      <div className="max-w-6xl mx-auto px-4 space-y-8">
-        
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Link 
-              href="/"
-              className="p-2 bg-white dark:bg-gray-900 rounded-xl glass-card border border-gray-100 dark:border-gray-800 hover:text-amber-600 transition-colors"
-            >
-              <ChevronLeft className="w-5 h-5" />
-            </Link>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <PackageOpen className="text-amber-600 w-8 h-8" />
-                Stock Alerts
-              </h1>
-              <p className="text-gray-500 dark:text-gray-400 mt-1">Monitor items nearing depletion</p>
-            </div>
-          </div>
-          
-          <div className="flex gap-3">
-             <Link 
-               href="/inventory"
-               className="flex items-center gap-2 px-5 py-2.5 bg-white dark:bg-gray-900 text-gray-900 dark:text-white rounded-2xl font-bold transition-all border border-gray-100 dark:border-gray-800 hover:border-amber-200 dark:hover:border-amber-900/50 shadow-sm"
-             >
-                <Layers className="w-4 h-4 text-amber-600" />
-                Inventory Manager
-             </Link>
+    <div className="space-y-8 pb-10 max-w-[1400px] mx-auto">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div className="flex items-center gap-5">
+          <Link 
+            href="/"
+            className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl border border-gray-100 text-gray-400 hover:text-[#11327c] hover:border-[#11327c]/20 transition-all shadow-sm group"
+          >
+            <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} />
+          </Link>
+          <div>
+            <h1 className="text-[28px] font-black text-[#11327c] tracking-tight">
+              Stock Alerts
+            </h1>
+            <p className="text-[13px] text-gray-500 font-medium">Monitor items nearing depletion</p>
           </div>
         </div>
+        
+        <div className="flex gap-3">
+           <Link 
+             href="/inventory"
+             className="flex items-center gap-2 px-6 py-3 bg-[#11327c] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:bg-[#1e4db7] shadow-lg shadow-[#11327c]/20"
+           >
+              <Layers className="w-4 h-4" strokeWidth={2.5} />
+              Inventory Manager
+           </Link>
+        </div>
+      </div>
 
-        {/* Big Alert Hero */}
-        <div className={`relative glass-panel p-8 md:p-12 rounded-[2.5rem] border border-white/20 shadow-2xl overflow-hidden bg-gradient-to-br transition-all duration-700 ${
-          lowStockMedicines.length > 0 
-          ? 'from-amber-600 to-amber-700 text-white' 
-          : 'from-emerald-600 to-emerald-700 text-white'
-        }`}>
-          <div className="absolute -top-12 -right-12 p-12 opacity-10 pointer-events-none rotate-12">
-            {lowStockMedicines.length > 0 ? <AlertTriangle className="w-64 h-64" /> : <CheckCircle2 className="w-64 h-64" />}
-          </div>
-          
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
-            <div className="space-y-2">
-               <div className="flex items-center gap-2 text-white/70 font-bold text-[10px] uppercase tracking-[0.2em] mb-2">
-                 {lowStockMedicines.length > 0 ? <AlertCircle className="w-3.5 h-3.5" /> : <CheckCircle2 className="w-3.5 h-3.5" />}
-                 System Health Status
-               </div>
-               <h2 className="text-4xl md:text-5xl font-black tracking-tight">
+      {/* Minimal Status Banner */}
+      <div className="relative p-8 rounded-[32px] border border-gray-100 shadow-[0_15px_45px_-15px_rgba(17,50,124,0.1)] overflow-hidden bg-white">
+        <div className="absolute -right-6 -top-6 opacity-[0.03] pointer-events-none text-[#11327c]">
+          {lowStockMedicines.length > 0 ? <AlertTriangle className="w-48 h-48" /> : <CheckCircle2 className="w-48 h-48" />}
+        </div>
+        
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${lowStockMedicines.length > 0 ? 'bg-orange-50 text-orange-500' : 'bg-emerald-50 text-emerald-500'}`}>
+              {lowStockMedicines.length > 0 ? <AlertTriangle className="w-8 h-8" strokeWidth={2.5} /> : <CheckCircle2 className="w-8 h-8" strokeWidth={2.5} />}
+            </div>
+            <div>
+               <h2 className="text-3xl font-black text-[#11327c] tracking-tight">
                  {lowStockMedicines.length > 0 
-                  ? `${lowStockMedicines.length} Items Low on Stock` 
-                  : "All Units Optimized"}
+                  ? `${lowStockMedicines.length} Critical Stock Alerts` 
+                  : "Inventory Healthy"}
                </h2>
-               <p className="text-lg text-white/80 font-medium max-w-xl">
-                 {lowStockMedicines.length > 0 
-                  ? "Immediate restock recommended for these critical items to avoid service disruption." 
-                  : "Inventory levels are currently within safe operational thresholds. No action needed."}
+               <p className="text-[13px] text-gray-400 font-bold uppercase tracking-widest mt-1">
+                 System Status: <span className={lowStockMedicines.length > 0 ? 'text-orange-500' : 'text-emerald-500'}>
+                   {lowStockMedicines.length > 0 ? 'Restock Required' : 'Optimal'}
+                 </span>
                </p>
             </div>
-            
-            {lowStockMedicines.length > 0 && (
-              <div className="bg-white/20 backdrop-blur-md rounded-3xl p-6 border border-white/20 min-w-[200px] text-center">
-                 <div className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-1">Restock Priority</div>
-                 <div className="text-4xl font-black">HIGH</div>
-                 <div className="mt-3 flex items-center justify-center gap-1.5 text-xs font-bold text-white/80">
-                    <Truck className="w-4 h-4" />
-                    Pending Shipments: 0
-                 </div>
-              </div>
-            )}
           </div>
-        </div>
-
-        {/* Low Stock Medicines List */}
-        <div className="space-y-6">
-          <div className="flex items-center justify-between px-2">
-             <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
-                <AlertTriangle className="text-amber-500 w-6 h-6" />
-                Critical Stock List
-             </h2>
-             <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input 
-                  placeholder="Filter alerts..."
-                  className="pl-10 pr-4 py-2 bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/50"
-                />
-             </div>
-          </div>
-
-          {lowStockMedicines.length > 0 ? (
-            <div className="glass-panel rounded-3xl border border-white/20 shadow-xl overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="bg-amber-50/50 dark:bg-amber-900/10 border-b border-amber-100/50 dark:border-amber-800/30">
-                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest">Medicine & Batch</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest">Catalog</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest text-center">Status</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest text-right">Current Units</th>
-                      <th className="px-6 py-4 text-[10px] font-bold text-amber-800 dark:text-amber-400 uppercase tracking-widest text-right">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50 dark:divide-gray-800/50">
-                    {lowStockMedicines.map((med, idx) => (
-                      <tr 
-                        key={med._id} 
-                        className="hover:bg-amber-50/30 dark:hover:bg-amber-900/10 transition-all group animate-in fade-in slide-in-from-bottom-2 duration-300"
-                        style={{ animationDelay: `${idx * 50}ms` }}
-                      >
-                        <td className="px-6 py-5">
-                          <div className="flex items-center gap-4">
-                            <div className="w-10 h-10 bg-amber-100/50 dark:bg-amber-900/30 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
-                              <Package className="w-5 h-5 text-amber-600" />
-                            </div>
-                            <div>
-                               <div className="font-bold text-gray-900 dark:text-white uppercase tracking-tight">{med.name}</div>
-                               <div className="text-[10px] font-bold text-gray-400 mt-1 flex items-center gap-1.5 leading-none">
-                                 <Hash className="w-3 h-3" />
-                                 {med.batchNumber}
-                               </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-6 py-5 text-sm font-semibold text-gray-600 dark:text-gray-400">
-                           <div className="flex flex-col">
-                              <span>{med.brand || "Generics"}</span>
-                              <span className="text-[10px] font-medium text-gray-400 flex items-center gap-1 mt-0.5">
-                                <Calendar className="w-3 h-3" />
-                                Exp: {new Date(med.expiryDate).toLocaleDateString()}
-                              </span>
-                           </div>
-                        </td>
-                        <td className="px-6 py-5 text-center">
-                           <div className="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-tighter bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-400 border border-amber-200/50 dark:border-amber-800/50">
-                             {med.stock <= 5 ? "Critical" : "Warning"}
-                           </div>
-                        </td>
-                        <td className="px-6 py-5 text-right">
-                           <div className="flex flex-col items-end">
-                              <span className={`text-xl font-black leading-none ${med.stock <= 5 ? 'text-rose-600 animate-pulse' : 'text-amber-600'}`}>
-                                {med.stock}
-                              </span>
-                              <span className="text-[10px] font-bold text-gray-400 uppercase mt-1">Strips LEFT</span>
-                           </div>
-                        </td>
-                        <td className="px-6 py-5 text-right">
-                           <Link 
-                             href="/inventory"
-                             className="inline-flex items-center gap-1 text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-800 transition-colors"
-                           >
-                             Manage
-                             <ArrowRight className="w-3.5 h-3.5" />
-                           </Link>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          ) : (
-            <div className="glass-panel rounded-[2.5rem] p-20 text-center border border-white/20 shadow-xl flex flex-col items-center">
-               <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-950 rounded-full flex items-center justify-center mb-6">
-                  <CheckCircle2 className="w-10 h-10 text-emerald-500" />
-               </div>
-               <h3 className="text-2xl font-black text-gray-900 dark:text-white uppercase tracking-tight">Inventory Healthy</h3>
-               <p className="text-gray-500 font-medium max-w-sm mt-2">All medicines are currently above the low stock threshold.</p>
-               <Link 
-                 href="/inventory"
-                 className="mt-8 px-8 py-3 bg-gray-900 dark:bg-white text-white dark:text-gray-900 rounded-2xl font-bold shadow-xl hover:scale-105 transition-all"
-               >
-                 View All Inventory
-               </Link>
+          
+          {lowStockMedicines.length > 0 && (
+            <div className="flex items-center gap-3 px-6 py-3 bg-[#f8fafc] rounded-2xl border border-gray-100">
+               <div className="text-[10px] font-black uppercase tracking-wider text-gray-400">Priority:</div>
+               <div className="text-sm font-black text-orange-600 uppercase">High</div>
             </div>
           )}
         </div>
+      </div>
 
-        {/* Action Footnote */}
-        <div className="flex justify-center pt-4 pb-12">
-           <p className="text-xs text-gray-400 font-medium flex items-center gap-2">
-             <AlertCircle className="w-3.5 h-3.5" />
-             Threshold is currently set to 10 strips. Adjust in settings if required.
-           </p>
+      {/* List Section */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between px-2">
+           <h2 className="text-[18px] font-black text-[#11327c] uppercase tracking-widest flex items-center gap-3">
+              <AlertCircle className="text-orange-500 w-5 h-5" strokeWidth={3} />
+              Critical Shortage List
+           </h2>
+           <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#11327c] transition-colors" />
+              <input 
+                placeholder="Filter alerts..."
+                className="pl-12 pr-6 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all w-64 shadow-sm"
+              />
+           </div>
         </div>
 
+        {lowStockMedicines.length > 0 ? (
+          <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.05)] overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-[#f8fafc] border-b border-gray-50">
+                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Medicine & Batch</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Manufacturer</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Status</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Available</th>
+                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50">
+                  {lowStockMedicines.map((med, idx) => (
+                    <tr 
+                      key={med._id} 
+                      className="hover:bg-[#f8fafc]/50 transition-all group"
+                    >
+                      <td className="px-8 py-6">
+                        <div className="flex items-center gap-5">
+                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-sm ${
+                            med.stock <= 5 ? 'bg-rose-50 text-rose-600' : 'bg-orange-50 text-orange-600'
+                          }`}>
+                            <Package className="w-6 h-6" strokeWidth={2} />
+                          </div>
+                          <div>
+                             <div className="font-black text-[#11327c] uppercase text-[13px] tracking-tight">{med.name}</div>
+                             <div className="text-[10px] font-black text-gray-400 mt-1 flex items-center gap-2">
+                               <Hash className="w-3 h-3" strokeWidth={2.5} />
+                               BATCH: <span className="text-gray-500 font-mono">{med.batchNumber}</span>
+                             </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-8 py-6">
+                         <div className="flex flex-col">
+                            <span className="text-[13px] font-black text-[#11327c]/70 uppercase">{med.brand || "Generics"}</span>
+                            <span className="text-[10px] font-bold text-gray-400 flex items-center gap-2 mt-1.5 uppercase tracking-wider">
+                              <Calendar className="w-3.5 h-3.5" />
+                              Exp: {format(new Date(med.expiryDate), "MMM dd, yyyy")}
+                            </span>
+                         </div>
+                      </td>
+                      <td className="px-8 py-6 text-center">
+                         <div className={`inline-flex items-center px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
+                           med.stock <= 5 
+                           ? 'bg-rose-50 text-rose-700 border-rose-100' 
+                           : 'bg-orange-50 text-orange-700 border-orange-100'
+                         }`}>
+                           {med.stock <= 5 ? "Critical" : "Warning"}
+                         </div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                         <div className="flex flex-col items-end">
+                            <span className={`text-2xl font-black tracking-tighter leading-none ${med.stock <= 5 ? 'text-rose-600' : 'text-orange-600'}`}>
+                              {med.stock}
+                            </span>
+                            <span className="text-[9px] font-black text-gray-300 uppercase mt-1 tracking-widest">Strips</span>
+                         </div>
+                      </td>
+                      <td className="px-8 py-6 text-right">
+                         <Link 
+                           href="/inventory"
+                           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 text-[#11327c] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#11327c] hover:text-white transition-all shadow-sm active:scale-95"
+                         >
+                           Restock
+                           <ArrowRight className="w-3.5 h-3.5" strokeWidth={3} />
+                         </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-white rounded-[40px] p-24 text-center border border-gray-100 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.05)] flex flex-col items-center">
+             <div className="w-24 h-24 bg-emerald-50 rounded-[32px] flex items-center justify-center mb-8 shadow-sm">
+                <CheckCircle2 className="w-12 h-12 text-emerald-500" strokeWidth={2.5} />
+             </div>
+             <h3 className="text-2xl font-black text-[#11327c] uppercase tracking-tight">Catalog Optimized</h3>
+             <p className="text-gray-400 font-medium text-sm max-w-sm mt-3 leading-relaxed">Great news! All medicines are currently maintaining inventory levels above the warning threshold.</p>
+             <Link 
+               href="/inventory"
+               className="mt-10 px-10 py-4 bg-[#11327c] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-[#11327c]/20 hover:scale-105 active:scale-95 transition-all"
+             >
+               View All Products
+             </Link>
+          </div>
+        )}
+      </div>
+
+      {/* Footer Info */}
+      <div className="flex justify-center pt-10 pb-6">
+         <div className="px-5 py-2.5 bg-[#f8fafc] rounded-xl border border-gray-100 text-[11px] text-gray-400 font-bold flex items-center gap-3 uppercase tracking-wider">
+           <AlertCircle className="w-4 h-4 text-orange-400" />
+           Threshold: <span className="text-[#11327c]">10 Units</span> <span className="opacity-20">/</span> Smart Alerts <span className="text-emerald-500">Active</span>
+         </div>
       </div>
     </div>
   );

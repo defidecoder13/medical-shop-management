@@ -15,11 +15,14 @@ import {
   AlertCircle, 
   Loader2,
   Upload,
-  Download
+  Download,
+  Package,
+  Layers
 } from "lucide-react";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
+import { format } from "date-fns";
 import * as xlsx from "xlsx";
 
 type Medicine = {
@@ -390,20 +393,20 @@ export default function InventoryPage() {
     });
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
+    <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
       {/* Header Actions */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Inventory Management</h2>
-          <p className="text-sm text-muted-foreground">Manage your medicine stock and pricing.</p>
+          <h2 className="text-[26px] font-bold text-[#11327c] tracking-tight">Inventory Management</h2>
+          <p className="text-[13px] text-gray-500 font-medium">Manage your medicine stock and pricing.</p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <button 
             onClick={downloadTemplate}
-            className="flex items-center gap-2 bg-secondary text-foreground border border-border px-3 py-2.5 rounded-lg font-medium text-sm hover:bg-secondary/80 transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-white text-gray-600 border border-gray-200 px-4 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-gray-50 transition-all shadow-sm active:scale-95"
           >
-            <Download size={16} />
-            <span className="hidden sm:inline">Template</span>
+            <Download size={16} strokeWidth={2.5} />
+            Template
           </button>
           
           <input 
@@ -416,10 +419,10 @@ export default function InventoryPage() {
           <button 
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center gap-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 px-3 py-2.5 rounded-lg font-medium text-sm hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors shadow-sm disabled:opacity-50"
+            className="flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-indigo-100 transition-all shadow-sm disabled:opacity-50 active:scale-95"
           >
-            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-            <span className="hidden sm:inline">{uploading ? "Uploading..." : "Upload CSV"}</span>
+            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} strokeWidth={2.5} />}
+            {uploading ? "Uploading..." : "Upload CSV"}
           </button>
 
           <button 
@@ -428,44 +431,59 @@ export default function InventoryPage() {
               setEditingId(null);
               setShowForm(!showForm);
             }}
-            className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg font-semibold text-sm hover:bg-primary/90 transition-colors shadow-sm"
+            className="flex items-center gap-2 bg-[#11327c] text-white px-5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-[#1e4db7] transition-all shadow-lg shadow-[#11327c]/20 active:scale-95"
           >
-            <Plus size={18} />
+            <Plus size={18} strokeWidth={3} />
             {showForm ? "Cancel" : "Add Medicine"}
           </button>
         </div>
       </div>
 
       {message && (
-        <div className={`p-4 rounded-lg flex items-center gap-2 text-sm font-medium ${
-          message.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
+        <div className={`px-4 py-3 rounded-xl flex items-center gap-3 text-[13px] font-bold shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 ${
+          message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
         }`}>
-          {message.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+          {message.type === 'success' ? <CheckCircle2 size={18} strokeWidth={2.5} /> : <AlertCircle size={18} strokeWidth={2.5} />}
           {message.text}
         </div>
       )}
 
       {/* Form Section */}
+      <AnimatePresence>
       {showForm && (
-        <div className="bg-card p-6 rounded-xl border border-border shadow-sm animate-in fade-in slide-in-from-top-4">
-          <h3 className="font-semibold text-foreground mb-4">{editingId ? "Edit Medicine" : "New Medicine Details"}</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-[0_20px_50px_-20px_rgba(17,50,124,0.12)]"
+        >
+          <div className="flex items-center gap-4 mb-8">
+            <div className="w-12 h-12 bg-[#11327c]/5 rounded-2xl flex items-center justify-center text-[#11327c]">
+              <Edit3 size={24} strokeWidth={2.5} />
+            </div>
+            <div>
+              <h3 className="text-[18px] font-black text-[#11327c] tracking-tight">{editingId ? "Edit Medicine" : "Add New Medicine"}</h3>
+              <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest">Update your catalog information</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="flex flex-col gap-2 relative" ref={autocompleteRef}>
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Medicine Name</label>
-              <div className="relative">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Medicine Name</label>
+              <div className="relative group">
                 <input 
-                  placeholder="e.g. Dolo 650" 
+                  placeholder="Search and select name..." 
                   value={form.name}
                   onChange={e => handleMedicineNameChange(e.target.value)}
                   onFocus={() => {
                     if (suggestions.length > 0) setShowSuggestions(true);
                   }}
-                  className="w-full px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 placeholder:text-gray-400"
                   autoComplete="off"
                 />
                 {loadingSuggestions && (
-                  <div className="absolute right-3 top-2.5">
-                    <Loader2 size={16} className="animate-spin text-muted-foreground" />
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 size={16} className="animate-spin text-[#11327c]" />
                   </div>
                 )}
               </div>
@@ -473,179 +491,198 @@ export default function InventoryPage() {
               <AnimatePresence>
                 {showSuggestions && (
                   <motion.div 
-                    initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
-                    className="absolute z-50 top-[calc(100%+4px)] left-0 w-[150%] sm:w-[200%] bg-card border border-border rounded-xl shadow-xl overflow-hidden max-h-64 overflow-y-auto"
+                    initial={{ opacity: 0, y: 5 }} 
+                    animate={{ opacity: 1, y: 0 }} 
+                    exit={{ opacity: 0, y: 5 }}
+                    className="absolute z-50 top-full mt-2 w-[150%] sm:w-[200%] bg-white border border-gray-100 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] overflow-hidden max-h-64 overflow-y-auto p-2"
                   >
                     {suggestions.map((s, idx) => (
                       <button
                         key={idx}
                         onClick={() => handleSuggestionSelect(s)}
-                        className="w-full text-left px-4 py-3 hover:bg-secondary border-b border-border/50 last:border-0 transition-colors flex flex-col items-start gap-1"
+                        className="w-full text-left px-4 py-3.5 hover:bg-[#f8fafc] rounded-xl transition-colors flex flex-col items-start gap-1 group/item"
                       >
                         <div className="flex justify-between w-full items-center">
-                          <span className="font-semibold text-sm text-foreground">{s.name}</span>
-                          <span className="text-[10px] font-medium px-2 py-0.5 bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 rounded-full">{s.brand}</span>
+                          <span className="font-black text-[13px] text-[#11327c] group-hover/item:text-[#11327c]">{s.name}</span>
+                          <span className="text-[9px] font-black px-2 py-0.5 bg-indigo-50 text-[#11327c] rounded-md uppercase tracking-wider">{s.brand}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground line-clamp-1 break-all">{s.composition}</span>
+                        <span className="text-[11px] text-gray-400 font-medium line-clamp-1">{s.composition}</span>
                       </button>
                     ))}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Brand</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Brand</label>
               <input 
                 placeholder="e.g. Micro Labs" 
                 value={form.brand}
                 onChange={e => setForm({...form, brand: e.target.value})}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Barcode (Optional)</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Barcode</label>
               <input 
-                placeholder="Scan or type barcode" 
+                placeholder="Scan barcode" 
                 value={form.barcode || ''}
                 onChange={e => handleBarcodeChange(e.target.value)}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Batch Number</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Batch Number</label>
               <input 
                 ref={batchNumberInputRef}
                 placeholder="e.g. BATCH123" 
                 value={form.batchNumber}
                 onChange={e => setForm({...form, batchNumber: e.target.value})}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Rack / Row</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Rack / Row</label>
               <input 
                 placeholder="e.g. A1" 
                 value={form.rackNumber}
                 onChange={e => setForm({...form, rackNumber: e.target.value})}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Composition (Generic)</label>
+
+            <div className="flex flex-col gap-2 lg:col-span-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Composition</label>
               <input 
                 placeholder="e.g. Paracetamol 500mg" 
                 value={form.composition}
                 onChange={e => setForm({...form, composition: e.target.value})}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">HSN Code</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">HSN Code</label>
               <input 
-                placeholder="e.g. 3004" 
+                placeholder="3004" 
                 value={form.hsnCode}
                 onChange={e => setForm({...form, hsnCode: e.target.value})}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Expiry Date</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Expiry Date</label>
               <input 
                 type="date"
                 value={form.expiryDate}
                 onChange={e => setForm({...form, expiryDate: e.target.value})}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground w-full"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Stock (Strips)</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Stock (Strips)</label>
               <input 
                 type="number" 
                 placeholder="0" 
                 value={form.stock}
                 onChange={e => setForm({...form, stock: e.target.value === "" ? "" : Number(e.target.value)})}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Tablets / Strip</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Tablets / Strip</label>
               <input 
                 type="number" 
                 placeholder="0" 
                 value={form.tabletsPerStrip}
                 onChange={e => setForm({...form, tabletsPerStrip: e.target.value === "" ? "" : Number(e.target.value)})}
-                className="px-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50"
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Buying Price</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Cost Price</label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-muted-foreground text-sm">₹</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
                 <input 
                   type="number" 
                   placeholder="0.00" 
                   value={form.buyingPrice}
                   onChange={e => setForm({...form, buyingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="pl-7 pr-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50 w-full"
+                  className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
                 />
               </div>
             </div>
+
             <div className="flex flex-col gap-2">
-              <label className="text-xs font-semibold text-muted-foreground uppercase">Selling Price (MRP)</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">MRP / Selling Price</label>
               <div className="relative">
-                <span className="absolute left-3 top-2 text-muted-foreground text-sm">₹</span>
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
                 <input 
                   type="number" 
                   placeholder="0.00" 
                   value={form.sellingPrice}
                   onChange={e => setForm({...form, sellingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="pl-7 pr-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary text-foreground placeholder:text-muted-foreground/50 w-full"
+                  className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
                 />
               </div>
             </div>
+
             <div className="flex items-end">
               <button 
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full bg-primary text-primary-foreground font-medium rounded-lg py-2.5 hover:bg-primary/90 transition-colors disabled:opacity-50 shadow-sm"
+                className="w-full bg-[#11327c] text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-[#1e4db7] transition-all disabled:opacity-50 shadow-lg shadow-[#11327c]/20"
               >
-                {loading ? "Saving..." : "Save Medicine"}
+                {loading ? "SAVING..." : "SAVE MEDICINE"}
               </button>
             </div>
           </div>
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Filters Bar */}
-      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col md:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 text-muted-foreground" size={18} />
+      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] flex flex-col md:flex-row gap-4">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
           <input 
             type="text" 
             placeholder="Search by name, brand, batch or composition..."
-            className="w-full pl-10 pr-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-card transition-all text-foreground placeholder:text-muted-foreground"
+            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 placeholder:text-gray-400"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
         <div className="flex gap-2 relative">
-          
-          {/* Sort Dropdown */}
           <div className="relative">
             <button 
-              onClick={() => { setShowSort(!showSort); }}
-              className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition-all ${
+              onClick={() => setShowSort(!showSort)}
+              className={`flex items-center gap-2 px-5 py-3 border rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
                 sortConfig.key !== 'none' 
-                ? 'bg-primary text-primary-foreground border-primary shadow-sm' 
-                : 'border-border hover:bg-secondary text-foreground'
+                ? 'bg-[#11327c] text-white border-[#11327c] shadow-lg shadow-[#11327c]/20' 
+                : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-500'
               }`}
             >
-              <ArrowUpDown size={16} />
+              <ArrowUpDown size={16} strokeWidth={2.5} />
               Sort
             </button>
 
+            <AnimatePresence>
             {showSort && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-card border border-border rounded-xl shadow-xl z-50 p-2 animate-in fade-in slide-in-from-top-2">
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 10 }}
+                className="absolute right-0 top-full mt-3 w-56 bg-white border border-gray-100 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] z-50 p-2 overflow-hidden"
+              >
                 {[
                   { label: 'Name', key: 'name' },
                   { label: 'Expiry Date', key: 'expiryDate' },
@@ -661,94 +698,106 @@ export default function InventoryPage() {
                       });
                       setShowSort(false);
                     }}
-                    className={`w-full text-left px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide flex items-center justify-between hover:bg-secondary transition-all ${
-                      sortConfig.key === s.key ? 'text-primary' : 'text-muted-foreground'
+                    className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] flex items-center justify-between hover:bg-[#f8fafc] transition-all ${
+                      sortConfig.key === s.key ? 'text-[#11327c]' : 'text-gray-400'
                     }`}
                   >
                     {s.label}
                     {sortConfig.key === s.key && (
-                      <ArrowUpDown size={12} className={sortConfig.direction === 'desc' ? 'rotate-180' : ''} />
+                      <ArrowUpDown size={12} className={sortConfig.direction === 'desc' ? 'rotate-180' : ''} strokeWidth={3} />
                     )}
                   </button>
                 ))}
+                <div className="h-px bg-gray-50 my-1 mx-2" />
                 <button
                   onClick={() => { setSortConfig({ key: 'none', direction: 'asc' }); setShowSort(false); }}
-                  className="w-full text-left px-4 py-2 rounded-lg text-[10px] font-black text-rose-500 uppercase tracking-widest hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all mt-1 border-t border-border"
+                  className="w-full text-left px-4 py-3 rounded-xl text-[9px] font-black text-rose-500 uppercase tracking-widest hover:bg-rose-50 transition-all"
                 >
                   Reset Sort
                 </button>
-              </div>
+              </motion.div>
             )}
+            </AnimatePresence>
           </div>
         </div>
       </div>
 
-      {/* Data Table */}
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
-        <div className="flex-1 overflow-x-auto overflow-y-auto">
+      {/* Data Table Container */}
+      <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden">
+        <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-secondary/50 sticky top-0 border-b border-border z-10">
+            <thead className="sticky top-0 bg-[#f8fafc] border-b border-gray-100 z-10">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Medicine Name</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Rack</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Stock</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Total Tablets</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Batch</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Expiry</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Cost</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">MRP</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-center">Actions</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Medicine Details</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Rack</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Strips</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Tablets</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Expiry</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">Cost</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">MRP</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-gray-50">
               <AnimatePresence>
               {filteredMeds.map((med, index) => (
                 <motion.tr 
                   key={med._id} 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: index * 0.05, duration: 0.2 }}
-                  className="hover:bg-muted/50 transition-colors group"
+                  transition={{ delay: Math.min(index * 0.03, 0.5) }}
+                  className="hover:bg-[#f8fafc]/80 transition-colors group"
                 >
-                  <td className="px-6 py-4 font-semibold text-foreground text-sm">
-                    {med.name}
-                    <span className="block text-[10px] text-muted-foreground font-normal">{med.composition ? `${med.composition} • ` : ''}{med.brand}</span>
+                  <td className="px-7 py-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-[#11327c] shadow-sm">
+                        <Package size={20} strokeWidth={2} />
+                      </div>
+                      <div>
+                        <div className="font-black text-[#11327c] uppercase text-[13px] tracking-tight mb-0.5">{med.name}</div>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                          {med.brand} <span className="mx-1 opacity-20">/</span> <span className="font-mono text-gray-500">#{med.batchNumber}</span>
+                        </div>
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-foreground">{med.rackNumber || "-"}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={`font-bold ${Number(med.stock) < 50 ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
-                      {med.stock}
+                  <td className="px-7 py-5">
+                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[11px] font-black tracking-tight">
+                      {med.rackNumber || "-"}
                     </span>
-                    <span className="text-[10px] text-muted-foreground ml-1">STRIPS</span>
                   </td>
-                  <td className="px-6 py-4 text-sm text-foreground">
+                  <td className="px-7 py-5">
+                    <div className={`text-[14px] font-black tracking-tight ${Number(med.stock) < 10 ? 'text-rose-600' : 'text-[#11327c]'}`}>
+                      {med.stock}
+                    </div>
+                    {Number(med.stock) < 10 && (
+                      <div className="text-[9px] font-black text-rose-500 uppercase tracking-widest mt-0.5">Critical</div>
+                    )}
+                  </td>
+                  <td className="px-7 py-5 text-[13px] font-bold text-gray-500">
                     {med.totalTabletsInStock || (Number(med.stock) * Number(med.tabletsPerStrip)) || 0}
                   </td>
-                  <td className="px-6 py-4 text-xs font-mono text-muted-foreground">{med.batchNumber}</td>
-                  <td className="px-6 py-4 text-sm">
-                    <span className={new Date(med.expiryDate) < new Date() ? 'text-rose-600 dark:text-rose-400 font-medium' : 'text-muted-foreground'}>
-                      {med.expiryDate ? med.expiryDate.slice(0, 10) : "-"}
-                    </span>
+                  <td className="px-7 py-5">
+                    <div className={`text-[13px] font-black tracking-tight ${new Date(med.expiryDate) < new Date() ? 'text-rose-600' : 'text-gray-600'}`}>
+                      {med.expiryDate ? format(new Date(med.expiryDate), "MMM yyyy") : "-"}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-sm text-right text-muted-foreground">₹{Number(med.buyingPrice).toFixed(2)}</td>
-                  <td className="px-6 py-4 text-sm font-semibold text-right text-foreground">₹{Number(med.sellingPrice).toFixed(2)}</td>
-                  <td className="px-6 py-4">
-                    <div className="flex items-center justify-center gap-1">
+                  <td className="px-7 py-5 text-right text-[13px] font-bold text-gray-400">₹{Number(med.buyingPrice).toFixed(2)}</td>
+                  <td className="px-7 py-5 text-right text-[15px] font-black text-[#11327c] tracking-tight">₹{Number(med.sellingPrice).toFixed(2)}</td>
+                  <td className="px-7 py-5">
+                    <div className="flex items-center justify-center gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={() => handleEdit(med)}
-                        className="p-1.5 text-muted-foreground hover:text-primary rounded hover:bg-primary/10 transition-all"
+                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#11327c] hover:bg-[#11327c]/5 rounded-lg transition-all"
                       >
-                        <Edit3 size={16} />
+                        <Edit3 size={16} strokeWidth={2.5} />
                       </button>
                       <button 
                         onClick={() => handleDelete(med._id!)}
-                        className="p-1.5 text-muted-foreground hover:text-destructive rounded hover:bg-destructive/10 transition-all"
+                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
                       >
-                        <Trash2 size={16} />
-                      </button>
-                      <button className="p-1.5 text-muted-foreground hover:text-foreground rounded hover:bg-secondary transition-all">
-                        <MoreVertical size={16} />
+                        <Trash2 size={16} strokeWidth={2.5} />
                       </button>
                     </div>
                   </td>
@@ -757,20 +806,26 @@ export default function InventoryPage() {
               </AnimatePresence>
               {filteredMeds.length === 0 && (
                 <tr>
-                   <td colSpan={8} className="px-6 py-12 text-center text-muted-foreground">
-                      No medicines found matching your search.
+                   <td colSpan={8} className="px-7 py-24 text-center">
+                      <div className="flex flex-col items-center gap-3 opacity-20">
+                        <Search size={48} strokeWidth={1} className="text-gray-400" />
+                        <div className="space-y-1">
+                          <p className="text-gray-600 font-black text-sm uppercase tracking-widest">No Products Found</p>
+                          <p className="text-gray-400 font-medium text-xs">Try adjusting your search or filters</p>
+                        </div>
+                      </div>
                    </td>
                 </tr>
               )}
             </tbody>
           </table>
         </div>
-        <div className="p-4 bg-secondary/30 border-t border-border flex items-center justify-between text-xs font-medium text-muted-foreground">
-          <p>Showing {filteredMeds.length} medicines</p>
+        <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
+          <p>Total Catalog Size: <span className="text-[#11327c] ml-1">{filteredMeds.length} Items</span></p>
           <div className="flex gap-2">
-            <button className="px-3 py-1 bg-card border border-border rounded shadow-sm disabled:opacity-50" disabled>Previous</button>
-            <button className="px-3 py-1 bg-primary text-primary-foreground border border-primary rounded shadow-sm">1</button>
-            <button className="px-3 py-1 bg-card border border-border rounded shadow-sm">Next</button>
+            <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30" disabled>Previous</button>
+            <button className="px-4 py-2 bg-[#11327c] text-white border border-[#11327c] rounded-xl shadow-md shadow-[#11327c]/20">1</button>
+            <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">Next</button>
           </div>
         </div>
       </div>

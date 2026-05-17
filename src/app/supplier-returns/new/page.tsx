@@ -13,7 +13,8 @@ import {
   CheckCircle2,
   XCircle,
   Truck,
-  ArrowLeft
+  ArrowLeft,
+  Loader2
 } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/src/components/ui/separator";
@@ -205,293 +206,291 @@ function ReturnContent() {
   };
 
   return (
-    <div className="h-full flex flex-col space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="h-full flex flex-col space-y-8 max-w-[1400px] mx-auto pb-10">
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <Link href="/supplier-returns" className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-2 transition-colors">
-            <ArrowLeft size={16} className="mr-1" />
+          <Link href="/supplier-returns" className="inline-flex items-center text-[11px] font-black uppercase tracking-widest text-gray-400 hover:text-[#11327c] mb-3 transition-all group">
+            <ArrowLeft size={14} className="mr-2 group-hover:-translate-x-1 transition-transform" strokeWidth={3} />
             Back to Ledger
           </Link>
-          <h2 className="text-2xl font-bold text-foreground">New Supplier Return</h2>
-          <p className="text-sm text-muted-foreground">Draft a debit note against inventory outflows.</p>
+          <h2 className="text-[28px] font-black text-[#11327c] tracking-tight">New Supplier Return</h2>
+          <p className="text-[13px] text-gray-500 font-medium">Draft a debit note against inventory outflows.</p>
         </div>
         
-        {message && (
-          <div className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium ${
-            message.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
-          }`}>
-            {message.type === 'success' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
-            {message.text}
-          </div>
-        )}
+        <AnimatePresence>
+          {message && (
+            <motion.div 
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className={`px-5 py-3 rounded-2xl flex items-center gap-3 text-[13px] font-black uppercase tracking-wider shadow-sm border ${
+                message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'
+              }`}
+            >
+              {message.type === 'success' ? <CheckCircle2 size={18} strokeWidth={2.5} /> : <XCircle size={18} strokeWidth={2.5} />}
+              {message.text}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 h-full min-h-0">
         
         {/* Left Column: Search & Items */}
-        <div className="lg:col-span-8 flex flex-col gap-6 min-h-0">
+        <div className="lg:col-span-8 flex flex-col gap-8 min-h-0">
           
-          <div className="bg-card p-6 rounded-xl border border-border shadow-sm relative">
-            <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Search size={16} className="text-primary" />
+          {/* Search Area */}
+          <div className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] relative">
+            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] mb-4 flex items-center gap-2">
+              <Search size={14} className="text-[#11327c]" strokeWidth={3} />
               Find Inventory to Return
             </h2>
-            <div className="relative">
+            <div className="relative group">
               <input
-                className="w-full bg-secondary/50 border border-border px-10 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all text-foreground placeholder:text-muted-foreground"
-                placeholder="Search by name, brand or batch..."
+                className="w-full bg-gray-50 border border-gray-200 pl-12 pr-6 py-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-gray-800 font-bold placeholder:text-gray-400 text-sm"
+                placeholder="Search by medicine name, brand or batch..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] w-5 h-5 transition-colors" strokeWidth={2.5} />
             </div>
 
             {/* Results Dropdown */}
-            {medicines.length > 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto"
-              >
-                <AnimatePresence>
-                {medicines.map((med, index) => (
-                  <motion.button
-                    key={med._id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => addToCart(med)}
-                    className="w-full flex justify-between items-center p-3 hover:bg-muted/50 text-left transition-colors border-b border-border last:border-0"
-                  >
-                    <div>
-                      <div className="font-medium text-foreground">{med.name}</div>
-                      {med.composition && (
-                         <div className="text-[11px] text-muted-foreground italic truncate max-w-xs">{med.composition}</div>
-                      )}
-                      <div className="text-xs text-muted-foreground flex gap-3 mt-0.5">
-                        <span className="bg-secondary px-1.5 rounded">Rack: {med.rackNumber || 'N/A'}</span>
-                        <span className="text-foreground font-medium flex gap-1 items-center">
-                            Stock Available: <span className="font-bold text-primary">{med.stock} strips</span>
-                        </span>
+            <AnimatePresence>
+              {medicines.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-100 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-30 max-h-80 overflow-y-auto p-2"
+                >
+                  {medicines.map((med, index) => (
+                    <button
+                      key={med._id}
+                      onClick={() => addToCart(med)}
+                      className="w-full flex justify-between items-center p-4 hover:bg-[#f8fafc] text-left transition-all rounded-2xl group/btn mb-1 last:mb-0"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover/btn:bg-white transition-colors">
+                          <Package className="w-5 h-5 text-[#11327c]/40 group-hover/btn:text-[#11327c]" strokeWidth={2} />
+                        </div>
+                        <div>
+                          <div className="font-black text-[#11327c] uppercase text-[13px] tracking-tight">{med.name}</div>
+                          <div className="text-[10px] text-gray-400 font-bold flex gap-3 mt-1 uppercase tracking-wider">
+                            <span>BATCH: <span className="text-[#11327c]/60">{med.batchNumber}</span></span>
+                            <span>STOCK: <span className="text-orange-600">{med.stock}</span></span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
-                      <Plus size={16} />
-                    </div>
-                  </motion.button>
-                ))}
-                </AnimatePresence>
-              </motion.div>
-            )}
+                      <div className="w-8 h-8 flex items-center justify-center bg-[#11327c] text-white rounded-lg opacity-0 group-hover/btn:opacity-100 transition-all transform translate-x-2 group-hover/btn:translate-x-0">
+                        <Plus size={16} strokeWidth={3} />
+                      </div>
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          <div className="bg-card rounded-xl border border-border shadow-sm flex-1 flex flex-col min-h-0">
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <h2 className="font-semibold text-foreground flex items-center gap-2">
-                <Truck size={18} className="text-primary" />
-                Return Draft Items <span className="text-muted-foreground text-sm font-normal">({cart.length})</span>
+          {/* Cart Area */}
+          <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] flex-1 flex flex-col min-h-0 overflow-hidden">
+            <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-[#f8fafc]/50">
+              <h2 className="text-[16px] font-black text-[#11327c] uppercase tracking-widest flex items-center gap-3">
+                <Truck size={20} className="text-orange-500" strokeWidth={2.5} />
+                Return Draft Items 
+                <span className="bg-white px-2 py-0.5 rounded-lg border border-gray-100 text-[10px] font-black text-gray-400 ml-2">{cart.length}</span>
               </h2>
               {cart.length > 0 && (
                 <button 
                   onClick={() => setCart([])}
-                  className="text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-medium flex items-center gap-1 transition-colors"
+                  className="text-[10px] text-rose-500 hover:text-rose-700 font-black uppercase tracking-widest flex items-center gap-2 transition-all active:scale-95 px-3 py-1.5 hover:bg-rose-50 rounded-xl"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={14} strokeWidth={2.5} />
                   Clear All
                 </button>
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            <div className="flex-1 overflow-y-auto p-8 space-y-4">
               {cart.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-48 text-center opacity-50">
-                  <Package size={40} className="mb-2 text-muted-foreground" />
-                  <p className="text-muted-foreground font-medium text-sm">Draft is empty</p>
-                  <p className="text-xs text-muted-foreground">Search inventory items to add</p>
+                <div className="flex flex-col items-center justify-center h-64 text-center">
+                  <div className="w-20 h-20 bg-gray-50 rounded-[32px] flex items-center justify-center mb-6 opacity-40">
+                    <Package size={40} className="text-gray-400" strokeWidth={1} />
+                  </div>
+                  <p className="text-[#11327c] font-black text-sm uppercase tracking-widest opacity-30">Draft is empty</p>
+                  <p className="text-gray-400 font-medium text-xs mt-2">Search inventory items to build your return note</p>
                 </div>
               ) : (
                 <AnimatePresence>
-                {cart.map((item) => (
-                  <motion.div 
-                    key={item.medicineId} 
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="group relative p-4 rounded-xl border border-border bg-card hover:bg-accent/5 transition-all shadow-sm hover:shadow-md overflow-hidden flex flex-col gap-3"
-                  >
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                  {cart.map((item) => (
+                    <motion.div 
+                      key={item.medicineId} 
+                      layout
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="group relative p-6 rounded-3xl border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all shadow-sm hover:shadow-[0_10px_30px_-10px_rgba(17,50,124,0.1)] flex flex-col gap-6"
+                    >
+                      <div className="flex justify-between items-start">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-[#f8fafc] rounded-2xl flex items-center justify-center text-[#11327c]">
+                            <Package size={24} strokeWidth={2} />
+                          </div>
+                          <div>
+                            <div className="font-black text-[#11327c] uppercase text-[15px] tracking-tight">{item.name}</div>
+                            <div className="flex items-center gap-3 text-[10px] font-black text-gray-400 mt-1 uppercase tracking-widest">
+                              <span>BATCH: <span className="text-[#11327c]/60">{item.batchNumber}</span></span>
+                              <div className="w-1 h-1 rounded-full bg-gray-200" />
+                              <span>STOCK: <span className="text-orange-600">{item.stock}</span></span>
+                            </div>
+                          </div>
+                        </div>
 
-                    <div className="flex justify-between items-start pr-8">
-                      <div className="space-y-1.5">
-                        <div className="font-semibold text-foreground text-[15px] flex items-center gap-2">
-                          {item.name}
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2 text-xs">
-                          <span className="text-muted-foreground/80 font-medium">Batch: <span className="text-foreground">{item.batchNumber}</span></span>
-                          <span className="w-1 h-1 rounded-full bg-border" />
-                          <span className="text-muted-foreground/80 font-medium">
-                            Stock Remaining: <span className="font-bold">{item.stock}</span>
-                          </span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => removeItem(item.medicineId)}
-                        className="absolute right-3 top-4 text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 p-1.5 rounded-md transition-colors"
-                        title="Remove Item"
-                      >
-                        <Trash2 size={16} strokeWidth={2} />
-                      </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
-                      {/* Strip Input */}
-                      <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-secondary/40 border border-border/50">
-                        <div className="flex justify-between items-center px-1">
-                          <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />
-                            Return Strips
-                          </label>
-                          <span className="text-[11px] font-semibold text-foreground/80 tabular-nums">Cost: ₹{item.stripBuyingPrice}/ea</span>
-                        </div>
-                        <div className="relative flex items-center shadow-sm rounded-md overflow-hidden border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all bg-background">
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="Qty"
-                            className="w-full bg-transparent px-3 py-1.5 text-sm outline-none text-foreground font-semibold placeholder:font-normal placeholder:text-muted-foreground/50 tabular-nums"
-                            value={item.stripQty || ''}
-                            onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
-                          />
-                          <AnimatePresence>
-                            {item.stripQty > 0 && (
-                              <motion.div 
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                className="absolute right-2 px-1.5 py-0.5 rounded bg-blue-50 text-[10px] font-bold text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 pointer-events-none tabular-nums"
-                              >
-                                ₹{(item.stripQty * item.stripBuyingPrice).toFixed(2)}
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-                        </div>
+                        <button
+                          onClick={() => removeItem(item.medicineId)}
+                          className="w-10 h-10 flex items-center justify-center text-gray-300 hover:text-rose-500 hover:bg-rose-50 rounded-xl transition-all active:scale-90"
+                          title="Remove Item"
+                        >
+                          <Trash2 size={18} strokeWidth={2.5} />
+                        </button>
                       </div>
                       
-                      {/* Tablet Input */}
-                      <div className="flex flex-col gap-1.5 p-2.5 rounded-lg bg-secondary/40 border border-border/50">
-                        <div className="flex justify-between items-center px-1">
-                          <label className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground flex items-center gap-1.5">
-                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                            Return Tablets
-                          </label>
-                          <span className="text-[11px] font-semibold text-foreground/80 tabular-nums">Cost: ₹{item.tabletBuyingPrice}/ea</span>
-                        </div>
-                        <div className="relative flex items-center shadow-sm rounded-md overflow-hidden border border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all bg-background">
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="Qty"
-                            className="w-full bg-transparent px-3 py-1.5 text-sm outline-none text-foreground font-semibold placeholder:font-normal placeholder:text-muted-foreground/50 tabular-nums"
-                            value={item.tabletQty || ''}
-                            onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
-                          />
-                          <AnimatePresence>
-                            {item.tabletQty > 0 && (
-                              <motion.div 
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                className="absolute right-2 px-1.5 py-0.5 rounded bg-emerald-50 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 pointer-events-none tabular-nums"
-                              >
-                                ₹{(item.tabletQty * item.tabletBuyingPrice).toFixed(2)}
-                              </motion.div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Strip Input Container */}
+                        <div className="p-5 rounded-2xl bg-[#f8fafc] border border-gray-100 group/input focus-within:border-[#11327c]/30 transition-all">
+                          <div className="flex justify-between items-center mb-3">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-blue-500" />
+                              Return Strips
+                            </label>
+                            <span className="text-[11px] font-black text-[#11327c] tabular-nums bg-white px-2 py-0.5 rounded-lg border border-gray-100 shadow-sm">₹{item.stripBuyingPrice}/ea</span>
+                          </div>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="00"
+                              className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-lg font-black text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all tabular-nums placeholder:text-gray-200"
+                              value={item.stripQty || ''}
+                              onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
+                            />
+                            {item.stripQty > 0 && (
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
+                                TOTAL: ₹{(item.stripQty * item.stripBuyingPrice).toLocaleString()}
+                              </div>
                             )}
-                          </AnimatePresence>
+                          </div>
+                        </div>
+                        
+                        {/* Tablet Input Container */}
+                        <div className="p-5 rounded-2xl bg-[#f8fafc] border border-gray-100 group/input focus-within:border-[#11327c]/30 transition-all">
+                          <div className="flex justify-between items-center mb-3">
+                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest flex items-center gap-2">
+                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                              Return Tablets
+                            </label>
+                            <span className="text-[11px] font-black text-[#11327c] tabular-nums bg-white px-2 py-0.5 rounded-lg border border-gray-100 shadow-sm">₹{item.tabletBuyingPrice}/ea</span>
+                          </div>
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              placeholder="00"
+                              className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-lg font-black text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all tabular-nums placeholder:text-gray-200"
+                              value={item.tabletQty || ''}
+                              onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
+                            />
+                            {item.tabletQty > 0 && (
+                              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                                TOTAL: ₹{(item.tabletQty * item.tabletBuyingPrice).toLocaleString()}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  ))}
                 </AnimatePresence>
               )}
             </div>
           </div>
         </div>
 
-        {/* Right Column: Context & Calculations */}
-        <div className="lg:col-span-4">
-          <div className="bg-card p-6 rounded-xl border border-border shadow-sm sticky top-6">
-            <h2 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
-              <Calculator size={20} className="text-primary" />
-              Debit Note Summary
-            </h2>
+        {/* Right Column: Context & Summary */}
+        <div className="lg:col-span-4 flex flex-col gap-8">
+          {/* Note Context Card */}
+          <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-[0_15px_45px_-15px_rgba(0,0,0,0.05)]">
+            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] mb-8">Note Specifications</h2>
+            
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Supplier Name *</label>
+                <input 
+                  type="text" 
+                  placeholder="E.g., Global Pharma Dist." 
+                  value={supplierName} 
+                  onChange={(e) => setSupplierName(e.target.value)} 
+                  className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all placeholder:text-gray-300" 
+                />
+              </div>
 
-            <div className="space-y-4 mb-6 relative">
-              <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Note Context</h3>
+              <div className="space-y-2">
+                <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Return Reason *</label>
+                <select
+                  className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all appearance-none cursor-pointer"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                >
+                  <option value="Expired">Expired Stock</option>
+                  <option value="Damaged">Damaged in Transit</option>
+                  <option value="Excess">Excess/Unsold Stock</option>
+                  <option value="Recall">Product Recall</option>
+                  <option value="Other">Other Reasons</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Financial Summary Card */}
+          <div className="bg-[#11327c] p-8 rounded-[40px] shadow-[0_30px_60px_-15px_rgba(17,50,124,0.4)] text-white relative overflow-hidden">
+            <div className="absolute -right-4 -top-4 opacity-10 pointer-events-none">
+              <Calculator size={120} />
+            </div>
+            
+            <div className="relative z-10">
+              <h2 className="text-[10px] font-black text-white/40 uppercase tracking-[0.25em] mb-10">Debit Summary</h2>
               
-              <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">Supplier/Distributor Name *</label>
-                  <input 
-                    type="text" 
-                    placeholder="E.g., PharmaCorp Distributors" 
-                    value={supplierName} 
-                    onChange={(e) => setSupplierName(e.target.value)} 
-                    className="w-full bg-background border border-border px-3 py-2 rounded-md text-sm outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50 text-foreground" 
-                  />
+              <div className="space-y-2 mb-10">
+                <div className="text-[11px] font-black text-white/50 uppercase tracking-widest">Total Refund Value</div>
+                <div className="text-[42px] font-black tracking-tighter leading-none">
+                  ₹{grandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </div>
+                <p className="text-[9px] font-bold text-white/30 uppercase tracking-[0.1em] mt-2 italic">Calculated at secure purchase cost price</p>
               </div>
 
-              <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground">Reason for Return *</label>
-                  <select
-                     className="w-full bg-background border border-border px-3 py-2 rounded-md text-sm outline-none focus:ring-1 focus:ring-primary text-foreground"
-                     value={reason}
-                     onChange={(e) => setReason(e.target.value)}
-                  >
-                        <option value="Expired">Expired Stock</option>
-                        <option value="Damaged">Damaged in Transit</option>
-                        <option value="Excess">Excess/Unsold Stock</option>
-                        <option value="Recall">Product Recall</option>
-                        <option value="Other">Other</option>
-                  </select>
-              </div>
-            </div>
-
-            <div className="space-y-4 text-sm">
-              <Separator className="my-4" />
-
-              <div className="flex justify-between items-end">
-                <span className="font-bold text-foreground text-sm uppercase">Total Debit Value</span>
-                <span className="text-2xl font-bold text-primary tabular-nums">
-                  ₹{grandTotal.toFixed(2)}
-                </span>
-              </div>
-              <p className="text-[10px] text-muted-foreground text-right -mt-2">Extracted securely at purchase cost price.</p>
-            </div>
-
-            <div className="mt-8">
               <button
                 disabled={loading || cart.length === 0 || !supplierName.trim()}
                 onClick={submitReturn}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-semibold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-5 bg-orange-500 hover:bg-orange-600 text-white rounded-[24px] font-black text-[13px] uppercase tracking-[0.15em] transition-all shadow-xl shadow-orange-950/20 active:scale-95 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
-                {loading ? "Processing..." : (
+                {loading ? <Loader2 size={20} className="animate-spin" /> : (
                   <>
-                    <CheckCircle2 size={18} />
-                    Confirm & Decrement Stock
+                    <CheckCircle2 size={20} strokeWidth={3} />
+                    Confirm Return
                   </>
                 )}
               </button>
+              
+              {cart.length > 0 && (
+                <div className="mt-6 flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
+                  <AlertCircle size={16} className="text-orange-400 shrink-0 mt-0.5" />
+                  <p className="text-[9px] font-bold text-white/60 leading-relaxed uppercase tracking-wider">
+                    Caution: Confirmed units will be automatically deducted from physical inventory stock.
+                  </p>
+                </div>
+              )}
             </div>
-            
-            {cart.length > 0 && (
-              <div className="mt-4 p-3 bg-rose-50 dark:bg-rose-900/20 border border-rose-100 dark:border-rose-800 rounded-lg flex gap-2 text-xs text-rose-700 dark:text-rose-300">
-                <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                <p className="font-medium">WARNING: This securely removes exact physical units directly from your available inventory automatically.</p>
-              </div>
-            )}
           </div>
         </div>
 

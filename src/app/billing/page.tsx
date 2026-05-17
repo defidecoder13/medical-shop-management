@@ -16,7 +16,9 @@ import {
   FileText,
   Printer,
   ChevronLeft,
-  Banknote
+  Banknote,
+  Users,
+  Calendar
 } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/src/components/ui/separator";
@@ -82,6 +84,8 @@ function BillingContent() {
   const [grandTotal, setGrandTotal] = useState(0);
   const [gstEnabled, setGstEnabled] = useState(false);
   const [gstPercent, setGstPercent] = useState(0);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [generatedBillId, setGeneratedBillId] = useState<string | null>(null);
 
   // Load cart from localStorage
   useEffect(() => {
@@ -506,18 +510,11 @@ function BillingContent() {
       setPatientName("");
       setPatientPhone("");
       setDoctorName("");
-      setMessage({text: data.offlineQueued ? "Bill saved offline (Unsynced)" : "Bill generated successfully", type: "success"});
       
-      setTimeout(() => setMessage(null), 3000);
-      
-      // Prompt for printing
+      // Open our smart success modal
       if (data._id) {
-         // Small delay so the success message renders before blocking the thread with confirm
-         setTimeout(() => {
-            if (window.confirm("Bill generated. Do you want to print the invoice now?")) {
-               window.open(`/print/${data._id}`, '_blank');
-            }
-         }, 100);
+        setGeneratedBillId(data._id);
+        setShowSuccessModal(true);
       }
     } catch (err: any) {
       setLoading(false);
@@ -526,110 +523,115 @@ function BillingContent() {
     }
   };
 
+  const removeFromCart = (id: string) => {
+    setCart(cart.filter((item) => item.medicineId !== id));
+  };
+
   return (
-    <div className="h-full flex flex-col space-y-6">
+    <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">New Bill</h2>
-          <p className="text-sm text-muted-foreground">Create new invoice.</p>
+          <h2 className="text-[26px] font-bold text-[#11327c] tracking-tight">New Bill</h2>
+          <p className="text-[13px] text-gray-500 font-medium">Create and manage customer invoices.</p>
         </div>
         
         {message && (
-          <div className={`px-4 py-2 rounded-lg flex items-center gap-2 text-sm font-medium ${
-            message.type === 'success' ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400' : 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
+          <div className={`px-4 py-2.5 rounded-xl flex items-center gap-2 text-[13px] font-bold shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 ${
+            message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
           }`}>
-            {message.type === 'success' ? <CheckCircle2 size={16} /> : <XCircle size={16} />}
+            {message.type === 'success' ? <CheckCircle2 size={16} strokeWidth={2.5} /> : <XCircle size={16} strokeWidth={2.5} />}
             {message.text}
           </div>
         )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Column: Search & Cart */}
-        <div className="lg:col-span-8 flex flex-col gap-6 min-h-0">
+        <div className="lg:col-span-8 space-y-6">
           
           {/* Search Box */}
-          <div className="bg-card p-6 rounded-xl border border-border shadow-sm relative">
-            <h2 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
-              <Search size={16} className="text-primary" />
+          <div className="bg-white p-7 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] relative group">
+            <h2 className="text-[15px] font-extrabold text-[#11327c] mb-4 flex items-center gap-2">
+              <Search size={18} className="text-[#11327c]" strokeWidth={2.5} />
               Add Medicines
             </h2>
             <div className="relative">
               <input
-                className="w-full bg-secondary/50 border border-border px-10 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary transition-all text-foreground placeholder:text-muted-foreground"
+                className="w-full bg-gray-50 border border-gray-200 pl-12 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-gray-800 placeholder:text-gray-400 font-medium shadow-sm"
                 placeholder="Scan Barcode or Search by name, brand, batch..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 onKeyDown={handleBarcodeScan}
                 autoFocus
               />
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground w-5 h-5" />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" strokeWidth={2} />
             </div>
 
             {/* Results Dropdown */}
-            {medicines.length > 0 && (
-              <motion.div 
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 5 }}
-                className="absolute top-full left-0 right-0 mt-2 bg-popover border border-border rounded-xl shadow-xl z-20 max-h-60 overflow-y-auto"
-              >
-                <AnimatePresence>
-                {medicines.map((med, index) => (
-                  <motion.button
-                    key={med._id}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => addToCart(med)}
-                    className="w-full flex justify-between items-center p-3 hover:bg-muted/50 text-left transition-colors border-b border-border last:border-0"
-                  >
-                    <div>
-                      <div className="font-medium text-foreground">{med.name}</div>
-                      {med.composition && (
-                        <div className="text-[11px] text-muted-foreground italic truncate max-w-xs">{med.composition}</div>
-                      )}
-                      <div className="text-xs text-muted-foreground flex gap-3 mt-0.5">
-                        <span className="bg-secondary px-1.5 rounded">Rack: {med.rackNumber || 'N/A'}</span>
-                        <span className={med.stock < 10 ? 'text-rose-600 dark:text-rose-400 font-medium' : ''}>Stock: {med.stock}</span>
+            <AnimatePresence>
+              {medicines.length > 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 5, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 5, scale: 0.98 }}
+                  className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-100 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] z-20 max-h-80 overflow-y-auto p-2"
+                >
+                  {medicines.map((med, index) => (
+                    <motion.button
+                      key={med._id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                      onClick={() => addToCart(med)}
+                      className="w-full flex justify-between items-center p-3.5 hover:bg-[#f8fafc] text-left transition-colors rounded-xl border-b border-gray-50 last:border-0 group/item"
+                    >
+                      <div className="flex-1">
+                        <div className="font-bold text-[#11327c] text-sm group-hover/item:text-[#11327c] transition-colors">{med.name}</div>
+                        {med.composition && (
+                          <div className="text-[11px] text-gray-500 font-medium truncate max-w-sm mt-0.5">{med.composition}</div>
+                        )}
+                        <div className="text-[11px] text-gray-400 font-bold flex gap-3 mt-1.5 uppercase tracking-tight">
+                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">Rack: {med.rackNumber || 'N/A'}</span>
+                          <span className={med.stock < 10 ? 'text-rose-600' : 'text-emerald-600'}>Stock: {med.stock}</span>
+                        </div>
                       </div>
-                    </div>
-                    <div className="p-1.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-lg hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors">
-                      <Plus size={16} />
-                    </div>
-                  </motion.button>
-                ))}
-                </AnimatePresence>
-              </motion.div>
-            )}
+                      <div className="w-9 h-9 flex items-center justify-center bg-[#f0f2ff] text-[#11327c] rounded-lg group-hover/item:bg-[#11327c] group-hover/item:text-white transition-all shadow-sm">
+                        <Plus size={18} strokeWidth={3} />
+                      </div>
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
-          {/* Cart Items */}
-          <div className="bg-card rounded-xl border border-border shadow-sm flex-1 flex flex-col min-h-0">
-            <div className="p-4 border-b border-border flex items-center justify-between">
-              <h2 className="font-semibold text-foreground flex items-center gap-2">
-                <ShoppingCart size={18} className="text-primary" />
-                Cart Items <span className="text-muted-foreground text-sm font-normal">({cart.length})</span>
-              </h2>
+          {/* Cart Table View */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden">
+            <div className="p-6 border-b border-gray-50 bg-[#f8fafc]/50 flex items-center justify-between">
+              <h3 className="text-[15px] font-extrabold text-[#11327c] flex items-center gap-2">
+                <ShoppingCart size={18} strokeWidth={2.5} />
+                Selected Medicines
+                <span className="ml-2 bg-[#11327c]/10 text-[#11327c] text-[11px] font-black px-2 py-0.5 rounded-full">{cart.length} items</span>
+              </h3>
               {cart.length > 0 && (
                 <button 
                   onClick={() => { setCart([]); localStorage.removeItem('medishop_cart'); }}
-                  className="text-xs text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-medium flex items-center gap-1 transition-colors"
+                  className="text-[11px] text-rose-500 hover:text-rose-600 font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors"
                 >
-                  <Trash2 size={14} />
-                  Clear All
+                  <Trash2 size={14} strokeWidth={2.5} />
+                  Clear Cart
                 </button>
               )}
             </div>
-
-            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            
+            <div className="p-5 space-y-4">
               {cart.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-48 text-center opacity-50">
-                  <ShoppingCart size={40} className="mb-2 text-muted-foreground" />
-                  <p className="text-muted-foreground font-medium text-sm">Cart is empty</p>
-                  <p className="text-xs text-muted-foreground">Search items to add</p>
+                <div className="py-20 flex flex-col items-center justify-center text-center opacity-30">
+                  <ShoppingCart size={48} strokeWidth={1} className="text-gray-400 mb-3" />
+                  <p className="text-gray-500 font-bold text-sm tracking-tight">Your cart is empty</p>
+                  <p className="text-[11px] text-gray-400 font-medium">Search items to start billing</p>
                 </div>
               ) : (
                 <AnimatePresence>
@@ -640,98 +642,75 @@ function BillingContent() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="group relative p-4 rounded-xl border border-border bg-card hover:bg-accent/5 transition-all shadow-sm hover:shadow-md overflow-hidden flex flex-col gap-3"
+                    className="group relative p-5 rounded-2xl border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all shadow-sm hover:shadow-md flex flex-col gap-4"
                   >
-                    {/* Left Accent Bar */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
-                        <div className="font-bold text-foreground text-[15px] flex items-center gap-2">
+                        <div className="font-black text-[#11327c] text-[16px] flex items-center gap-2 tracking-tight">
                           {item.name}
                           {item.stock < 10 && (
-                            <span className="px-1.5 py-0.5 rounded bg-rose-100 dark:bg-rose-900/30 text-rose-600 dark:text-rose-400 text-[9px] font-bold uppercase tracking-wider">
+                            <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-wider border border-rose-100">
                               Low Stock
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-2 text-[11px]">
-                          <span className="text-muted-foreground font-medium">Batch: <span className="text-foreground font-semibold">{item.batchNumber}</span></span>
-                          <span className="w-1 h-1 rounded-full bg-border" />
-                          <span className="text-muted-foreground font-medium">
-                            Stock: <span className={item.stock < 10 ? "text-rose-500 font-bold" : "text-foreground font-semibold"}>{item.stock}</span>
-                          </span>
+                        <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-tight">
+                          <span className="text-gray-400">Batch: <span className="text-gray-600">{item.batchNumber}</span></span>
+                          <span className="text-gray-400">Stock: <span className={item.stock < 10 ? "text-rose-500" : "text-emerald-600"}>{item.stock}</span></span>
                           {item.rackNumber && (
-                            <>
-                              <span className="w-1 h-1 rounded-full bg-border" />
-                              <div className="flex items-center gap-1 text-indigo-600 dark:text-indigo-400 font-semibold bg-indigo-50 dark:bg-indigo-900/20 px-1.5 py-0.5 rounded tracking-wide uppercase">
-                                <Package size={10} strokeWidth={2.5} />
-                                Rack {item.rackNumber}
-                              </div>
-                            </>
+                            <div className="flex items-center gap-1 text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded border border-indigo-100">
+                              Rack {item.rackNumber}
+                            </div>
                           )}
                         </div>
                       </div>
 
                       <button
-                        onClick={() => removeItem(item.medicineId)}
-                        className="text-muted-foreground/50 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/50 p-2 rounded-lg transition-colors flex-shrink-0"
-                        title="Remove Item"
+                        onClick={() => removeFromCart(item.medicineId)}
+                        className="text-gray-300 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-xl transition-all"
                       >
-                        <Trash2 size={16} strokeWidth={2} />
+                        <Trash2 size={18} strokeWidth={2.5} />
                       </button>
                     </div>
                     
-                    <div className="flex flex-col gap-2 mt-2">
-                      {/* Strip Input Row */}
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 border border-border/50 hover:border-primary/20 transition-colors">
-                        <div className="flex items-center gap-2 w-24">
-                          <div className="w-1.5 h-1.5 rounded-sm bg-blue-500" />
-                          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Strips</span>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {/* Strip Input */}
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-[#f0f2ff]/40 border border-indigo-100/30 hover:border-[#11327c]/20 transition-all">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#11327c]" />
+                          <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Strips</span>
                         </div>
-                        <div className="flex items-center gap-3 flex-1 justify-end">
-                          <div className="relative">
-                            <input
-                              type="number"
-                              min="0"
-                              placeholder="Qty"
-                              className="w-16 bg-background border border-border rounded-md px-2 py-1 text-sm font-semibold text-center focus:ring-2 focus:ring-primary outline-none tabular-nums"
-                              value={item.stripQty || ''}
-                              onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
-                            />
-                          </div>
-                          <div className="w-16 text-right">
-                             <span className="text-[11px] font-medium text-muted-foreground">x ₹{item.stripSellingPrice}</span>
-                          </div>
-                          <div className="w-20 text-right">
-                             <span className="text-sm font-bold text-foreground">₹{((item.stripQty || 0) * (item.stripSellingPrice || 0)).toFixed(2)}</span>
-                          </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="Qty"
+                            className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-[13px] font-bold text-center focus:ring-2 focus:ring-[#11327c]/10 outline-none"
+                            value={item.stripQty || ''}
+                            onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
+                          />
+                          <span className="text-[11px] font-bold text-gray-400 min-w-[50px] text-right">x ₹{item.stripSellingPrice}</span>
+                          <span className="text-[14px] font-black text-[#11327c] min-w-[70px] text-right">₹{((item.stripQty || 0) * (item.stripSellingPrice || 0)).toFixed(2)}</span>
                         </div>
                       </div>
                       
-                      {/* Tablet Input Row */}
-                      <div className="flex items-center justify-between p-2 rounded-lg bg-secondary/30 border border-border/50 hover:border-primary/20 transition-colors">
-                        <div className="flex items-center gap-2 w-24">
+                      {/* Tablet Input */}
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/40 border border-emerald-100/30 hover:border-emerald-500/20 transition-all">
+                        <div className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Tablets</span>
+                          <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Tablets</span>
                         </div>
-                        <div className="flex items-center gap-3 flex-1 justify-end">
-                          <div className="relative">
-                            <input
-                              type="number"
-                              min="0"
-                              placeholder="Qty"
-                              className="w-16 bg-background border border-border rounded-md px-2 py-1 text-sm font-semibold text-center focus:ring-2 focus:ring-primary outline-none tabular-nums"
-                              value={item.tabletQty || ''}
-                              onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
-                            />
-                          </div>
-                          <div className="w-16 text-right">
-                             <span className="text-[11px] font-medium text-muted-foreground">x ₹{item.tabletSellingPrice}</span>
-                          </div>
-                          <div className="w-20 text-right">
-                             <span className="text-sm font-bold text-foreground">₹{((item.tabletQty || 0) * (item.tabletSellingPrice || 0)).toFixed(2)}</span>
-                          </div>
+                        <div className="flex items-center gap-3">
+                          <input
+                            type="number"
+                            min="0"
+                            placeholder="Qty"
+                            className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-[13px] font-bold text-center focus:ring-2 focus:ring-emerald-500/10 outline-none"
+                            value={item.tabletQty || ''}
+                            onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
+                          />
+                          <span className="text-[11px] font-bold text-gray-400 min-w-[50px] text-right">x ₹{item.tabletSellingPrice}</span>
+                          <span className="text-[14px] font-black text-[#11327c] min-w-[70px] text-right">₹{((item.tabletQty || 0) * (item.tabletSellingPrice || 0)).toFixed(2)}</span>
                         </div>
                       </div>
                     </div>
@@ -743,133 +722,189 @@ function BillingContent() {
           </div>
         </div>
 
-        {/* Right Column: Calculations */}
-        <div className="lg:col-span-4">
-          <div className="bg-card p-6 rounded-xl border border-border shadow-sm sticky top-6">
-            <h2 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
-              <Calculator size={20} className="text-primary" />
-              Bill Summary
-            </h2>
-
-            {/* Customer & Prescription Details */}
-            <div className="space-y-3 mb-6 bg-secondary/30 p-4 rounded-lg border border-border/50">
-              <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Customer & Prescription (Optional)</h3>
-              <input 
-                type="text" 
-                placeholder="Patient Name" 
-                value={patientName} 
-                onChange={(e) => setPatientName(e.target.value)} 
-                className="w-full bg-background border border-border px-3 py-2 rounded-md text-sm outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50 text-foreground" 
-              />
-              <input 
-                type="text" 
-                placeholder="Doctor Name" 
-                value={doctorName} 
-                onChange={(e) => setDoctorName(e.target.value)} 
-                className="w-full bg-background border border-border px-3 py-2 rounded-md text-sm outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50 text-foreground" 
-              />
-              <input 
-                type="tel" 
-                placeholder="Patient Phone (Auto-fills if exists)" 
-                value={patientPhone} 
-                onChange={(e) => setPatientPhone(e.target.value)} 
-                className="w-full bg-background border border-border px-3 py-2 rounded-md text-sm outline-none focus:ring-1 focus:ring-primary placeholder:text-muted-foreground/50 text-foreground" 
-              />
+        {/* Right Column: Checkout Summary */}
+        <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
+          {/* Patient Details Card */}
+          <div className="bg-white p-7 rounded-2xl border border-gray-100 shadow-[0_4px_20_rgba(0,0,0,0.06)]">
+            <h3 className="text-[15px] font-extrabold text-[#11327c] mb-5 flex items-center gap-2">
+              <Users size={18} strokeWidth={2.5} className="text-[#11327c]" />
+              Customer Details
+            </h3>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Name</label>
+                <input
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold"
+                  placeholder="Full Name"
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Doctor Name</label>
+                <input
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold"
+                  placeholder="Dr. Name"
+                  value={doctorName}
+                  onChange={(e) => setDoctorName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
+                <input
+                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold"
+                  placeholder="10-digit number"
+                  value={patientPhone}
+                  onChange={(e) => setPatientPhone(e.target.value)}
+                />
+              </div>
+              
               {regularMedicines.length > 0 && (
                  <button 
                    onClick={loadRegularMedicines}
                    disabled={loading}
-                   className="w-full mt-2 bg-indigo-50 dark:bg-indigo-900/20 hover:bg-indigo-100 dark:hover:bg-indigo-900/40 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800/50 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-colors flex items-center justify-center gap-2"
+                   className="w-full mt-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm"
                  >
-                    <Package size={14} />
-                    Load Active Prescriptions ({regularMedicines.length})
+                    <Package size={16} strokeWidth={2.5} />
+                    Active Prescriptions ({regularMedicines.length})
                  </button>
               )}
             </div>
+          </div>
 
-            <div className="space-y-4 text-sm">
-              <div className="flex justify-between text-muted-foreground">
+          {/* Bill Summary Card */}
+          <div className="bg-[#11327c] p-8 rounded-2xl shadow-[0_20px_50px_-15px_rgba(17,50,124,0.3)] text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-2xl" />
+            
+            <h3 className="text-[15px] font-black uppercase tracking-widest mb-6 opacity-80 flex items-center gap-2">
+              <Calculator size={18} strokeWidth={2.5} />
+              Invoice Summary
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between text-[14px] font-bold opacity-70">
                 <span>Sub Total</span>
-                <span className="font-medium text-foreground">₹{subTotal.toFixed(2)}</span>
+                <span>₹{subTotal.toFixed(2)}</span>
               </div>
 
               <div className="flex justify-between items-center">
-                <span className="text-muted-foreground">Discount (%)</span>
-                <div className="w-16 flex items-center border border-border rounded px-2 bg-secondary/50">
+                <span className="text-[14px] font-bold opacity-70">Discount (%)</span>
+                <div className="w-20 bg-white/10 rounded-lg flex items-center px-2 border border-white/10 focus-within:border-white/30 transition-all">
                   <input
                     type="number"
-                    className="w-full bg-transparent text-right outline-none text-xs font-medium py-1 text-foreground"
+                    className="w-full bg-transparent text-right outline-none text-[13px] font-black py-1.5 text-white placeholder:text-white/30"
                     placeholder="0"
                     value={discountPercent}
                     onChange={(e) => setDiscountPercent(e.target.value === "" ? "" : Number(e.target.value))}
                   />
+                  <span className="text-[10px] font-black ml-1 opacity-50">%</span>
                 </div>
               </div>
               
               {discountAmount > 0 && (
-                <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
-                  <span>Discount Amount</span>
+                <div className="flex justify-between text-[14px] font-bold text-rose-300">
+                  <span>Discount Savings</span>
                   <span>-₹{discountAmount.toFixed(2)}</span>
                 </div>
               )}
 
-              {/* GST Toggle and Display */}
-              <div className="flex justify-between items-center py-1">
-                 <div className="flex items-center gap-2">
-                    <input 
-                      type="checkbox" 
-                      id="gstToggle" 
-                      checked={gstEnabled && gstPercent > 0} 
-                      disabled={gstPercent === 0}
-                      onChange={(e) => setGstEnabled(e.target.checked)}
-                      className="w-4 h-4 rounded border-border text-primary focus:ring-primary/20 accent-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    />
-                    <label htmlFor="gstToggle" className={`text-sm cursor-pointer ${gstPercent === 0 ? 'text-muted-foreground/50' : 'text-muted-foreground select-none'}`}>
-                      Apply GST {gstPercent > 0 ? `(@ ${gstPercent}%)` : '(N/A)'}
-                    </label>
+              {/* GST Section */}
+              <div className="flex flex-col gap-3 py-4 border-y border-white/10">
+                 <div className="flex justify-between items-center">
+                    <div className="flex items-center gap-3">
+                       <label className="text-[14px] font-bold opacity-70 cursor-pointer select-none" htmlFor="gstToggle">Apply GST (12%)</label>
+                       <div 
+                        onClick={() => setGstEnabled(!gstEnabled)}
+                        className={`w-9 h-5 rounded-full transition-all relative cursor-pointer ${gstEnabled ? 'bg-emerald-500' : 'bg-white/10'}`}
+                       >
+                          <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all shadow-sm ${gstEnabled ? 'left-5' : 'left-1'}`} />
+                       </div>
+                    </div>
                  </div>
-                 {gstEnabled && gstPercent > 0 && (
-                    <span className="font-medium text-foreground">
-                         ₹{((subTotal - discountAmount) * (gstPercent / 100)).toFixed(2)}
-                    </span>
+                 {gstEnabled && (
+                    <div className="flex justify-between text-[14px] font-bold text-emerald-300">
+                        <span>GST Amount</span>
+                        <span>+₹{((subTotal - discountAmount) * 0.12).toFixed(2)}</span>
+                    </div>
                  )}
               </div>
 
-              <Separator className="my-4" />
+              <div className="pt-4">
+                <div className="flex justify-between items-end mb-8">
+                  <span className="text-[14px] font-black uppercase tracking-widest opacity-60">Grand Total</span>
+                  <div className="text-right">
+                    <span className="text-[34px] font-black block leading-none">₹{grandTotal.toFixed(2)}</span>
+                  </div>
+                </div>
 
-              <div className="flex justify-between items-end">
-                <span className="font-bold text-foreground">Grand Total</span>
-                <span className="text-2xl font-bold text-primary">
-                  ₹{grandTotal.toFixed(2)}
-                </span>
+                <button
+                  disabled={loading || cart.length === 0}
+                  onClick={submitBill}
+                  className="w-full bg-white text-[#11327c] py-4 rounded-xl font-black text-[15px] shadow-xl hover:bg-gray-50 hover:-translate-y-1 transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:translate-y-0 flex items-center justify-center gap-2"
+                >
+                  {loading ? "GENERATING..." : (
+                    <>
+                      <FileText size={20} strokeWidth={2.5} />
+                      FINALIZE BILL
+                    </>
+                  )}
+                </button>
               </div>
-            </div>
-
-            <div className="mt-8">
-              <button
-                disabled={loading || cart.length === 0}
-                onClick={submitBill}
-                className="w-full flex items-center justify-center gap-2 py-3 bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg font-semibold transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? "Generating..." : (
-                  <>
-                    <FileText size={18} />
-                    Generate Bill
-                  </>
-                )}
-              </button>
             </div>
             
             {cart.length > 0 && (
-              <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg flex gap-2 text-xs text-blue-700 dark:text-blue-300">
-                <AlertCircle size={14} className="shrink-0 mt-0.5" />
-                <p>Quantities will be deducted from inventory immediately.</p>
+              <div className="mt-6 flex gap-2 text-[10px] font-black uppercase tracking-widest text-white/40 justify-center">
+                <AlertCircle size={12} strokeWidth={3} />
+                Stock will be deducted on submit
               </div>
             )}
           </div>
         </div>
 
       </div>
+
+      {/* Success Modal */}
+      <AnimatePresence>
+        {showSuccessModal && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#11327c]/20 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-3xl shadow-[0_30px_70px_-15px_rgba(17,50,124,0.3)] w-full max-w-[400px] overflow-hidden"
+            >
+              <div className="p-8 text-center">
+                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-sm">
+                  <CheckCircle2 size={40} className="text-emerald-500" strokeWidth={2.5} />
+                </div>
+                <h3 className="text-[22px] font-black text-[#11327c] mb-2 tracking-tight">Success!</h3>
+                <p className="text-gray-500 font-bold text-[14px] mb-8">
+                  Your bill has been generated successfully and saved to your records.
+                </p>
+                <div className="flex flex-col gap-3">
+                  <button 
+                    onClick={() => {
+                      if (generatedBillId) {
+                        window.open(`/print/${generatedBillId}`, '_blank');
+                      }
+                    }}
+                    className="w-full bg-[#11327c] text-white py-4 rounded-2xl font-black text-[14px] shadow-lg shadow-[#11327c]/20 hover:bg-[#1e4db7] transition-all flex items-center justify-center gap-2"
+                  >
+                    <Printer size={18} strokeWidth={2.5} />
+                    PRINT INVOICE
+                  </button>
+                  <button 
+                    onClick={() => setShowSuccessModal(false)}
+                    className="w-full bg-gray-50 text-gray-500 py-4 rounded-2xl font-black text-[14px] hover:bg-gray-100 transition-all"
+                  >
+                    OK, GOT IT
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

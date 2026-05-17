@@ -147,52 +147,54 @@ export default function SupplierReturnsPage() {
   }
 
   return (
-    <div className="space-y-6 h-full flex flex-col">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-6 pb-10 max-w-[1400px] mx-auto">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h2 className="text-2xl font-bold text-foreground">Supplier Returns</h2>
-          <p className="text-sm text-muted-foreground">Manage debit notes and stock outflows.</p>
+          <h2 className="text-[26px] font-black text-[#11327c] tracking-tight">Supplier Returns</h2>
+          <p className="text-[13px] text-gray-500 font-medium">Manage debit notes and stock outflows.</p>
         </div>
 
         <div className="flex gap-3">
           <button
             onClick={() => router.push('/supplier-returns/new')}
-            className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-5 py-3 bg-[#11327c] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:bg-[#1e4db7] shadow-lg shadow-[#11327c]/20 active:scale-95"
           >
-            <Plus size={18} />
+            <Plus size={18} strokeWidth={3} />
             Create Return Note
           </button>
           <button
             onClick={exportToExcel}
-            className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 transition-colors shadow-sm"
+            className="flex items-center gap-2 px-5 py-3 bg-white text-gray-600 border border-gray-200 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:bg-gray-50 shadow-sm active:scale-95"
           >
-            <FileSpreadsheet size={18} />
-            Export to Excel
+            <FileSpreadsheet size={18} strokeWidth={2.5} />
+            Export Data
           </button>
         </div>
       </div>
 
-      <div className="bg-card p-4 rounded-xl border border-border shadow-sm flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-2.5 text-muted-foreground" size={18} />
+      {/* Filter Bar */}
+      <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] flex flex-col md:flex-row gap-4 items-center">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
           <input 
             type="text" 
-            placeholder="Search by ID, Supplier, or Cost Amount..."
-            className="w-full pl-10 pr-4 py-2 bg-secondary/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:bg-card transition-all text-foreground placeholder:text-muted-foreground"
+            placeholder="Search by ID, Supplier, or Reason..."
+            className="w-full pl-12 pr-6 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-gray-800 placeholder:text-gray-400"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div className="flex bg-secondary/50 p-1 rounded-lg border border-border">
+        <div className="flex bg-gray-100/50 p-1.5 rounded-2xl border border-gray-200/50">
           {(["1d", "7d", "1m"] as const).map((range) => (
             <button
               key={range}
               onClick={() => setDateFilter(range)}
-              className={`px-4 py-1.5 text-xs font-bold rounded-md transition-all ${
+              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
                 dateFilter === range
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                  ? "bg-[#11327c] text-white shadow-md"
+                  : "text-gray-400 hover:text-[#11327c] hover:bg-white"
               }`}
             >
               {range.toUpperCase()}
@@ -201,61 +203,66 @@ export default function SupplierReturnsPage() {
         </div>
       </div>
 
-      <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden flex-1 flex flex-col min-h-0">
-        <div className="flex-1 overflow-x-auto overflow-y-auto">
+      {/* Ledger Table Container */}
+      <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] overflow-hidden">
+        <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-secondary/50 sticky top-0 border-b border-border z-10">
+            <thead className="bg-[#f8fafc] border-b border-gray-100">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Date & Note ID</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Supplier Context</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider">Items Sent</th>
-                <th className="px-6 py-4 text-xs font-bold text-muted-foreground uppercase tracking-wider text-right">Debit Total</th>
+                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Date & ID</th>
+                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Supplier Context</th>
+                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Itemized Return</th>
+                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Debit Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
-              {filteredReturns.map((t) => (
-                <tr key={t._id} className="hover:bg-muted/50 transition-colors group">
-                  <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                       <div className="text-sm font-medium text-foreground">
-                         {new Date(t.createdAt).toLocaleDateString()}
-                       </div>
+            <tbody className="divide-y divide-gray-50">
+              {filteredReturns.map((t, idx) => (
+                <tr key={t._id} className="hover:bg-[#f8fafc]/50 transition-all group animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: `${idx * 30}ms` }}>
+                  <td className="px-8 py-6">
+                    <div className="text-[13px] font-black text-[#11327c] tracking-tight">
+                      {format(new Date(t.createdAt), "dd MMM, yyyy")}
                     </div>
-                    <div className="text-xs font-mono text-muted-foreground flex items-center gap-1">
-                      <span className="text-amber-600 dark:text-amber-500 font-bold uppercase tracking-wider text-[10px] bg-amber-50 dark:bg-amber-900/40 px-1 rounded">Debit Note</span>
-                      {t._id.slice(-8).toUpperCase()}
+                    <div className="text-[10px] font-mono text-gray-400 flex items-center gap-1.5 mt-1">
+                      <span className="text-orange-600 font-black uppercase tracking-wider text-[8px] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100">DEBIT NOTE</span>
+                      #{t._id.slice(-8).toUpperCase()}
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="text-sm font-bold text-foreground">
+                  <td className="px-8 py-6">
+                    <div className="text-[14px] font-black text-[#11327c] uppercase tracking-tight">
                       {t.supplierName}
                     </div>
-                    <div className="text-[10px] uppercase font-bold text-muted-foreground">
-                      Reason: <span className="text-foreground">{t.reason}</span>
+                    <div className="text-[10px] font-black text-gray-400 mt-1 uppercase tracking-widest flex items-center gap-2">
+                      REASON: <span className="text-[#11327c]/60">{t.reason}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <div className="flex flex-col gap-1 max-h-24 overflow-y-auto">
+                  <td className="px-8 py-6">
+                    <div className="flex flex-col gap-1.5 max-h-32 overflow-y-auto pr-4 scrollbar-thin">
                       {t.items.map((item, index) => (
-                        <div key={index} className="text-sm text-foreground">
-                          {item.name} <span className="text-xs text-muted-foreground">x{item.qty} {item.unitType}(s)</span>
+                        <div key={index} className="flex items-center gap-2 group/item">
+                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-200 group-hover/item:bg-[#11327c] transition-colors" />
+                          <span className="text-[11px] font-bold text-gray-500 group-hover/item:text-[#11327c] transition-colors">{item.name}</span>
+                          <span className="text-[10px] font-black text-gray-300 uppercase">x{item.qty} {item.unitType}</span>
                         </div>
                       ))}
                     </div>
                   </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="text-sm font-bold text-foreground">
-                      ₹{t.totalRefundAmount.toFixed(2)}
+                  <td className="px-8 py-6 text-right">
+                    <div className="text-[18px] font-black text-[#11327c] tracking-tighter">
+                      ₹{t.totalRefundAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
+                    <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest mt-1">Confirmed</p>
                   </td>
                 </tr>
               ))}
               {filteredReturns.length === 0 && (
                 <tr>
-                   <td colSpan={5} className="px-6 py-12 text-center text-muted-foreground">
-                      <div className="flex flex-col items-center gap-2">
-                        <Search size={24} className="opacity-50" />
-                        <p>No supplier returns found.</p>
+                   <td colSpan={4} className="px-8 py-24 text-center">
+                      <div className="flex flex-col items-center gap-4 opacity-20">
+                        <FileSpreadsheet size={48} strokeWidth={1} className="text-gray-400" />
+                        <div className="space-y-1">
+                          <p className="text-gray-600 font-black text-sm uppercase tracking-widest">No Return Records</p>
+                          <p className="text-gray-400 font-medium text-xs">Debit note ledger is currently empty</p>
+                        </div>
                       </div>
                    </td>
                 </tr>
@@ -263,8 +270,12 @@ export default function SupplierReturnsPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-4 bg-secondary/30 border-t border-border text-xs text-muted-foreground flex justify-between items-center">
-           <span>Showing {filteredReturns.length} records</span>
+        <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
+           <span>Showing <span className="text-[#11327c]">{filteredReturns.length}</span> documented returns</span>
+           <div className="flex gap-2">
+             <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30" disabled>Prev</button>
+             <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">Next</button>
+           </div>
         </div>
       </div>
     </div>
