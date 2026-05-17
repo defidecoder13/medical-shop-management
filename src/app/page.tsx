@@ -79,7 +79,7 @@ export default function Home() {
   return (
     <div className="space-y-6 max-w-[1600px] mx-auto pb-10 flex flex-col">
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 order-2 lg:order-1">
+      <div className="hidden md:grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 order-2 lg:order-1">
         <StatsCard 
           title="Total Revenue" 
           value={`₹${salesVal > 0 ? salesVal.toFixed(2) : "23,305.87"}`} 
@@ -212,7 +212,7 @@ export default function Home() {
       </div>
 
       {/* Row 3: Transactions */}
-      <div className="grid grid-cols-1 gap-6 order-3">
+      <div className="hidden md:grid grid-cols-1 gap-6 order-3">
         <div className="w-full">
           <RecentTransactions data={data.recentTransactions} />
         </div>
