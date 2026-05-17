@@ -16,7 +16,8 @@ import {
   VolumeX, 
   Sparkles,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Menu
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -34,7 +35,11 @@ export interface AppNotification {
   read: boolean;
 }
 
-export const Topbar = () => {
+export interface TopbarProps {
+  onMenuClick?: () => void;
+}
+
+export const Topbar = ({ onMenuClick }: TopbarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
@@ -286,16 +291,26 @@ export const Topbar = () => {
   const isDashboard = pathname === "/";
 
   return (
-    <div className="h-[88px] flex items-center justify-between px-8 bg-[#f8fafc] z-50 shrink-0">
-      <div className="flex flex-col">
-        <h2 className="text-[26px] font-bold text-[#11327c] tracking-tight leading-tight">
-          {getPageTitle(pathname)}
-        </h2>
-        {isDashboard && (
-          <p className="text-[13px] text-gray-500 font-medium">
-            Welcome back, Admin! Here's what's happening in your pharmacy today.
-          </p>
+    <div className="h-[88px] flex items-center justify-between px-4 md:px-8 bg-[#f8fafc] z-50 shrink-0 border-b border-gray-50">
+      <div className="flex items-center gap-3">
+        {onMenuClick && (
+          <button 
+            onClick={onMenuClick}
+            className="lg:hidden p-2 text-[#11327c] hover:bg-white rounded-xl transition-colors shrink-0 shadow-sm border border-gray-100/50 bg-white"
+          >
+            <Menu size={20} strokeWidth={2.5} />
+          </button>
         )}
+        <div className="flex flex-col">
+          <h2 className="text-[20px] md:text-[26px] font-bold text-[#11327c] tracking-tight leading-tight">
+            {getPageTitle(pathname)}
+          </h2>
+          {isDashboard && (
+            <p className="text-[13px] text-gray-500 font-medium hidden md:block">
+              Welcome back, Admin! Here's what's happening in your pharmacy today.
+            </p>
+          )}
+        </div>
       </div>
 
       <div className="flex items-center gap-6">

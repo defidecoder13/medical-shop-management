@@ -18,7 +18,8 @@ import {
   AlertTriangle,
   Truck,
   Landmark,
-  Plus
+  Plus,
+  X
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
@@ -51,7 +52,12 @@ const navigationGroups = [
   }
 ];
 
-export const Sidebar = () => {
+interface SidebarProps {
+  isMobile?: boolean;
+  onClose?: () => void;
+}
+
+export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
@@ -69,18 +75,20 @@ export const Sidebar = () => {
     }
   };
 
+  const isSidebarCollapsed = collapsed && !isMobile;
+
   return (
     <aside className={cn(
       "transition-all duration-300 bg-white border-r border-gray-100 flex flex-col z-20 h-screen shrink-0",
-      collapsed ? "w-20" : "w-[240px]"
+      isSidebarCollapsed ? "w-20" : "w-[240px]"
     )}>
       {/* App Branding */}
-      <div className="h-20 flex items-center px-5 shrink-0 overflow-hidden">
-        <div className="flex items-center gap-2 w-full">
+      <div className="h-20 flex items-center justify-between px-5 shrink-0 overflow-hidden">
+        <div className="flex items-center gap-2">
           <div className="shrink-0">
              <Plus className="text-[#ef4444] fill-[#ef4444]" size={28} strokeWidth={4} />
           </div>
-          {!collapsed && (
+          {!isSidebarCollapsed && (
             <div className="flex flex-col ml-1">
               <span className="font-black text-[16px] tracking-tight leading-none">
                 <span className="text-[#f97316]">MEDSATHI</span>
@@ -91,13 +99,22 @@ export const Sidebar = () => {
             </div>
           )}
         </div>
+        
+        {isMobile && onClose && (
+          <button 
+            onClick={onClose} 
+            className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+          >
+            <X size={20} strokeWidth={2.5} />
+          </button>
+        )}
       </div>
 
       {/* Navigation Links */}
       <nav className="flex-1 overflow-y-auto py-2 px-3 space-y-4 scrollbar-hide">
         {navigationGroups.map((section, sectionIdx) => (
           <div key={sectionIdx} className="space-y-1">
-            {!collapsed && (
+            {!isSidebarCollapsed && (
               <div className="px-3 mb-2 text-[11px] font-bold tracking-wider text-[#11327c]/60">
                 {section.group}
               </div>
@@ -108,13 +125,16 @@ export const Sidebar = () => {
                 <Link
                   key={route.href}
                   href={route.href}
+                  onClick={() => {
+                    if (isMobile && onClose) onClose();
+                  }}
                   className={cn(
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] font-bold transition-all group",
                     isActive 
                       ? "bg-[#0047ab] shadow-sm shadow-[#0047ab]/20 text-white" 
                       : "text-gray-500 hover:bg-gray-50 hover:text-[#11327c]"
                   )}
-                  title={collapsed ? route.label : undefined}
+                  title={isSidebarCollapsed ? route.label : undefined}
                 >
                   <route.icon 
                     size={18} 
@@ -126,7 +146,7 @@ export const Sidebar = () => {
                         : "text-gray-400 group-hover:text-[#11327c]"
                     )} 
                   />
-                  {!collapsed && <span>{route.label}</span>}
+                  {!isSidebarCollapsed && <span>{route.label}</span>}
                 </Link>
               );
             })}
@@ -136,19 +156,21 @@ export const Sidebar = () => {
 
       {/* Bottom Actions */}
       <div className="p-3 shrink-0 border-t border-gray-50 space-y-0.5">
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center gap-3 px-3 py-2 text-gray-500 hover:bg-gray-50 rounded-lg text-[13.5px] font-bold transition-colors"
-        >
-          {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-          {!collapsed && <span>Collapse Sidebar</span>}
-        </button>
+        {!isMobile && (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="w-full flex items-center gap-3 px-3 py-2 text-gray-500 hover:bg-gray-50 rounded-lg text-[13.5px] font-bold transition-colors"
+          >
+            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            {!collapsed && <span>Collapse Sidebar</span>}
+          </button>
+        )}
         <button 
           onClick={handleLogout}
           className="w-full flex items-center gap-3 px-3 py-2 text-[#ef4444] hover:bg-red-50 rounded-lg text-[13.5px] font-bold transition-colors"
         >
           <LogOut size={18} />
-          {!collapsed && <span>Logout</span>}
+          {!isSidebarCollapsed && <span>Logout</span>}
         </button>
       </div>
     </aside>

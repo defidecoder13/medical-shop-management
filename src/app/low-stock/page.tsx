@@ -153,16 +153,16 @@ export default function LowStockPage() {
 
       {/* List Section */}
       <div className="space-y-6">
-        <div className="flex items-center justify-between px-2">
-           <h2 className="text-[18px] font-black text-[#11327c] uppercase tracking-widest flex items-center gap-3">
-              <AlertCircle className="text-orange-500 w-5 h-5" strokeWidth={3} />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-2">
+           <h2 className="text-[16px] sm:text-[18px] font-black text-[#11327c] uppercase tracking-widest flex items-center gap-3">
+              <AlertCircle className="text-orange-500 w-5 h-5 shrink-0" strokeWidth={3} />
               Critical Shortage List
            </h2>
-           <div className="relative group">
+           <div className="relative group w-full sm:w-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#11327c] transition-colors" />
               <input 
                 placeholder="Filter alerts..."
-                className="pl-12 pr-6 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all w-64 shadow-sm"
+                className="pl-12 pr-6 py-3 bg-white border border-gray-100 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all w-full sm:w-64 shadow-sm"
               />
            </div>
         </div>
