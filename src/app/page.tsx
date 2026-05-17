@@ -77,9 +77,9 @@ export default function Home() {
   const salesVal = rawSales ? parseFloat(rawSales) : 0;
   
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-10">
+    <div className="space-y-6 max-w-[1600px] mx-auto pb-10 flex flex-col">
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 order-2 lg:order-1">
         <StatsCard 
           title="Total Revenue" 
           value={`₹${salesVal > 0 ? salesVal.toFixed(2) : "23,305.87"}`} 
@@ -133,7 +133,7 @@ export default function Home() {
       </div>
 
       {/* Row 2: Quick Actions & Today's Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 order-1 lg:order-2">
         {/* Quick Actions */}
         <div className="lg:col-span-2">
           <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] h-full">
@@ -212,7 +212,7 @@ export default function Home() {
       </div>
 
       {/* Row 3: Transactions */}
-      <div className="grid grid-cols-1 gap-6">
+      <div className="grid grid-cols-1 gap-6 order-3">
         <div className="w-full">
           <RecentTransactions data={data.recentTransactions} />
         </div>
