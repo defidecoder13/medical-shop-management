@@ -1,4 +1,4 @@
-# MediShop Admin 🏥💊
+# Medsathi pharmacy 🏥💊
 
 MediShop Admin is a comprehensive, full-stack **Pharmacy Management System** designed to streamline inventory, billing, sales tracking, and medicine expiry for local pharmacies. Built strictly with modern web technologies, it features a fast, robust, and highly interactive UI that mimics the efficiency of traditional desktop ERPs (like Marg) but within a browser.
 
