@@ -14,23 +14,18 @@ export async function GET() {
             let needsUpdate = false;
 
             // Fix missing/NaN Cost Price
-            if (med.buyingPricePerStrip === undefined || med.buyingPricePerStrip === null || isNaN(med.buyingPricePerStrip)) {
-                med.buyingPricePerStrip = 0;
+            if (med.buyingPrice === undefined || med.buyingPrice === null || isNaN(med.buyingPrice)) {
+                med.buyingPrice = 0;
                 needsUpdate = true;
             }
 
             // Fix missing/NaN Selling Price (MRP)
-            if (med.sellingPricePerStrip === undefined || med.sellingPricePerStrip === null || isNaN(med.sellingPricePerStrip)) {
+            if (med.mrp === undefined || med.mrp === null || isNaN(med.mrp)) {
                 // Fallback to buying price if available, else 0
-                med.sellingPricePerStrip = med.buyingPricePerStrip > 0 ? med.buyingPricePerStrip : 0;
+                med.mrp = med.buyingPrice > 0 ? med.buyingPrice : 0;
                 needsUpdate = true;
             }
 
-            // Fix missing Rack Number
-            if (med.rackNumber === undefined || med.rackNumber === null) {
-                med.rackNumber = "";
-                needsUpdate = true;
-            }
 
             // Fix missing tabletsPerStrip or invalid
             if (!med.tabletsPerStrip || med.tabletsPerStrip <= 0) {

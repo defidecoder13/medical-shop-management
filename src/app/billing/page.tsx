@@ -37,6 +37,8 @@ type Medicine = {
   expiryDate: string;
   rackNumber: string;
   composition?: string;
+  discountPercent?: number;
+  gstPercent?: number;
 };
 
 type CartItem = {
@@ -50,6 +52,9 @@ type CartItem = {
   mrp: number; // Added for reference
   stock: number;
   rackNumber: string;
+  discountPercent?: number | "";
+  tabletsPerStrip: number;
+  gstPercent: number;
 };
 
 export default function BillingPage() {
@@ -74,6 +79,7 @@ function BillingContent() {
   const [patientName, setPatientName] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
   const debouncedPhone = useDebounce(patientPhone, 500);
+  const [patientAddress, setPatientAddress] = useState("");
   const [doctorName, setDoctorName] = useState("");
   const [regularMedicines, setRegularMedicines] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -81,9 +87,12 @@ function BillingContent() {
   
   const [subTotal, setSubTotal] = useState(0);
   const [discountAmount, setDiscountAmount] = useState(0);
+  const [gstAmount, setGstAmount] = useState(0);
+  const [roundingAdjustment, setRoundingAdjustment] = useState(0);
   const [grandTotal, setGrandTotal] = useState(0);
   const [gstEnabled, setGstEnabled] = useState(false);
   const [gstPercent, setGstPercent] = useState(0);
+  const [paymentMethod, setPaymentMethod] = useState<"Cash" | "UPI" | "Card">("Cash");
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [generatedBillId, setGeneratedBillId] = useState<string | null>(null);
 
@@ -164,6 +173,9 @@ function BillingContent() {
                 mrp: sellingPrice,
                 stock: med.stock,
                 rackNumber: med.rackNumber || "",
+                discountPercent: med.discountPercent || 0,
+                tabletsPerStrip: tabletsPerStrip,
+                gstPercent: med.gstPercent || 0,
               },
             ]);
           }
@@ -182,7 +194,7 @@ function BillingContent() {
       setMedicines([]);
       return;
     }
-    apiClient.get(`/api/inventory?q=${debouncedSearch}`)
+    apiClient.get(`/api/inventory?q=${debouncedSearch}&inStock=true`)
       .then(setMedicines)
       .catch((err) => console.error(err));
   }, [debouncedSearch]);
@@ -201,6 +213,7 @@ function BillingContent() {
            if (p.phone === debouncedPhone) {
               if (!patientName) setPatientName(p.name || "");
               if (!doctorName) setDoctorName(p.doctorName || "");
+              if (!patientAddress) setPatientAddress(p.address || "");
               if (p.regularMedicines?.length > 0) {
                  setRegularMedicines(p.regularMedicines);
               }
@@ -232,30 +245,46 @@ function BillingContent() {
   }, []);
   
   useEffect(() => {
-    const calculatedSubTotal = cart.reduce((sum, item) => {
+    let tempSubTotal = 0;
+    let tempDiscountAmount = 0;
+    let tempGstAmount = 0;
+
+    cart.forEach((item) => {
       const stripTotal = typeof item.stripSellingPrice === 'number' && typeof item.stripQty === 'number' 
         ? item.stripSellingPrice * item.stripQty 
         : 0;
       const tabletTotal = typeof item.tabletSellingPrice === 'number' && typeof item.tabletQty === 'number' 
         ? item.tabletSellingPrice * item.tabletQty 
         : 0;
-      return sum + stripTotal + tabletTotal;
-    }, 0);
+      const itemSubTotal = stripTotal + tabletTotal;
+      const itemDiscountPercent = typeof item.discountPercent === 'number' ? item.discountPercent : 0;
+      const itemDiscount = itemSubTotal * (itemDiscountPercent / 100);
+      const itemTaxableValue = itemSubTotal - itemDiscount;
+
+      const itemGstPercent = typeof item.gstPercent === 'number' ? item.gstPercent : 0;
+      const itemGst = gstEnabled ? itemTaxableValue * (itemGstPercent / 100) : 0;
+
+      tempSubTotal += itemSubTotal;
+      tempDiscountAmount += itemDiscount;
+      tempGstAmount += itemGst;
+    });
+
+    setSubTotal(tempSubTotal);
     
-    setSubTotal(calculatedSubTotal);
-    
-    const dp = discountPercent === "" ? 0 : Number(discountPercent);
-    const calculatedDiscount = calculatedSubTotal * (dp / 100);
-    const roundedDiscount = Math.round(calculatedDiscount * 100) / 100;
+    const roundedDiscount = Math.round(tempDiscountAmount * 100) / 100;
     setDiscountAmount(roundedDiscount);
+
+    const roundedGst = Math.round(tempGstAmount * 100) / 100;
+    setGstAmount(roundedGst);
     
-    const totalAfterDiscount = calculatedSubTotal - calculatedDiscount;
-    const gstAmount = gstEnabled ? totalAfterDiscount * (gstPercent / 100) : 0;
-    const finalTotal = totalAfterDiscount + gstAmount;
-    const roundedFinalTotal = Math.round(finalTotal * 100) / 100;
+    const totalAfterDiscount = tempSubTotal - roundedDiscount;
+    const finalTotal = totalAfterDiscount + roundedGst;
+    const roundedFinalTotal = Math.round(finalTotal);
+    const rAdjustment = Math.round((roundedFinalTotal - finalTotal) * 100) / 100;
     
+    setRoundingAdjustment(rAdjustment);
     setGrandTotal(roundedFinalTotal);
-  }, [cart, discountPercent, gstEnabled, gstPercent]);
+  }, [cart, gstEnabled]);
 
   const handleBarcodeScan = async (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && search.trim() !== '') {
@@ -320,6 +349,9 @@ function BillingContent() {
         mrp: sellingPrice,
         stock: med.stock,
         rackNumber: med.rackNumber || "",
+        discountPercent: med.discountPercent || 0,
+        tabletsPerStrip: tabletsPerStrip,
+        gstPercent: med.gstPercent || 0,
       },
     ]);
     setSearch("");
@@ -366,6 +398,9 @@ function BillingContent() {
                    mrp: sellingPrice,
                    stock: med.stock,
                    rackNumber: med.rackNumber || "",
+                   discountPercent: med.discountPercent || 0,
+                   tabletsPerStrip: tabletsPerStrip,
+                   gstPercent: med.gstPercent || 0,
                 });
                 addedCount++;
              }
@@ -424,6 +459,8 @@ function BillingContent() {
               unitType: 'strip',
               qty: c.stripQty,
               sellingPrice: c.stripSellingPrice,
+              discountPercent: c.discountPercent || 0,
+              pack: `${c.tabletsPerStrip || 1}'S`,
             });
           }
           if (c.tabletQty > 0 && typeof c.tabletSellingPrice === 'number') {
@@ -434,6 +471,8 @@ function BillingContent() {
               unitType: 'tablet',
               qty: c.tabletQty,
               sellingPrice: c.tabletSellingPrice,
+              discountPercent: c.discountPercent || 0,
+              pack: `${c.tabletsPerStrip || 1}'S`,
             });
           }
           return items;
@@ -442,7 +481,9 @@ function BillingContent() {
         gstEnabled: gstEnabled, // Send toggle status
         patientName,
         patientPhone,
+        patientAddress,
         doctorName,
+        paymentMethod,
         printInvoice: false, // Never print from here
       };
 
@@ -453,10 +494,16 @@ function BillingContent() {
       
       if (data.offlineQueued && data._id) {
          // Reconstruct the transaction locally for offline printing
-         const processedItems = payload.items.map(item => ({
-            ...item,
-            total: item.qty * item.sellingPrice
-         }));
+          const processedItems = payload.items.map(item => {
+             const itemDiscountPercent = item.discountPercent || 0;
+             const itemTotal = item.qty * item.sellingPrice;
+             return {
+                ...item,
+                total: itemTotal,
+                discountPercent: itemDiscountPercent,
+                discountAmount: Math.round(itemTotal * (itemDiscountPercent / 100) * 100) / 100,
+             };
+          });
          
          txToCache = {
             _id: data._id,
@@ -466,13 +513,16 @@ function BillingContent() {
             discountAmount: discountAmount,
             gstPercent: gstPercent,
             gstEnabled: gstEnabled,
-            gstAmount: gstEnabled ? (subTotal - discountAmount) * (gstPercent / 100) : 0,
+            gstAmount: gstAmount,
             grandTotal: grandTotal,
             items: processedItems,
             printInvoice: false,
             patientName,
             patientPhone,
+            patientAddress,
             doctorName,
+            paymentMethod: paymentMethod,
+            roundingAdjustment: roundingAdjustment,
             isUnsynced: true // Custom flag strictly for UI display
          };
       } else if (data._id) {
@@ -510,6 +560,8 @@ function BillingContent() {
       setPatientName("");
       setPatientPhone("");
       setDoctorName("");
+      setPaymentMethod("Cash");
+      setRoundingAdjustment(0);
       
       // Open our smart success modal
       if (data._id) {
@@ -559,7 +611,7 @@ function BillingContent() {
             </h2>
             <div className="relative">
               <input
-                className="w-full bg-gray-50 border border-gray-200 pl-12 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-gray-800 placeholder:text-gray-400 font-medium shadow-sm"
+                className="w-full bg-white border border-gray-300 shadow-sm pl-12 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-gray-800 placeholder:text-gray-400 font-medium shadow-sm"
                 placeholder="Scan Barcode or Search by name, brand, batch..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -592,9 +644,11 @@ function BillingContent() {
                         {med.composition && (
                           <div className="text-[11px] text-gray-500 font-medium truncate max-w-sm mt-0.5">{med.composition}</div>
                         )}
-                        <div className="text-[11px] text-gray-400 font-bold flex gap-3 mt-1.5 uppercase tracking-tight">
+                        <div className="text-[11px] text-gray-400 font-bold flex flex-wrap gap-x-3 gap-y-1 mt-1.5 uppercase tracking-tight">
                           <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">Rack: {med.rackNumber || 'N/A'}</span>
-                          <span className={med.stock < 10 ? 'text-rose-600' : 'text-emerald-600'}>Stock: {med.stock}</span>
+                          <span className={med.stock < 10 ? 'text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded' : 'text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded'}>Stock: {med.stock}</span>
+                          <span className="bg-indigo-50 px-1.5 py-0.5 rounded text-indigo-600">Batch: {med.batchNumber || 'N/A'}</span>
+                          <span className="bg-amber-50 px-1.5 py-0.5 rounded text-amber-700">MRP: ₹{(med.sellingPricePerStrip || med.sellingPrice || 0).toFixed(2)}</span>
                         </div>
                       </div>
                       <div className="w-9 h-9 flex items-center justify-center bg-[#f0f2ff] text-[#11327c] rounded-lg group-hover/item:bg-[#11327c] group-hover/item:text-white transition-all shadow-sm">
@@ -635,87 +689,126 @@ function BillingContent() {
                 </div>
               ) : (
                 <AnimatePresence>
-                {cart.map((item) => (
-                  <motion.div 
-                    key={item.medicineId} 
-                    layout
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    className="group relative p-5 rounded-2xl border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all shadow-sm hover:shadow-md flex flex-col gap-4"
-                  >
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <div className="font-black text-[#11327c] text-[16px] flex items-center gap-2 tracking-tight">
-                          {item.name}
-                          {item.stock < 10 && (
-                            <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-wider border border-rose-100">
-                              Low Stock
-                            </span>
-                          )}
+                  {cart.map((item) => {
+                    const isMulti = item.tabletsPerStrip > 1;
+                    return (
+                      <motion.div 
+                        key={item.medicineId} 
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="group relative p-5 rounded-2xl border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all shadow-sm hover:shadow-md flex flex-col gap-4"
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="space-y-1">
+                            <div className="font-black text-[#11327c] text-[16px] flex items-center gap-2 tracking-tight">
+                              {item.name}
+                              {item.stock < 10 && (
+                                <span className="px-1.5 py-0.5 rounded bg-rose-50 text-rose-600 text-[10px] font-black uppercase tracking-wider border border-rose-100">
+                                  Low Stock
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-tight">
+                              <span className="text-gray-400">Batch: <span className="text-gray-600">{item.batchNumber}</span></span>
+                              <span className="text-gray-400">Stock: <span className={item.stock < 10 ? "text-rose-500" : "text-emerald-600"}>{item.stock}</span></span>
+                              {item.rackNumber && (
+                                <div className="flex items-center gap-1 text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded border border-indigo-100">
+                                  Rack {item.rackNumber}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={() => removeFromCart(item.medicineId)}
+                            className="text-gray-300 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-xl transition-all"
+                          >
+                            <Trash2 size={18} strokeWidth={2.5} />
+                          </button>
                         </div>
-                        <div className="flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-tight">
-                          <span className="text-gray-400">Batch: <span className="text-gray-600">{item.batchNumber}</span></span>
-                          <span className="text-gray-400">Stock: <span className={item.stock < 10 ? "text-rose-500" : "text-emerald-600"}>{item.stock}</span></span>
-                          {item.rackNumber && (
-                            <div className="flex items-center gap-1 text-indigo-600 bg-indigo-50/50 px-1.5 py-0.5 rounded border border-indigo-100">
-                              Rack {item.rackNumber}
+                        
+                        <div className={`grid grid-cols-1 gap-4 ${isMulti ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+                          {/* Strip Input */}
+                          <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-[#f0f2ff]/40 border border-indigo-100/30 hover:border-[#11327c]/20 transition-all">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className="w-1.5 h-1.5 rounded-full bg-[#11327c]" />
+                                <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">
+                                  {isMulti ? "Strips" : "Quantity"}
+                                </span>
+                              </div>
+                              <span className="text-[13px] font-black text-[#11327c]">₹{((item.stripQty || 0) * (item.stripSellingPrice || 0)).toFixed(2)}</span>
+                            </div>
+                            <div className="flex items-center justify-between mt-1">
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="Qty"
+                                className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1 text-[12px] font-bold text-center focus:ring-2 focus:ring-[#11327c]/10 outline-none text-gray-900"
+                                value={item.stripQty || ''}
+                                onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
+                              />
+                              <span className="text-[10px] font-bold text-gray-400">x ₹{item.stripSellingPrice}</span>
+                            </div>
+                          </div>
+                          
+                          {/* Tablet Input */}
+                          {isMulti && (
+                            <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-emerald-50/40 border border-emerald-100/30 hover:border-emerald-500/20 transition-all">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                  <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Tablets</span>
+                                </div>
+                                <span className="text-[13px] font-black text-[#11327c]">₹{((item.tabletQty || 0) * (item.tabletSellingPrice || 0)).toFixed(2)}</span>
+                              </div>
+                              <div className="flex items-center justify-between mt-1">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  placeholder="Qty"
+                                  className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1 text-[12px] font-bold text-center focus:ring-2 focus:ring-emerald-500/10 outline-none text-gray-900"
+                                  value={item.tabletQty || ''}
+                                  onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
+                                />
+                                <span className="text-[10px] font-bold text-gray-400">x ₹{item.tabletSellingPrice}</span>
+                              </div>
                             </div>
                           )}
-                        </div>
-                      </div>
 
-                      <button
-                        onClick={() => removeFromCart(item.medicineId)}
-                        className="text-gray-300 hover:text-rose-500 hover:bg-rose-50 p-2 rounded-xl transition-all"
-                      >
-                        <Trash2 size={18} strokeWidth={2.5} />
-                      </button>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {/* Strip Input */}
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-[#f0f2ff]/40 border border-indigo-100/30 hover:border-[#11327c]/20 transition-all">
-                        <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-[#11327c]" />
-                          <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Strips</span>
+                      {/* Discount Input */}
+                      <div className="flex flex-col gap-2 p-3.5 rounded-xl bg-amber-50/40 border border-amber-100/30 hover:border-amber-500/20 transition-all">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Discount</span>
+                          </div>
+                          <span className="text-[13px] font-black text-amber-600">
+                            -₹{(((item.stripQty || 0) * (item.stripSellingPrice || 0) + (item.tabletQty || 0) * (item.tabletSellingPrice || 0)) * ((item.discountPercent || 0) / 100)).toFixed(2)}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-between mt-1">
                           <input
                             type="number"
                             min="0"
-                            placeholder="Qty"
-                            className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-[13px] font-bold text-center focus:ring-2 focus:ring-[#11327c]/10 outline-none"
-                            value={item.stripQty || ''}
-                            onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
+                            max="100"
+                            placeholder="0"
+                            className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1 text-[12px] font-bold text-center focus:ring-2 focus:ring-amber-500/10 outline-none text-gray-900"
+                            value={item.discountPercent || ''}
+                            onChange={(e) => {
+                              const val = e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value)));
+                              updateItem(item.medicineId, "discountPercent", val);
+                            }}
                           />
-                          <span className="text-[11px] font-bold text-gray-400 min-w-[50px] text-right">x ₹{item.stripSellingPrice}</span>
-                          <span className="text-[14px] font-black text-[#11327c] min-w-[70px] text-right">₹{((item.stripQty || 0) * (item.stripSellingPrice || 0)).toFixed(2)}</span>
-                        </div>
-                      </div>
-                      
-                      {/* Tablet Input */}
-                      <div className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/40 border border-emerald-100/30 hover:border-emerald-500/20 transition-all">
-                        <div className="flex items-center gap-2">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                          <span className="text-[11px] font-black text-gray-500 uppercase tracking-widest">Tablets</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <input
-                            type="number"
-                            min="0"
-                            placeholder="Qty"
-                            className="w-16 bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-[13px] font-bold text-center focus:ring-2 focus:ring-emerald-500/10 outline-none"
-                            value={item.tabletQty || ''}
-                            onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
-                          />
-                          <span className="text-[11px] font-bold text-gray-400 min-w-[50px] text-right">x ₹{item.tabletSellingPrice}</span>
-                          <span className="text-[14px] font-black text-[#11327c] min-w-[70px] text-right">₹{((item.tabletQty || 0) * (item.tabletSellingPrice || 0)).toFixed(2)}</span>
+                          <span className="text-[10px] font-black text-gray-500">%</span>
                         </div>
                       </div>
                     </div>
                   </motion.div>
-                ))}
+                );
+              })}
                 </AnimatePresence>
               )}
             </div>
@@ -734,7 +827,7 @@ function BillingContent() {
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Name</label>
                 <input
-                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold"
+                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
                   placeholder="Full Name"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
@@ -743,7 +836,7 @@ function BillingContent() {
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Doctor Name</label>
                 <input
-                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold"
+                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
                   placeholder="Dr. Name"
                   value={doctorName}
                   onChange={(e) => setDoctorName(e.target.value)}
@@ -752,10 +845,19 @@ function BillingContent() {
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
                 <input
-                  className="w-full bg-gray-50 border border-gray-200 px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold"
+                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
                   placeholder="10-digit number"
                   value={patientPhone}
                   onChange={(e) => setPatientPhone(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Address</label>
+                <input
+                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
+                  placeholder="Patient Address"
+                  value={patientAddress}
+                  onChange={(e) => setPatientAddress(e.target.value)}
                 />
               </div>
               
@@ -787,18 +889,9 @@ function BillingContent() {
                 <span>₹{subTotal.toFixed(2)}</span>
               </div>
 
-              <div className="flex justify-between items-center">
-                <span className="text-[14px] font-bold opacity-70">Discount (%)</span>
-                <div className="w-20 bg-white/10 rounded-lg flex items-center px-2 border border-white/10 focus-within:border-white/30 transition-all">
-                  <input
-                    type="number"
-                    className="w-full bg-transparent text-right outline-none text-[13px] font-black py-1.5 text-white placeholder:text-white/30"
-                    placeholder="0"
-                    value={discountPercent}
-                    onChange={(e) => setDiscountPercent(e.target.value === "" ? "" : Number(e.target.value))}
-                  />
-                  <span className="text-[10px] font-black ml-1 opacity-50">%</span>
-                </div>
+              <div className="flex justify-between items-center text-[14px] font-bold opacity-70">
+                <span>Weighted Discount (%)</span>
+                <span className="tabular-nums">{(subTotal > 0 ? (discountAmount / subTotal) * 100 : 0).toFixed(1)}%</span>
               </div>
               
               {discountAmount > 0 && (
@@ -812,7 +905,7 @@ function BillingContent() {
               <div className="flex flex-col gap-3 py-4 border-y border-white/10">
                  <div className="flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                       <label className="text-[14px] font-bold opacity-70 cursor-pointer select-none" htmlFor="gstToggle">Apply GST (12%)</label>
+                       <label className="text-[14px] font-bold opacity-70 cursor-pointer select-none" htmlFor="gstToggle">Apply GST (Item-wise)</label>
                        <div 
                         onClick={() => setGstEnabled(!gstEnabled)}
                         className={`w-9 h-5 rounded-full transition-all relative cursor-pointer ${gstEnabled ? 'bg-emerald-500' : 'bg-white/10'}`}
@@ -824,9 +917,36 @@ function BillingContent() {
                  {gstEnabled && (
                     <div className="flex justify-between text-[14px] font-bold text-emerald-300">
                         <span>GST Amount</span>
-                        <span>+₹{((subTotal - discountAmount) * 0.12).toFixed(2)}</span>
+                        <span>+₹{gstAmount.toFixed(2)}</span>
                     </div>
                  )}
+                 {roundingAdjustment !== 0 && (
+                    <div className={`flex justify-between text-[14px] font-bold ${roundingAdjustment < 0 ? 'text-rose-300' : 'text-emerald-300'}`}>
+                        <span>Rounding</span>
+                        <span>{roundingAdjustment < 0 ? '-' : '+'}₹{Math.abs(roundingAdjustment).toFixed(2)}</span>
+                    </div>
+                 )}
+              </div>
+
+              {/* Payment Mode Selector */}
+              <div className="py-4 border-b border-white/10 flex flex-col gap-2.5">
+                <span className="text-[12px] font-black uppercase tracking-wider opacity-60">Payment Method</span>
+                <div className="grid grid-cols-3 gap-2">
+                  {(["Cash", "UPI", "Card"] as const).map((mode) => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => setPaymentMethod(mode)}
+                      className={`py-2 px-3 rounded-xl text-[11px] font-black uppercase tracking-wider transition-all border ${
+                        paymentMethod === mode
+                          ? "bg-white text-[#11327c] border-white shadow-md scale-105"
+                          : "bg-white/5 text-white/80 border-white/10 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      {mode}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="pt-4">

@@ -11,19 +11,51 @@ export async function GET(req: Request) {
         await connectDB();
         const { searchParams } = new URL(req.url);
         const range = searchParams.get('range') || '1m';
+        const pageParam = searchParams.get('page');
+        const page = parseInt(pageParam || "1");
+        const limit = parseInt(searchParams.get('limit') || "20");
+        const search = searchParams.get('search') || "";
 
-        const now = new Date();
-        let startDate = new Date();
-        if (range === '1d') startDate.setDate(now.getDate() - 1);
-        else if (range === '7d') startDate.setDate(now.getDate() - 7);
-        else if (range === '1m') startDate.setMonth(now.getMonth() - 1);
-        else startDate.setMonth(now.getMonth() - 1);
+        const filter: any = {};
+        
+        if (range !== 'all') {
+            const now = new Date();
+            let startDate = new Date();
+            if (range === '1d') startDate.setDate(now.getDate() - 1);
+            else if (range === '7d') startDate.setDate(now.getDate() - 7);
+            else if (range === '1m') startDate.setMonth(now.getMonth() - 1);
+            else startDate.setMonth(now.getMonth() - 1);
+            filter.createdAt = { $gte: startDate };
+        }
 
-        const returns = await SupplierReturn.find({
-            createdAt: { $gte: startDate }
-        }).sort({ createdAt: -1 });
+        if (search) {
+            filter.$or = [
+                { supplierName: { $regex: search, $options: 'i' } },
+                { 'items.name': { $regex: search, $options: 'i' } }
+            ];
+        }
 
-        return NextResponse.json(returns);
+        const totalCount = await SupplierReturn.countDocuments(filter);
+        const totalPages = Math.ceil(totalCount / limit);
+
+        const returns = await SupplierReturn.find(filter)
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(limit);
+
+        if (pageParam) {
+            return NextResponse.json({
+                data: returns,
+                pagination: {
+                    totalCount,
+                    totalPages,
+                    currentPage: page,
+                    limit
+                }
+            });
+        } else {
+            return NextResponse.json(returns);
+        }
     } catch (error) {
         return NextResponse.json({ error: "Failed to fetch returns" }, { status: 500 });
     }

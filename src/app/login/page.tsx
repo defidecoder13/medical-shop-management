@@ -53,8 +53,8 @@ export default function LoginPage() {
         
         {/* Branding Section */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-[52px] h-[52px] bg-[#fef2f2] rounded-2xl flex items-center justify-center border border-red-50 shadow-[0_4px_12px_-2px_rgba(239,68,68,0.12)] mb-4">
-            <Plus className="w-8 h-8 text-[#ef4444]" strokeWidth={4} />
+          <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center border-green-50  mb-4">
+            <Plus className="w-8 h-8 text-green-500" strokeWidth={4} />
           </div>
           <div className="flex flex-col items-center text-center">
             <h1 className="text-[26px] font-black leading-[1.05] tracking-tight">

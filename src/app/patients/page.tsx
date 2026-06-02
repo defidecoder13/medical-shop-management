@@ -8,6 +8,8 @@ import { apiClient } from "@/src/lib/apiClient";
 export default function PatientsPage() {
     const [patients, setPatients] = useState<any[]>([]);
     const [search, setSearch] = useState("");
+    const [page, setPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [loading, setLoading] = useState(true);
     
     // Modal state
@@ -21,13 +23,30 @@ export default function PatientsPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
     useEffect(() => {
-        fetchPatients();
+        setPage(1);
     }, [search]);
+
+    useEffect(() => {
+        setLoading(true);
+        const timeoutId = setTimeout(() => {
+            fetchPatients();
+        }, 300);
+        return () => clearTimeout(timeoutId);
+    }, [search, page]);
 
     const fetchPatients = async () => {
         try {
-            const data = await apiClient.get(`/api/patients?search=${search}`);
-            setPatients(data || []);
+            const res = await apiClient.get(`/api/patients?search=${search}&page=${page}&limit=20`);
+            
+            if (res?.data && Array.isArray(res.data)) {
+                setPatients(res.data);
+                setTotalPages(res.pagination?.totalPages || 1);
+            } else if (Array.isArray(res)) {
+                setPatients(res);
+                setTotalPages(1);
+            } else {
+                setPatients([]);
+            }
         } catch (error) {
             console.error("Failed to fetch patients", error);
         } finally {
@@ -218,6 +237,31 @@ export default function PatientsPage() {
                                 </div>
                             </div>
                         )}
+                    </div>
+                )}
+                
+                {/* Pagination Controls */}
+                {!loading && totalPages > 1 && (
+                    <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
+                        <span className="text-sm text-gray-500 font-medium">
+                            Page {page} of {totalPages}
+                        </span>
+                        <div className="flex gap-2">
+                            <button
+                                disabled={page === 1}
+                                onClick={() => setPage(p => Math.max(1, p - 1))}
+                                className="px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                disabled={page === totalPages}
+                                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                                className="px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                            >
+                                Next
+                            </button>
+                        </div>
                     </div>
                 )}
             </div>

@@ -351,7 +351,7 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
                     </div>
                     <div className="text-right">
                       <div className="text-[11px] font-medium text-gray-500">Stock: <span className={med.stock < 10 ? 'text-red-500' : 'text-green-600'}>{med.stock}</span></div>
-                      <div className="text-[11px] font-medium text-gray-500">₹{med.mrp.toFixed(2)}</div>
+                      <div className="text-[11px] font-medium text-gray-500">₹{(med.sellingPricePerStrip ?? med.mrp ?? 0).toFixed(2)}</div>
                     </div>
                   </motion.button>
                 ))}

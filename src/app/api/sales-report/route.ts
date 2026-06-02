@@ -21,12 +21,13 @@ export async function GET(request: Request) {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    // Fetch bills within the date range
+    // Fetch bills within the date range (excluding return records)
     const bills = await Bill.find({
       createdAt: {
         $gte: start,
         $lte: end,
       },
+      isReturn: { $ne: true }
     }).lean();
 
     // Calculate total sales and profit
@@ -54,22 +55,50 @@ export async function GET(request: Request) {
     }
 
     bills.forEach((bill: any) => {
-      totalSales += bill.grandTotal || 0;
+      // Calculate net quantities and totals for this bill (excluding returned items)
+      let netSubTotal = 0;
+      const netItems = bill.items.map((item: any) => {
+        const netQty = item.qty - (item.returnedQty || 0);
+        const itemSubTotal = item.sellingPrice * netQty;
+        netSubTotal += itemSubTotal;
+        return {
+          ...item,
+          netQty,
+          itemSubTotal
+        };
+      });
 
-      const originalSubtotal = bill.subTotal;
       const discountPercent = bill.discountPercent || 0;
-      const discountAmount = bill.discountAmount || 0;
+      const netDiscountAmount = netSubTotal * (discountPercent / 100);
+      const netSubTotalAfterDiscount = netSubTotal - netDiscountAmount;
 
-      bill.items.forEach((item: any) => {
+      const gstPercent = bill.gstPercent || 0;
+      const netGstAmount = bill.gstEnabled ? (netSubTotalAfterDiscount * (gstPercent / 100)) : 0;
+      const netGrandTotal = Math.round(netSubTotalAfterDiscount + netGstAmount);
+
+      totalSales += netGrandTotal;
+
+      netItems.forEach((item: any) => {
+        if (item.netQty <= 0) return;
+
         if (!medicineQuantities[item.name]) {
           medicineQuantities[item.name] = { quantity: 0, revenue: 0, profit: 0 };
         }
 
-        medicineQuantities[item.name].quantity += item.qty;
-        medicineQuantities[item.name].revenue += item.total;
+        medicineQuantities[item.name].quantity += item.netQty;
+
+        // Calculate net revenue for this item (sellingPrice * netQty minus its share of discount)
+        const itemOriginalTotal = item.sellingPrice * item.netQty;
+        let discountedItemTotal = itemOriginalTotal;
+        if (netSubTotal > 0 && netDiscountAmount > 0) {
+          const discountRatio = netDiscountAmount / netSubTotal;
+          const itemDiscount = itemOriginalTotal * discountRatio;
+          discountedItemTotal = itemOriginalTotal - itemDiscount;
+        }
+
+        medicineQuantities[item.name].revenue += discountedItemTotal;
 
         // Profit Calculation
-        // New Bills: use stored buyingPrice
         let costPerUnit = 0;
         if (item.buyingPrice !== undefined) {
           costPerUnit = item.buyingPrice;
@@ -85,21 +114,15 @@ export async function GET(request: Request) {
           }
         }
 
-        const totalCost = costPerUnit * item.qty;
-
-        // Apply proportional discount to this item's selling price
-        let discountedItemTotal = item.total;
-        if (originalSubtotal > 0 && discountAmount > 0) {
-          const itemOriginalTotal = item.sellingPrice * item.qty;
-          const discountRatio = discountAmount / originalSubtotal;
-          const itemDiscount = itemOriginalTotal * discountRatio;
-          discountedItemTotal = itemOriginalTotal - itemDiscount;
-        }
-
+        const totalCost = costPerUnit * item.netQty;
         const itemProfit = discountedItemTotal - totalCost;
         medicineQuantities[item.name].profit += itemProfit;
         totalProfit += itemProfit;
       });
+
+      // Factor in rounding adjustment for this bill's overall profit
+      const roundingAdjustment = netGrandTotal - (netSubTotalAfterDiscount + netGstAmount);
+      totalProfit += roundingAdjustment;
     });
 
     // Find most and least sold medicines
@@ -134,15 +157,35 @@ export async function GET(request: Request) {
       if (!dailySalesMap[date]) {
         dailySalesMap[date] = { sales: 0, profit: 0 };
       }
-      dailySalesMap[date].sales += bill.grandTotal || 0;
 
-      const originalSubtotal = bill.subTotal;
-      const discountAmount = bill.discountAmount || 0;
+      // Calculate net quantities and totals for this bill (excluding returned items)
+      let netSubTotal = 0;
+      const netItems = bill.items.map((item: any) => {
+        const netQty = item.qty - (item.returnedQty || 0);
+        const itemSubTotal = item.sellingPrice * netQty;
+        netSubTotal += itemSubTotal;
+        return {
+          ...item,
+          netQty,
+          itemSubTotal
+        };
+      });
+
+      const discountPercent = bill.discountPercent || 0;
+      const netDiscountAmount = netSubTotal * (discountPercent / 100);
+      const netSubTotalAfterDiscount = netSubTotal - netDiscountAmount;
+
+      const gstPercent = bill.gstPercent || 0;
+      const netGstAmount = bill.gstEnabled ? (netSubTotalAfterDiscount * (gstPercent / 100)) : 0;
+      const netGrandTotal = Math.round(netSubTotalAfterDiscount + netGstAmount);
+
+      dailySalesMap[date].sales += netGrandTotal;
 
       let dailyProfit = 0;
-      bill.items.forEach((item: any) => {
-        let costPerUnit = 0;
+      netItems.forEach((item: any) => {
+        if (item.netQty <= 0) return;
 
+        let costPerUnit = 0;
         if (item.buyingPrice !== undefined) {
           costPerUnit = item.buyingPrice;
         } else {
@@ -156,12 +199,13 @@ export async function GET(request: Request) {
           }
         }
 
-        const totalCost = costPerUnit * item.qty;
+        const totalCost = costPerUnit * item.netQty;
 
-        let discountedItemTotal = item.total;
-        if (originalSubtotal > 0 && discountAmount > 0) {
-          const itemOriginalTotal = item.sellingPrice * item.qty;
-          const discountRatio = discountAmount / originalSubtotal;
+        // Calculate net revenue for this item
+        const itemOriginalTotal = item.sellingPrice * item.netQty;
+        let discountedItemTotal = itemOriginalTotal;
+        if (netSubTotal > 0 && netDiscountAmount > 0) {
+          const discountRatio = netDiscountAmount / netSubTotal;
           const itemDiscount = itemOriginalTotal * discountRatio;
           discountedItemTotal = itemOriginalTotal - itemDiscount;
         }

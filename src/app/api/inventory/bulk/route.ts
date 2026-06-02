@@ -24,6 +24,11 @@ export async function POST(req: Request) {
             const tabletsPerStrip = Number(item.tabletsPerStrip);
             const buyingPricePerStrip = Number(item.buyingPrice);
             const sellingPricePerStrip = Number(item.sellingPrice);
+            const discountPercent = Number(item.discountPercent) || 0;
+            const supplierName = item.supplierName || item["Supplier Name"] || "Direct Purchase";
+            const purchaseInvoiceNumber = item.purchaseInvoiceNumber || item["Invoice Number"] || "";
+
+            const category = item.category || item["Category"] || "Tablet";
 
             const {
                 name,
@@ -59,11 +64,15 @@ export async function POST(req: Request) {
                     composition,
                     hsnCode,
                     gstPercent: Number.isNaN(Number(gstPercent)) ? 5 : Number(gstPercent),
+                    category,
                 });
             } else {
                 // Optionally update master fields if provided
                 if (brand) medicine.brand = brand;
                 if (composition) medicine.composition = composition;
+                if (category && medicine.category !== category) {
+                    medicine.category = category;
+                }
                 await medicine.save();
             }
 
@@ -89,6 +98,9 @@ export async function POST(req: Request) {
                 // Update optional fields if provided
                 if (rackNumber) existingBatch.rackNumber = rackNumber;
                 if (expiryDate) existingBatch.expiryDate = new Date(expiryDate);
+                if (discountPercent !== undefined) existingBatch.discountPercent = discountPercent;
+                if (supplierName && supplierName !== "Direct Purchase") existingBatch.supplierName = supplierName;
+                if (purchaseInvoiceNumber) existingBatch.purchaseInvoiceNumber = purchaseInvoiceNumber;
 
                 await existingBatch.save();
                 updatedCount++;
@@ -104,6 +116,9 @@ export async function POST(req: Request) {
                     buyingPricePerStrip: Number.isNaN(buyingPricePerStrip) ? 0 : buyingPricePerStrip,
                     sellingPricePerStrip: Number.isNaN(sellingPricePerStrip) ? 0 : sellingPricePerStrip,
                     rackNumber,
+                    discountPercent,
+                    supplierName,
+                    purchaseInvoiceNumber,
                 });
                 addedCount++;
             }

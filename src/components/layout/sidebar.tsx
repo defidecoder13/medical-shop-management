@@ -17,9 +17,15 @@ import {
   LogOut,
   AlertTriangle,
   Truck,
+  Building2,
   Landmark,
   Plus,
-  X
+  X,
+  BookOpen,
+  ScrollText,
+  ArrowRightLeft,
+  FileSpreadsheet,
+  RotateCcw
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 
@@ -36,9 +42,17 @@ const navigationGroups = [
     group: "INVENTORY",
     routes: [
       { label: "Stock Items", icon: Package, href: "/inventory" },
-      { label: "Low Stock", icon: AlertTriangle, href: "/low-stock" },
-      { label: "Supplier Returns", icon: Truck, href: "/supplier-returns" },
+      { label: "Shortage Engine", icon: AlertTriangle, href: "/inventory/shortage" },
       { label: "Expiry Tracker", icon: CalendarClock, href: "/expiry" },
+    ]
+  },
+  {
+    group: "DISTRIBUTORS",
+    routes: [
+      { label: "Suppliers List", icon: Building2, href: "/suppliers" },
+      { label: "Purchase History", icon: Receipt, href: "/purchases/history" },
+      { label: "Auto Purchase Import", icon: FileSpreadsheet, href: "/purchases/import" },
+      { label: "Supplier Returns", icon: Truck, href: "/supplier-returns" },
     ]
   },
   {
@@ -46,8 +60,15 @@ const navigationGroups = [
     routes: [
       { label: "Patients CRM", icon: Users, href: "/patients" },
       { label: "Reports", icon: BarChart3, href: "/sales-report" },
-      { label: "Accounting", icon: Landmark, href: "/accounting" },
       { label: "Settings", icon: Settings, href: "/settings" },
+    ]
+  },
+  {
+    group: "ACCOUNTING",
+    routes: [
+      { label: "Chart of Accounts", icon: Landmark, href: "/accounting/ledgers" },
+      { label: "Journal Entries", icon: ScrollText, href: "/accounting/journals" },
+      { label: "Trial Balance", icon: ArrowRightLeft, href: "/accounting/trial-balance" },
     ]
   }
 ];
@@ -86,7 +107,7 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
       <div className="h-20 flex items-center justify-between px-5 shrink-0 overflow-hidden">
         <div className="flex items-center gap-2">
           <div className="shrink-0">
-             <Plus className="text-[#ef4444] fill-[#ef4444]" size={28} strokeWidth={4} />
+             <Plus className="text-green-500 fill-green-500" size={28} strokeWidth={4} />
           </div>
           {!isSidebarCollapsed && (
             <div className="flex flex-col ml-1">

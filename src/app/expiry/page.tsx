@@ -44,14 +44,30 @@ export default function ExpiryPage() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'expired' | 'under30' | 'under60'>('expired');
+  const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
+
+  const handleToggleBatch = (batch: string) => {
+    setSelectedBatches(prev => 
+      prev.includes(batch) ? prev.filter(b => b !== batch) : [...prev, batch]
+    );
+  };
+
+  const handleSelectAll = (batches: string[]) => {
+    if (selectedBatches.length === batches.length) {
+      setSelectedBatches([]); // deselect all
+    } else {
+      setSelectedBatches(batches); // select all
+    }
+  };
 
   useEffect(() => {
     const fetchExpiryData = async () => {
       try {
-        const response = await fetch('/api/inventory');
+        const response = await fetch('/api/inventory?limit=5000');
         if (response.ok) {
           const data = await response.json();
-          setMedicines(data);
+          const items = data?.data ? data.data : (Array.isArray(data) ? data : []);
+          setMedicines(items);
         }
       } catch (error) {
         console.error('Error fetching expiry data:', error);
@@ -206,6 +222,15 @@ export default function ExpiryPage() {
           <table className="w-full text-left border-collapse">
             <thead className="bg-[#f8fafc] border-b border-gray-100">
               <tr>
+                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] w-12 text-center">
+                   <div 
+                      onClick={() => handleSelectAll(filteredItems.map(m => m.batchNumber))}
+                      className="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:border-[#11327c] transition-all bg-white"
+                   >
+                     {selectedBatches.length > 0 && selectedBatches.length === filteredItems.length && <div className="w-2.5 h-2.5 bg-[#11327c] rounded-sm" />}
+                     {selectedBatches.length > 0 && selectedBatches.length < filteredItems.length && <div className="w-2.5 h-0.5 bg-[#11327c] rounded-sm" />}
+                   </div>
+                </th>
                 <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Product Details</th>
                 <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Batch Ident.</th>
                 <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Expiry Timeline</th>
@@ -217,7 +242,15 @@ export default function ExpiryPage() {
                 filteredItems.map((med, idx) => {
                   const isExpired = new Date(med.expiryDate) < today;
                   return (
-                    <tr key={med._id} className="hover:bg-[#f8fafc]/50 transition-all group animate-in fade-in slide-in-from-bottom-1 duration-300" style={{ animationDelay: `${idx * 20}ms` }}>
+                    <tr key={med._id} className={`transition-all group animate-in fade-in slide-in-from-bottom-1 duration-300 ${selectedBatches.includes(med.batchNumber) ? 'bg-blue-50/50' : 'hover:bg-[#f8fafc]/50'}`} style={{ animationDelay: `${idx * 20}ms` }}>
+                      <td className="px-8 py-6 text-center">
+                         <div 
+                            onClick={() => handleToggleBatch(med.batchNumber)}
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all mx-auto ${selectedBatches.includes(med.batchNumber) ? 'border-[#11327c] bg-[#11327c]' : 'border-gray-300 bg-white hover:border-[#11327c]'}`}
+                         >
+                           {selectedBatches.includes(med.batchNumber) && <CheckCircle2 size={14} className="text-white" strokeWidth={4} />}
+                         </div>
+                      </td>
                       <td className="px-8 py-6">
                         <div className="flex items-center gap-4">
                           <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
@@ -258,7 +291,7 @@ export default function ExpiryPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={4} className="px-8 py-32 text-center">
+                  <td colSpan={5} className="px-8 py-32 text-center">
                      <div className="flex flex-col items-center gap-4 opacity-20">
                         <CheckCircle2 size={56} strokeWidth={1} className="text-emerald-500" />
                         <div className="space-y-1">
@@ -273,6 +306,23 @@ export default function ExpiryPage() {
           </table>
         </div>
       </div>
+
+      {/* Floating Action Button for Debit Note */}
+      {selectedBatches.length > 0 && (
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#11327c] text-white px-8 py-4 rounded-full shadow-2xl shadow-[#11327c]/40 flex items-center gap-6 animate-in slide-in-from-bottom-10 fade-in duration-300 z-50 border border-white/10">
+           <div className="flex items-center gap-2">
+             <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-black">{selectedBatches.length}</span>
+             <span className="text-sm font-bold uppercase tracking-widest text-blue-100">Batches Selected</span>
+           </div>
+           <div className="w-px h-8 bg-white/20" />
+           <button 
+             onClick={() => router.push(`/supplier-returns/new?batches=${selectedBatches.join(',')}`)}
+             className="flex items-center gap-2 text-sm font-black uppercase tracking-widest hover:text-orange-400 transition-colors"
+           >
+             Create Debit Note <ArrowRight size={18} strokeWidth={3} />
+           </button>
+        </div>
+      )}
     </div>
   );
 }

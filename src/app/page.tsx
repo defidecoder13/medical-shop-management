@@ -82,7 +82,7 @@ export default function Home() {
       <div className="hidden md:grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 order-2 lg:order-1">
         <StatsCard 
           title="Total Revenue" 
-          value={`₹${salesVal > 0 ? salesVal.toFixed(2) : "23,305.87"}`} 
+          value={`₹${salesVal >= 0 ? salesVal.toFixed(2) : "0.00"}`} 
           trend="12.5" 
           trendUp={true} 
           icon={IndianRupee}
@@ -92,7 +92,7 @@ export default function Home() {
         />
         <StatsCard 
           title="Total Orders" 
-          value={data.stats.orders || 11} 
+          value={data.stats.orders ?? 0} 
           trend="10.0" 
           trendUp={true} 
           icon={ClipboardList}
@@ -102,7 +102,7 @@ export default function Home() {
         />
         <StatsCard 
           title="Low Stock" 
-          value={data.stats.lowStock} 
+          value={data.stats.lowStock ?? 0} 
           trend="25.0"
           trendUp={false} 
           icon={Package}
@@ -112,7 +112,7 @@ export default function Home() {
         />
         <StatsCard 
           title="Expiring Soon" 
-          value={data.stats.expiring} 
+          value={data.stats.expiring ?? 0} 
           trend="0"
           trendUp={null} 
           icon={Clock}
@@ -122,7 +122,7 @@ export default function Home() {
         />
         <StatsCard 
           title="Gross Profit" 
-          value="28.6%" 
+          value={salesVal > 0 ? "28.6%" : "0.0%"} 
           trend="8.4"
           trendUp={true} 
           icon={Percent}
@@ -176,35 +176,35 @@ export default function Home() {
                   <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#11327c]"><IndianRupee size={16} strokeWidth={2.5} /></div>
                   <span className="text-gray-500 text-[13px] font-semibold">Total Sales</span>
                 </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">₹{salesVal > 0 ? salesVal.toFixed(2) : "3,450.00"}</span>
+                <span className="text-gray-900 font-extrabold text-[16px]">₹{salesVal >= 0 ? salesVal.toFixed(2) : "0.00"}</span>
               </div>
               <div className="flex justify-between items-center pb-3 border-b border-gray-50">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600"><ReceiptText size={16} strokeWidth={2.5} /></div>
                   <span className="text-gray-500 text-[13px] font-semibold">Total Orders</span>
                 </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">{data.stats.orders || 3}</span>
+                <span className="text-gray-900 font-extrabold text-[16px]">{data.stats.orders ?? 0}</span>
               </div>
               <div className="flex justify-between items-center pb-3 border-b border-gray-50">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500"><Users size={16} strokeWidth={2.5} /></div>
                   <span className="text-gray-500 text-[13px] font-semibold">New Customers</span>
                 </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">2</span>
+                <span className="text-gray-900 font-extrabold text-[16px]">{data.stats.orders ?? 0}</span>
               </div>
               <div className="flex justify-between items-center pb-3 border-b border-gray-50">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center text-orange-500"><Pill size={16} strokeWidth={2.5} /></div>
                   <span className="text-gray-500 text-[13px] font-semibold">Prescriptions</span>
                 </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">5</span>
+                <span className="text-gray-900 font-extrabold text-[16px]">0</span>
               </div>
               <div className="flex justify-between items-center pb-1">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Activity size={16} strokeWidth={2.5} /></div>
                   <span className="text-gray-500 text-[13px] font-semibold">Avg. Order Value</span>
                 </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">₹1,150.00</span>
+                <span className="text-gray-900 font-extrabold text-[16px]">₹{data.stats.orders ? (salesVal / data.stats.orders).toFixed(2) : "0.00"}</span>
               </div>
             </div>
           </div>

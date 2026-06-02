@@ -9,6 +9,8 @@ export async function GET(req: Request) {
         await connectDB();
         const { searchParams } = new URL(req.url);
         const search = searchParams.get('search');
+        const pageParam = searchParams.get('page');
+        const limitParam = searchParams.get('limit');
 
         let query = {};
         if (search) {
@@ -21,8 +23,33 @@ export async function GET(req: Request) {
             };
         }
 
-        const patients = await Patient.find(query).sort({ updatedAt: -1 }).limit(50);
-        return NextResponse.json(patients);
+        const queryObj = Patient.find(query).sort({ updatedAt: -1 });
+
+        if (pageParam) {
+            const page = parseInt(pageParam) || 1;
+            const limit = parseInt(limitParam || "20");
+            
+            const totalCount = await Patient.countDocuments(query);
+            const totalPages = Math.ceil(totalCount / limit);
+            
+            queryObj.skip((page - 1) * limit).limit(limit);
+            const patients = await queryObj;
+            
+            return NextResponse.json({
+                data: patients,
+                pagination: {
+                    totalCount,
+                    totalPages,
+                    currentPage: page,
+                    limit
+                }
+            });
+        } else {
+            // Legacy backward-compatible response for autocomplete
+            queryObj.limit(50);
+            const patients = await queryObj;
+            return NextResponse.json(patients);
+        }
     } catch (error) {
         console.error("FAILED TO FETCH PATIENTS:", error);
         return NextResponse.json({ error: "Failed to fetch patients" }, { status: 500 });

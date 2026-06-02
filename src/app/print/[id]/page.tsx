@@ -3,6 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/src/lib/apiClient";
+import { User } from "lucide-react";
 
 type BillItem = {
   name: string;
@@ -10,10 +11,12 @@ type BillItem = {
   expiryDate?: string;
   batchNumber: string;
   hsnCode?: string;
+  pack?: string;
   unitType: "strip" | "tablet";
   qty: number;
   sellingPrice: number;
   total: number;
+  discountPercent?: number;
 };
 
 type Bill = {
@@ -29,7 +32,9 @@ type Bill = {
   createdAt: string;
   patientName?: string;
   patientPhone?: string;
+  patientAddress?: string;
   doctorName?: string;
+  roundingAdjustment?: number;
 };
 
 type Settings = {
@@ -185,23 +190,33 @@ function PrintInvoiceContent() {
               <div className="w-[20%] flex justify-center items-center">
                 <div className="border-[1.5px] border-black px-2 py-0.5">
                    <h2 className="text-[10px] font-bold uppercase tracking-widest text-black">
-                     {settings.gstEnabled ? "TAX INVOICE" : "INVOICE"}
+                     {settings.gstEnabled ? "TAX INVOICE" : "RETAIL INVOICE"}
                    </h2>
                 </div>
               </div>
 
               {/* Right Details */}
-              <div className="w-[35%] flex flex-col items-end text-[8px] gap-0.5">
-                <div className="grid grid-cols-[auto_auto] gap-x-2 gap-y-0.5 text-left">
-                  <span className="text-gray-500 font-semibold uppercase tracking-wider">Pt. Name</span>
-                  <span className="font-bold text-black text-right truncate max-w-[100px]">{bill.patientName || ""}</span>
+              <div className="w-[45%] flex items-start border-[1px] border-black rounded-md p-2 gap-2 text-[8px] mr-2">
+                 <div className="pt-0.5">
+                    <User size={12} className="text-black stroke-[2]" />
+                 </div>
+                 <div className="grid grid-cols-[auto_auto_auto] gap-x-1.5 gap-y-0.5 w-full text-left">
+                    <span className="font-semibold text-black">PATIENT NAME</span>
+                    <span className="font-semibold text-black">:</span>
+                    <span className="font-bold text-black text-left truncate max-w-[120px]">{bill.patientName || "-"}</span>
 
-                  <span className="text-gray-500 font-semibold uppercase tracking-wider">Pt. Ph</span>
-                  <span className="font-bold mono-font text-black text-right">{bill.patientPhone || ""}</span>
+                    <span className="font-semibold text-black">PHONE NO</span>
+                    <span className="font-semibold text-black">:</span>
+                    <span className="font-bold mono-font text-black text-left">{bill.patientPhone || "-"}</span>
 
-                  <span className="text-gray-500 font-semibold uppercase tracking-wider">Dr. Name</span>
-                  <span className="font-bold text-black text-right truncate max-w-[100px]">{bill.doctorName ? `DR. ${bill.doctorName.toUpperCase()}` : ""}</span>
-                </div>
+                    <span className="font-semibold text-black">ADDRESS</span>
+                    <span className="font-semibold text-black">:</span>
+                    <span className="font-bold text-black text-left truncate max-w-[120px]">{bill.patientAddress || "-"}</span>
+
+                    <span className="font-semibold text-black">DOCTOR'S NAME</span>
+                    <span className="font-semibold text-black">:</span>
+                    <span className="font-bold text-black text-left truncate max-w-[120px]">{bill.doctorName ? `DR. ${bill.doctorName.toUpperCase()}` : "-"}</span>
+                 </div>
               </div>
             </div>
 
@@ -212,7 +227,7 @@ function PrintInvoiceContent() {
                   {settings.pharmacistName && <div className="font-bold text-gray-500 uppercase tracking-wider">Pharmacist: <span className="text-black">{settings.pharmacistName}</span></div>}
                </div>
                <div className="flex gap-4">
-                  <div className="font-bold text-gray-500 uppercase tracking-wider">Invoice #: <span className="mono-font text-black">{bill._id.slice(-8).toUpperCase()}</span></div>
+                  <div className="font-bold text-gray-500 uppercase tracking-wider">Invoice No : <span className="mono-font text-black">{bill._id.slice(-8).toUpperCase()}</span></div>
                   <div className="font-bold text-gray-500 uppercase tracking-wider">Date: <span className="mono-font text-black">{new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
                   <div className="font-bold text-gray-500 uppercase tracking-wider">Time: <span className="mono-font text-black">{new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }).toLowerCase()}</span></div>
                </div>
@@ -223,15 +238,16 @@ function PrintInvoiceContent() {
               <table className="w-full h-full text-left border-collapse border-[1px] border-black flex-1">
                 <thead>
                    <tr className="border-b-[1px] border-black">
-                      <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[5%] border-r-[1px] border-black text-center">QTY</th>
-                      <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[33%] border-r-[1px] border-black">PRODUCT</th>
-                      <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[10%] text-center border-r-[1px] border-black">MFG</th>
-                      <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[8%] text-center border-r-[1px] border-black">HSN</th>
-                      <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[14%] text-center border-r-[1px] border-black">BATCH</th>
-                      <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[6%] text-center border-r-[1px] border-black">EXP.</th>
-                      <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[9%] text-right border-r-[1px] border-black">MRP</th>
-                      <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[5%] text-right border-r-[1px] border-black">DISC</th>
-                      <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[10%] text-right">AMOUNT</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[5%] border-r-[1px] border-black text-center">QTY</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[27%] border-r-[1px] border-black">PRODUCT</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[6%] text-center border-r-[1px] border-black">PACK</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[10%] text-center border-r-[1px] border-black">MFG</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[8%] text-center border-r-[1px] border-black">HSN</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[14%] text-center border-r-[1px] border-black">BATCH</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[6%] text-center border-r-[1px] border-black">EXP.</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[9%] text-right border-r-[1px] border-black">MRP</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[5%] text-right border-r-[1px] border-black">DISC</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[10%] text-right">AMOUNT</th>
                    </tr>
                 </thead>
                 <tbody>
@@ -255,29 +271,31 @@ function PrintInvoiceContent() {
                            {item.qty} <span className="text-[6px] font-bold text-gray-500 ml-0.5">{item.unitType === 'strip' ? 'S' : 'T'}</span>
                          </td>
                          <td className="py-0 px-1 text-[9px] font-bold text-gray-900 truncate border-r-[1px] border-black">{item.name}</td>
+                         <td className="py-0 px-1 text-[7px] font-medium text-gray-600 mono-font text-center border-r-[1px] border-black">{item.pack || "-"}</td>
                          <td className="py-0 px-1 text-[7px] font-medium text-gray-600 text-center truncate border-r-[1px] border-black">{mfgStr}</td>
                          <td className="py-0 px-1 text-[8px] font-medium text-gray-600 mono-font text-center border-r-[1px] border-black">{item.hsnCode || "-"}</td>
                          <td className="py-0 px-1 text-[8px] font-bold text-gray-700 uppercase mono-font text-center border-r-[1px] border-black">{item.batchNumber}</td>
                          <td className="py-0 px-1 text-[8px] font-medium text-gray-600 mono-font text-center border-r-[1px] border-black">{expStr}</td>
                          <td className="py-0 px-1 text-[8px] font-medium text-gray-700 mono-font text-right border-r-[1px] border-black">₹{item.sellingPrice.toFixed(2)}</td>
-                         <td className="py-0 px-1 text-[7px] font-medium text-gray-400 mono-font text-right border-r-[1px] border-black">{bill.discountPercent > 0 ? `${bill.discountPercent}%` : '-'}</td>
+                         <td className="py-0 px-1 text-[7px] font-medium text-gray-400 mono-font text-right border-r-[1px] border-black">{item.discountPercent && item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
                          <td className="py-0 px-1 text-[9px] font-bold text-gray-900 mono-font text-right">₹{item.total.toFixed(2)}</td>
                        </tr>
                      )
                    })}
                    
                    {/* Empty filler row to extend vertical borders to the bottom */}
-                   <tr className="border-0 h-full">
-                     <td className="border-r-[1px] border-black"></td>
-                     <td className="border-r-[1px] border-black"></td>
-                     <td className="border-r-[1px] border-black"></td>
-                     <td className="border-r-[1px] border-black"></td>
-                     <td className="border-r-[1px] border-black"></td>
-                     <td className="border-r-[1px] border-black"></td>
-                     <td className="border-r-[1px] border-black"></td>
-                     <td className="border-r-[1px] border-black"></td>
-                     <td className=""></td>
-                   </tr>
+                     <tr className="border-0 h-full">
+                       <td className="border-r-[1px] border-black"></td>
+                       <td className="border-r-[1px] border-black"></td>
+                       <td className="border-r-[1px] border-black"></td>
+                       <td className="border-r-[1px] border-black"></td>
+                       <td className="border-r-[1px] border-black"></td>
+                       <td className="border-r-[1px] border-black"></td>
+                       <td className="border-r-[1px] border-black"></td>
+                       <td className="border-r-[1px] border-black"></td>
+                       <td className="border-r-[1px] border-black"></td>
+                       <td className=""></td>
+                     </tr>
                 </tbody>
               </table>
             </div>
@@ -291,8 +309,11 @@ function PrintInvoiceContent() {
                    <p className="text-[9px] text-gray-800 font-bold leading-tight mb-1">
                      Please bring our bill while returning medicine.
                    </p>
-                   <p className="text-[9px] text-gray-800 font-bold leading-tight">
+                   <p className="text-[9px] text-gray-800 font-bold leading-tight mb-2">
                      ওষুধ ফেরত দেওয়ার সময় অনুগ্রহ করে আমাদের বিলটি সাথে আনবেন।
+                   </p>
+                   <p className="text-[8px] text-gray-500 font-bold leading-tight uppercase">
+                     E. & O.E.
                    </p>
                 </div>
 
@@ -321,6 +342,16 @@ function PrintInvoiceContent() {
                         <div className="flex justify-between text-[8px]">
                            <span className="text-gray-500 font-medium">Discount</span>
                            <span className="font-bold text-black mono-font">-₹{bill.discountAmount.toFixed(2)}</span>
+                        </div>
+                      )}
+
+                      {bill.roundingAdjustment !== undefined && bill.roundingAdjustment !== 0 && (
+                        <div className="flex justify-between text-[8px]">
+                           <span className="text-gray-500 font-medium">Rounding</span>
+                           <span className="font-bold text-black mono-font">
+                             {bill.roundingAdjustment > 0 ? "+" : ""}
+                             {bill.roundingAdjustment.toFixed(2)}
+                           </span>
                         </div>
                       )}
                    </div>

@@ -13,6 +13,10 @@ const MedicineBatchSchema = new mongoose.Schema(
     buyingPricePerStrip: { type: Number, required: true }, // COST PRICE
     sellingPricePerStrip: { type: Number, required: true }, // MRP
     rackNumber: { type: String }, // Rack Number
+    discountPercent: { type: Number, default: 0 }, // DEFAULT DISCOUNT
+    supplierName: { type: String, default: "Direct Purchase" }, // Ties batch to distributor
+    purchaseInvoiceNumber: { type: String, default: "" },       // Optional reference
+    pack: { type: String }, // e.g. "10x10" from supplier bill
   },
   { timestamps: true }
 );

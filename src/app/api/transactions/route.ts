@@ -1,44 +1,50 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
-import Medicine from "@/src/models/Medicine";
-
+import MedicineBatch from "@/src/models/MedicineBatch";
 export const runtime = "nodejs";
-
+export const dynamic = "force-dynamic";
 export async function GET(request: Request) {
   try {
     await connectDB();
 
     const { searchParams } = new URL(request.url);
-    const limit = searchParams.get("limit");
+    const pageParam = searchParams.get("page");
+    const page = parseInt(pageParam || "1");
+    const pageSize = parseInt(searchParams.get("limit") || "20");
+    const search = searchParams.get("search") || "";
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const range = searchParams.get("range");
+    const limit = searchParams.get("limit");
 
     const filter: any = {};
-    if (range) {
+    if (range && range !== "all") {
       const end = new Date();
       const start = new Date();
-      if (range === "1d") {
-        start.setHours(0, 0, 0, 0);
-      } else if (range === "7d") {
-        start.setDate(end.getDate() - 7);
-      } else if (range === "1m") {
-        start.setMonth(end.getMonth() - 1);
-      }
-      if (range !== "all") {
-        filter.createdAt = { $gte: start, $lte: end };
-      }
+      if (range === "1d") start.setHours(0, 0, 0, 0);
+      else if (range === "7d") start.setDate(end.getDate() - 7);
+      else if (range === "1m") start.setMonth(end.getMonth() - 1);
+      filter.createdAt = { $gte: start, $lte: end };
     } else if (startDate || endDate) {
       filter.createdAt = {};
       if (startDate) filter.createdAt.$gte = new Date(startDate);
       if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
 
+    if (search) {
+        filter.$or = [
+            { "items.name": { $regex: search, $options: "i" } }
+        ];
+    }
+
+    const totalCount = await Bill.countDocuments(filter);
+    const totalPages = Math.ceil(totalCount / pageSize);
+
     const query = Bill.find(filter).sort({ createdAt: -1 });
 
     if (limit !== "none") {
-      query.limit(100);
+      query.skip((page - 1) * pageSize).limit(pageSize);
     }
 
     const bills = await query.lean();
@@ -47,35 +53,61 @@ export async function GET(request: Request) {
     const billsWithProfit = await Promise.all(bills.map(async (bill) => {
       let totalProfit = 0;
 
+      if (bill.isReturn) {
+        return {
+          ...bill,
+          _id: bill._id.toString(),
+          profit: 0,
+        };
+      }
+
       // For each item in the bill, calculate profit based on buying price
       for (const item of bill.items) {
-        // Find the medicine in inventory to get buying price
-        const medicine = await Medicine.findOne({
-          name: item.name,
-          batchNumber: item.batchNumber
-        }).lean();
+        const netQty = (item.qty || 0) - (item.returnedQty || 0);
+        if (netQty <= 0) continue;
 
-        if (medicine && item.sellingPrice !== undefined && item.qty !== undefined) {
-          // Calculate profit per unit
-          const sellingPrice = item.sellingPrice || 0;
-          const buyingPrice = medicine.buyingPricePerStrip || 0;
-          const qty = item.qty || 0;
+        const sellingPrice = item.sellingPrice || 0;
+        let buyingPrice = 0;
 
-          // Calculate profit per unit
-          const profitPerUnit = sellingPrice - buyingPrice;
-          // Calculate total profit for this item
-          totalProfit += profitPerUnit * qty;
+        if (item.buyingPrice !== undefined && item.buyingPrice !== null) {
+          // Best source: buying price stored on bill at time of sale
+          buyingPrice = item.buyingPrice;
+        } else if (item.batchNumber) {
+          // Fallback: look up batch from inventory
+          const batch = await MedicineBatch.findOne({
+            batchNumber: item.batchNumber
+          }).lean() as any;
+          if (batch) {
+            buyingPrice = item.unitType === 'strip'
+              ? (batch.buyingPricePerStrip || 0)
+              : (batch.buyingPricePerStrip || 0) / (batch.tabletsPerStrip || 1);
+          }
         }
+
+        const profitPerUnit = sellingPrice - buyingPrice;
+        totalProfit += profitPerUnit * netQty;
       }
 
       return {
         ...bill,
         _id: bill._id.toString(),
-        profit: Math.max(0, totalProfit), // Ensure profit is not negative
+        profit: totalProfit,
       };
     }));
 
-    return NextResponse.json(billsWithProfit);
+    if (pageParam) {
+      return NextResponse.json({
+          data: billsWithProfit,
+          pagination: {
+              totalCount,
+              totalPages,
+              currentPage: page,
+              limit: pageSize
+          }
+      });
+    } else {
+      return NextResponse.json(billsWithProfit);
+    }
   } catch (error) {
     console.error("TRANSACTIONS ERROR:", error);
     return NextResponse.json(

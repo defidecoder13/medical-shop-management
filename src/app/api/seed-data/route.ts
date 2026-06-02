@@ -287,8 +287,17 @@ export async function GET(req: Request) {
 
             if (!existing) {
                 await Medicine.create({
-                    ...med,
-                    totalTabletsInStock: med.stock * med.tabletsPerStrip
+                    name: med.name,
+                    brand: med.brand,
+                    composition: med.composition,
+                    tabletsPerStrip: med.tabletsPerStrip,
+                    stock: med.stock,
+                    buyingPrice: med.buyingPricePerStrip,
+                    mrp: med.sellingPricePerStrip,
+                    gstPercent: med.gstPercent,
+                    minStockLevel: 5,
+                    maxStockLevel: 50,
+                    category: "Tablet"
                 });
                 createdCount++;
             }

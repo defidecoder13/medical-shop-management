@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState, Fragment } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
@@ -15,7 +15,11 @@ import {
   Printer, 
   Search,
   CheckCircle2,
-  FileText
+  FileText,
+  RotateCcw,
+  AlertCircle,
+  Loader2,
+  X
 } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
 
@@ -60,60 +64,102 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [dateFilter, setDateFilter] = useState<"1d" | "7d" | "1m">("1m");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  // Return Logic State
+  const [expandedBillId, setExpandedBillId] = useState<string | null>(null);
+  const [returnItems, setReturnItems] = useState<{ [key: number]: number }>({});
+  const [submittingReturn, setSubmittingReturn] = useState(false);
+  const [message, setMessage] = useState<{text: string, type: 'success'|'error'} | null>(null);
+
+  useEffect(() => {
+    setPage(1); // Reset page on filter/search change
+  }, [searchQuery, dateFilter]);
 
   useEffect(() => {
     setLoading(true);
-    apiClient.get(`/api/transactions?range=${dateFilter}`)
-      .then((data) => {
-        if (Array.isArray(data)) {
-          setTransactions(data);
-          // Ensure robust sorting (newest first based on generic ISO string or timestamp)
-          // If your schema uses MongoDB ObjectIds, they generally sort chronologically, 
-          // but explicit date sort is safer:
-          let sortedData = [...data].sort((a: Transaction, b: Transaction) => {
-             const dateA = new Date(a.createdAt).getTime();
-             const dateB = new Date(b.createdAt).getTime();
-             return dateB - dateA; // Descending
-          });
-          setTransactions(sortedData);
-        } else {
+    const delayDebounceFn = setTimeout(() => {
+      apiClient.get(`/api/transactions?range=${dateFilter}&page=${page}&search=${searchQuery}`)
+        .then((response: any) => {
+          if (response?.data && Array.isArray(response.data)) {
+            setTransactions(response.data);
+            setTotalPages(response.pagination?.totalPages || 1);
+          } else if (Array.isArray(response)) {
+            setTransactions(response);
+            setTotalPages(1);
+          } else {
+            setTransactions([]);
+          }
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch transactions:", error);
           setTransactions([]);
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch transactions:", error);
-        setTransactions([]);
-        setLoading(false);
+          setLoading(false);
+        });
+    }, 300);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [dateFilter, page, searchQuery]);
+
+  // Return Logic Methods
+  const handleToggleReturn = (billId: string) => {
+    if (expandedBillId === billId) {
+      setExpandedBillId(null);
+    } else {
+      setExpandedBillId(billId);
+      setReturnItems({});
+      setMessage(null);
+    }
+  };
+
+  const handleReturnQtyChange = (idx: number, qty: string, maxQty: number) => {
+    const num = Number(qty);
+    if (num < 0 || num > maxQty) return;
+    setReturnItems(prev => ({ ...prev, [idx]: num }));
+  };
+
+  const handleSubmitReturn = async (bill: Transaction) => {
+    const itemsToReturn = Object.entries(returnItems)
+      .filter(([_, qty]) => qty > 0)
+      .map(([idxStr, qty]) => {
+         const originalItem = bill.items[Number(idxStr)];
+         return {
+            batchNumber: originalItem.batchNumber,
+            name: originalItem.name,
+            returnQty: qty
+         };
       });
-  }, [dateFilter]);
 
-  const filteredTransactions = Array.isArray(transactions) 
-    ? transactions.filter(t => {
-        const searchLower = searchQuery.toLowerCase();
-        const dateObj = new Date(t.createdAt);
-        
-        // Generate flexible date variations
-        const dateVariations = [
-          format(dateObj, "dd/MM/yyyy HH:mm"),
-          format(dateObj, "d/M/yyyy"),
-          format(dateObj, "d/M"),
-          format(dateObj, "dd/MM"),
-          dateObj.toLocaleDateString(),
-          format(dateObj, "MMM d"), // e.g., Feb 10
-        ].map(v => v.toLowerCase());
+    if (itemsToReturn.length === 0) {
+       setMessage({ text: "Please specify return quantities", type: "error" });
+       return;
+    }
 
-        const itemsStr = t.items.map(i => i.name).join(", ").toLowerCase();
-        const amountStr = t.grandTotal.toString();
-        const idStr = t._id.slice(-8).toUpperCase().toLowerCase();
+    setSubmittingReturn(true);
+    setMessage(null);
+    try {
+       await apiClient.post('/api/returns', {
+          originalBillId: bill._id,
+          returnedItems: itemsToReturn
+       });
+       setMessage({ text: "Return processed successfully!", type: "success" });
+       setTimeout(() => {
+          setExpandedBillId(null);
+          // Trigger a re-fetch to see the new return bill
+          setPage(1); 
+          setSearchQuery(""); // Optionally clear search to force refresh
+          window.location.reload(); // Hard reload to ensure fresh data for now
+       }, 1000);
+    } catch (err: any) {
+       console.error(err);
+       setMessage({ text: err.message || "Failed to process return", type: "error" });
+       setSubmittingReturn(false);
+    }
+  };
 
-        return idStr.includes(searchLower) || 
-               dateVariations.some(v => v.includes(searchLower)) || 
-               itemsStr.includes(searchLower) || 
-               amountStr.includes(searchLower);
-      })
-    : [];
-
+  const filteredTransactions = transactions;
   const exportToExcel = async () => {
     if (filteredTransactions.length === 0) return;
     
@@ -266,7 +312,8 @@ export default function TransactionsPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               {filteredTransactions.map((t) => (
-                <tr key={t._id} className={`hover:bg-[#f8fafc]/80 transition-colors group ${t.isReturn ? 'bg-rose-50/20' : ''}`}>
+                <Fragment key={t._id}>
+                <tr className={`hover:bg-[#f8fafc]/80 transition-colors group ${t.isReturn ? 'bg-rose-50/20' : ''}`}>
                   <td className="px-7 py-5">
                     <div className="flex flex-col gap-0.5">
                        <div className={`text-[13.5px] font-black tracking-tight ${t.isReturn ? 'text-rose-600' : 'text-[#11327c]'}`}>
@@ -327,28 +374,157 @@ export default function TransactionsPage() {
                       >
                         <Eye size={18} strokeWidth={2.5} />
                       </Link>
+                      {!t.isReturn && (
+                        <button
+                          onClick={() => handleToggleReturn(t._id)}
+                          className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all border active:scale-95 ${
+                            expandedBillId === t._id 
+                              ? 'text-rose-600 bg-rose-50 border-rose-200 shadow-inner' 
+                              : 'text-gray-400 hover:text-rose-600 hover:bg-rose-50 border-transparent hover:border-rose-100'
+                          }`}
+                          title="Process Return"
+                        >
+                          <RotateCcw size={16} strokeWidth={2.5} />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>
+                
+                {/* INLINE RETURN UI */}
+                {expandedBillId === t._id && (
+                  <tr className="bg-rose-50/30 border-b border-rose-100/50">
+                    <td colSpan={5} className="p-0">
+                       <div className="px-7 py-6 overflow-hidden animate-in slide-in-from-top-2 fade-in duration-200">
+                          <div className="bg-white rounded-xl border border-rose-100 shadow-sm p-6 relative">
+                             <button onClick={() => setExpandedBillId(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600">
+                               <X size={20} />
+                             </button>
+                             
+                             <h3 className="text-[15px] font-black text-rose-800 tracking-tight flex items-center gap-2 mb-4">
+                               <RotateCcw size={18} className="text-rose-600" />
+                               Process Return for Invoice #{t._id.slice(-8).toUpperCase()}
+                             </h3>
+                             
+                             <div className="border border-gray-200 rounded-lg overflow-hidden mb-6">
+                                <table className="w-full text-left">
+                                   <thead className="bg-gray-50 border-b border-gray-200">
+                                      <tr>
+                                         <th className="px-4 py-3 text-[11px] font-black text-gray-500 uppercase">Item</th>
+                                         <th className="px-4 py-3 text-[11px] font-black text-gray-500 uppercase text-center">Purchased Qty</th>
+                                         <th className="px-4 py-3 text-[11px] font-black text-gray-500 uppercase text-right">Return Qty</th>
+                                      </tr>
+                                   </thead>
+                                   <tbody className="divide-y divide-gray-100">
+                                      {t.items.map((item, idx) => {
+                                         // Mocked logic for maxQty, ideally backend would send how much was already returned.
+                                         // For now, we assume max return is the original qty.
+                                         const maxQty = item.qty;
+                                         return (
+                                            <tr key={idx}>
+                                               <td className="px-4 py-3">
+                                                  <div className="font-bold text-gray-900 text-[13px]">{item.name}</div>
+                                                  <div className="text-[11px] text-gray-500 font-mono">Batch: {item.batchNumber}</div>
+                                               </td>
+                                               <td className="px-4 py-3 text-center font-black text-gray-700">{maxQty}</td>
+                                               <td className="px-4 py-3 text-right">
+                                                  <input
+                                                     type="number"
+                                                     min="0"
+                                                     max={maxQty}
+                                                     value={returnItems[idx] || ""}
+                                                     onChange={(e) => handleReturnQtyChange(idx, e.target.value, maxQty)}
+                                                     className="w-20 px-3 py-1.5 text-right border border-gray-300 rounded-md focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 font-bold text-rose-700"
+                                                     placeholder="0"
+                                                  />
+                                               </td>
+                                            </tr>
+                                         );
+                                      })}
+                                   </tbody>
+                                </table>
+                             </div>
+
+                             {message && (
+                                <div className={`p-4 mb-6 rounded-lg flex items-center gap-3 border ${
+                                  message.type === 'error' ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                }`}>
+                                   {message.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
+                                   <p className="text-sm font-semibold">{message.text}</p>
+                                </div>
+                             )}
+
+                             <div className="flex justify-end gap-3">
+                                <button
+                                   onClick={() => setExpandedBillId(null)}
+                                   className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                                >
+                                   Cancel
+                                </button>
+                                <button
+                                   onClick={() => handleSubmitReturn(t)}
+                                   disabled={submittingReturn}
+                                   className="px-6 py-2.5 bg-rose-600 text-white text-sm font-bold rounded-lg shadow-md hover:bg-rose-700 transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                                >
+                                   {submittingReturn && <Loader2 size={16} className="animate-spin" />}
+                                   Confirm Refund
+                                </button>
+                             </div>
+                          </div>
+                       </div>
+                    </td>
+                  </tr>
+                )}
+                </Fragment>
               ))}
               {filteredTransactions.length === 0 && (
                 <tr>
                    <td colSpan={5} className="px-7 py-24 text-center">
                       <div className="flex flex-col items-center gap-3 opacity-20">
-                        <Search size={48} strokeWidth={1} className="text-gray-400" />
-                        <div className="space-y-1">
-                          <p className="text-gray-600 font-black text-sm uppercase tracking-widest">No Records Found</p>
-                          <p className="text-gray-400 font-medium text-xs">Try adjusting your search or filters</p>
-                        </div>
+                        {transactions.length === 0 && !loading && (
+                          <div className="p-12 text-center text-gray-500">
+                            <FileText className="mx-auto h-12 w-12 text-gray-300 mb-3" />
+                            <p className="text-lg font-medium text-gray-900">No transactions found</p>
+                            <p className="text-sm">Try adjusting your filters or search query.</p>
+                          </div>
+                        )}
                       </div>
+                      
+
                    </td>
                 </tr>
               )}
             </tbody>
           </table>
+          
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50 rounded-b-xl">
+              <span className="text-sm text-gray-500 font-medium">
+                Page {page} of {totalPages}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  disabled={page === 1}
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={page === totalPages}
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          )}
         </div>
         <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 flex justify-between items-center">
-           <span>Total Transactions: <span className="text-[#11327c] ml-1">{filteredTransactions.length}</span></span>
+           <span>Sales: <span className="text-[#11327c] ml-1">{filteredTransactions.filter(t => !t.isReturn).length}</span></span>
+           <span>Refunds: <span className="text-rose-500 ml-1">{filteredTransactions.filter(t => t.isReturn).length}</span></span>
         </div>
       </div>
     </div>

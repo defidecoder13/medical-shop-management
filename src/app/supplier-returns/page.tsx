@@ -46,52 +46,41 @@ export default function SupplierReturnsPage() {
   const [returns, setReturns] = useState<SupplierReturn[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [dateFilter, setDateFilter] = useState<"1d" | "7d" | "1m">("1m");
+  const [dateFilter, setDateFilter] = useState<"1d" | "7d" | "1m" | "all">("1m");
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [dateFilter, searchQuery]);
 
   useEffect(() => {
     setLoading(true);
-    apiClient.get(`/api/supplier-returns?range=${dateFilter}`)
-      .then((data) => {
-        if (Array.isArray(data)) {
-          let sortedData = [...data].sort((a: SupplierReturn, b: SupplierReturn) => {
-             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-          });
-          setReturns(sortedData);
-        } else {
+    const timeoutId = setTimeout(() => {
+      apiClient.get(`/api/supplier-returns?range=${dateFilter}&page=${page}&limit=20&search=${searchQuery}`)
+        .then((res: any) => {
+          if (res?.data && Array.isArray(res.data)) {
+            setReturns(res.data);
+            setTotalPages(res.pagination?.totalPages || 1);
+          } else if (Array.isArray(res)) {
+            setReturns(res);
+            setTotalPages(1);
+          } else {
+            setReturns([]);
+          }
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error("Failed to fetch supplier returns:", error);
           setReturns([]);
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch supplier returns:", error);
-        setReturns([]);
-        setLoading(false);
-      });
-  }, [dateFilter]);
+          setLoading(false);
+        });
+    }, 300);
+    
+    return () => clearTimeout(timeoutId);
+  }, [dateFilter, page, searchQuery]);
 
-  const filteredReturns = Array.isArray(returns) 
-    ? returns.filter(t => {
-        const searchLower = searchQuery.toLowerCase();
-        const dateObj = new Date(t.createdAt);
-        
-        const dateVariations = [
-          format(dateObj, "dd/MM/yyyy HH:mm"),
-          format(dateObj, "d/M/yyyy"),
-          dateObj.toLocaleDateString(),
-        ].map(v => v.toLowerCase());
-
-        const itemsStr = t.items.map(i => i.name).join(", ").toLowerCase();
-        const amountStr = t.totalRefundAmount.toString();
-        const idStr = t._id.slice(-8).toUpperCase().toLowerCase();
-        const supplierStr = t.supplierName.toLowerCase();
-
-        return idStr.includes(searchLower) || 
-               supplierStr.includes(searchLower) ||
-               dateVariations.some(v => v.includes(searchLower)) || 
-               itemsStr.includes(searchLower) || 
-               amountStr.includes(searchLower);
-      })
-    : [];
+  const filteredReturns = returns;
 
   const exportToExcel = async () => {
     if (filteredReturns.length === 0) return;
@@ -272,10 +261,26 @@ export default function SupplierReturnsPage() {
         </div>
         <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
            <span>Showing <span className="text-[#11327c]">{filteredReturns.length}</span> documented returns</span>
-           <div className="flex gap-2">
-             <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30" disabled>Prev</button>
-             <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">Next</button>
-           </div>
+           
+           {totalPages > 1 && (
+             <div className="flex gap-2 items-center">
+               <span className="mr-2 normal-case tracking-normal text-sm font-medium">Page {page} of {totalPages}</span>
+               <button 
+                 onClick={() => setPage(p => Math.max(1, p - 1))}
+                 disabled={page === 1}
+                 className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+               >
+                 Prev
+               </button>
+               <button 
+                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                 disabled={page === totalPages}
+                 className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+               >
+                 Next
+               </button>
+             </div>
+           )}
         </div>
       </div>
     </div>

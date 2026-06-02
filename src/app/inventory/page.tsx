@@ -5,6 +5,7 @@ import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Plus, 
+  X,
   Filter, 
   Search, 
   Edit3, 
@@ -17,13 +18,69 @@ import {
   Upload,
   Download,
   Package,
-  Layers
+  Layers,
+  FileSpreadsheet
 } from "lucide-react";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
 import { format } from "date-fns";
 import * as xlsx from "xlsx";
+
+const parseExpiryDate = (expiryStr: string): string => {
+  if (!expiryStr) return "";
+  
+  // Normalize delimiters to slash
+  const cleanStr = expiryStr.trim().replace(/[-.]/g, "/");
+  
+  // Match MM/YY or MM/YYYY
+  const match = cleanStr.match(/^(\d{1,2})\/(\d{2,4})$/);
+  if (match) {
+    const month = parseInt(match[1], 10);
+    let year = parseInt(match[2], 10);
+    
+    if (month < 1 || month > 12) {
+      throw new Error("Invalid month (must be between 01 and 12)");
+    }
+    
+    // Adjust 2-digit years
+    if (year < 100) {
+      year += 2000;
+    }
+    
+    // Find the last day of the month
+    const lastDay = new Date(year, month, 0);
+    
+    const yyyy = lastDay.getFullYear();
+    const mm = String(lastDay.getMonth() + 1).padStart(2, '0');
+    const dd = String(lastDay.getDate()).padStart(2, '0');
+    
+    return `${yyyy}-${mm}-${dd}`;
+  }
+  
+  // If it's already YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStr)) {
+    return cleanStr;
+  }
+  
+  // If it's a full ISO timestamp
+  if (/^\d{4}-\d{2}-\d{2}T/.test(cleanStr)) {
+    return cleanStr.slice(0, 10);
+  }
+  
+  throw new Error("Invalid expiry date format. Use MM/YY or MM/YYYY (e.g. 12/28)");
+};
+
+const formatToMMYY = (dateStr: string): string => {
+  if (!dateStr) return "";
+  const parts = dateStr.slice(0, 10).split("-");
+  if (parts.length === 3) {
+    const year = parts[0];
+    const month = parts[1];
+    return `${month}/${year.slice(-2)}`;
+  }
+  return dateStr;
+};
 
 type Medicine = {
   _id?: string;
@@ -41,6 +98,11 @@ type Medicine = {
   gstPercent: number;
   totalTabletsInStock?: number;
   barcode?: string;
+  pack?: string;
+  discountPercent?: number | "";
+  supplierName?: string;
+  purchaseInvoiceNumber?: string;
+  category?: string;
 };
 
 const emptyMedicine: Medicine = {
@@ -54,9 +116,14 @@ const emptyMedicine: Medicine = {
   sellingPrice: "",
   rackNumber: "",
   composition: "",
+  pack: "",
   hsnCode: "3004",
   gstPercent: 5,
   barcode: "",
+  discountPercent: "",
+  supplierName: "",
+  purchaseInvoiceNumber: "",
+  category: "Tablet",
 };
 
 export default function InventoryPage() {
@@ -64,6 +131,8 @@ export default function InventoryPage() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Medicine>(emptyMedicine);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -71,6 +140,79 @@ export default function InventoryPage() {
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [gstEnabled, setGstEnabled] = useState(false);
+
+  const getLabels = (category: string) => {
+    switch (category) {
+      case "Syrup":
+        return {
+          stock: "Stock (Bottles)",
+          cost: "Cost Price (per Bottle)",
+          mrp: "MRP (per Bottle)",
+          subUnit: "",
+        };
+      case "Drops":
+        return {
+          stock: "Stock (Vials)",
+          cost: "Cost Price (per Vial)",
+          mrp: "MRP (per Vial)",
+          subUnit: "",
+        };
+      case "Ointment":
+        return {
+          stock: "Stock (Tubes)",
+          cost: "Cost Price (per Tube)",
+          mrp: "MRP (per Tube)",
+          subUnit: "",
+        };
+      case "Injection":
+        return {
+          stock: "Stock (Vials/Ampoules)",
+          cost: "Cost Price (per Vial/Ampoule)",
+          mrp: "MRP (per Vial/Ampoule)",
+          subUnit: "",
+        };
+      case "Device":
+        return {
+          stock: "Stock (Pcs)",
+          cost: "Cost Price (per Piece)",
+          mrp: "MRP (per Piece)",
+          subUnit: "",
+        };
+      case "Spray":
+        return {
+          stock: "Stock (Bottles)",
+          cost: "Cost Price (per Bottle)",
+          mrp: "MRP (per Bottle)",
+          subUnit: "",
+        };
+      case "Other":
+        return {
+          stock: "Stock (Packs/Qty)",
+          cost: "Cost Price (per Pack/Qty)",
+          mrp: "MRP (per Pack/Qty)",
+          subUnit: "",
+        };
+      case "Capsule":
+        return {
+          stock: "Qty",
+          cost: "Cost Price (per Strip)",
+          mrp: "MRP (per Strip)",
+          subUnit: "Capsules per Strip",
+        };
+      case "Tablet":
+      default:
+        return {
+          stock: "Qty",
+          cost: "Cost Price (per Strip)",
+          mrp: "MRP (per Strip)",
+          subUnit: "Tablets per Strip",
+        };
+    }
+  };
+
+  const labels = getLabels(form.category || "Tablet");
+  const isMultiUnit = form.category === "Tablet" || form.category === "Capsule";
 
   // Autocomplete State
   const [suggestions, setSuggestions] = useState<any[]>([]);
@@ -85,6 +227,7 @@ export default function InventoryPage() {
   // Sorting State
   const [sortConfig, setSortConfig] = useState<{ key: keyof Medicine | 'none', direction: 'asc' | 'desc' }>({ key: 'none', direction: 'asc' });
   const [showSort, setShowSort] = useState(false);
+  const [suppliers, setSuppliers] = useState<any[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -96,12 +239,30 @@ export default function InventoryPage() {
       }
     };
     checkAuth();
+    fetchSuppliers();
   }, [router]);
+
+  const fetchSuppliers = async () => {
+    try {
+      const data = await apiClient.get('/api/suppliers');
+      setSuppliers(data || []);
+    } catch (error) {
+      console.error("Failed to fetch suppliers", error);
+    }
+  };
 
   const fetchMedicines = async () => {
     try {
-      const data = await apiClient.get(`/api/inventory?q=${debouncedSearch}`);
-      setMedicines(data.map((m: any) => ({
+      const res = await apiClient.get(`/api/inventory?q=${debouncedSearch}&page=${page}&limit=20`);
+      
+      const payload = res?.data ? res.data : (Array.isArray(res) ? res : []);
+      if (res?.pagination) {
+        setTotalPages(res.pagination.totalPages || 1);
+      } else {
+        setTotalPages(1);
+      }
+
+      setMedicines(payload.map((m: any) => ({
         _id: m._id,
         name: m.name,
         brand: m.brand,
@@ -115,7 +276,12 @@ export default function InventoryPage() {
         composition: m.composition,
         hsnCode: m.hsnCode,
         gstPercent: m.gstPercent,
-        totalTabletsInStock: m.totalTabletsInStock
+        totalTabletsInStock: m.totalTabletsInStock,
+        discountPercent: m.discountPercent || 0,
+        supplierName: m.supplierName || "Direct Purchase",
+        purchaseInvoiceNumber: m.purchaseInvoiceNumber || "",
+        category: m.category || "Tablet",
+        pack: m.pack || ""
       })));
     } catch (error) {
       console.error("Failed to fetch medicines", error);
@@ -128,14 +294,17 @@ export default function InventoryPage() {
       Brand: "Micro Labs",
       "Batch Number": "BATCH123",
       "Expiry Date": "2026-12-31",
-      "Strips Qty": 10,
-      "Tablets Per Strip": 15,
+      "Qty": 10,
+      "Pack": 15,
       "Cost Price": 20.00,
       "MRP": 30.00,
       Rack: "A1",
       Composition: "Paracetamol 650mg",
       "HSN Code": "3004",
-      "GST Percent": 5
+      "GST Percent": 5,
+      "Discount Percent": 10,
+      "Supplier Name": "Apex Distributors",
+      "Invoice Number": "INV-101"
     }]);
     const wb = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(wb, ws, "Template");
@@ -165,14 +334,17 @@ export default function InventoryPage() {
           brand: row["Brand"] || "",
           batchNumber: row["Batch Number"] || "",
           expiryDate: row["Expiry Date"] || "",
-          stock: Number(row["Strips Qty"]) || 0,
-          tabletsPerStrip: Number(row["Tablets Per Strip"]) || 0,
+          stock: Number(row["Qty"]) || 0,
+          tabletsPerStrip: Number(row["Pack"]) || 0,
           buyingPrice: Number(row["Cost Price"]) || 0,
           sellingPrice: Number(row["MRP"]) || 0,
           rackNumber: row["Rack"] || "",
           composition: row["Composition"] || "",
           hsnCode: row["HSN Code"] || "3004",
-          gstPercent: Number(row["GST Percent"]) || 5
+          gstPercent: Number(row["GST Percent"]) || 5,
+          discountPercent: Number(row["Discount Percent"]) || 0,
+          supplierName: row["Supplier Name"] || "Direct Purchase",
+          purchaseInvoiceNumber: row["Invoice Number"] || ""
         }));
 
         const res = await fetch("/api/inventory/bulk", {
@@ -205,7 +377,25 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchMedicines();
+  }, [debouncedSearch, page]);
+
+  useEffect(() => {
+    setPage(1);
   }, [debouncedSearch]);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const settings = await apiClient.get('/api/settings');
+        if (settings) {
+          setGstEnabled(settings.gstEnabled || false);
+        }
+      } catch (err) {
+        console.error("Failed to load settings in inventory", err);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   // Handle Autocomplete Click Outside
   useEffect(() => {
@@ -261,15 +451,26 @@ export default function InventoryPage() {
   };
 
   const handleSubmit = async () => {
+    let parsedExpiry = "";
+    try {
+      parsedExpiry = parseExpiryDate(form.expiryDate);
+    } catch (e: any) {
+      setMessage({ text: e.message || "Invalid expiry date format.", type: 'error' });
+      setTimeout(() => setMessage(null), 4000);
+      return;
+    }
+
     setLoading(true);
     const method = editingId ? "PUT" : "POST";
     const payload = {
       ...form,
+      expiryDate: parsedExpiry,
       stock: Number(form.stock),
       tabletsPerStrip: Number(form.tabletsPerStrip),
       buyingPrice: Number(form.buyingPrice),
       sellingPrice: Number(form.sellingPrice),
-      totalTabletsInStock: Number(form.stock) * Number(form.tabletsPerStrip)
+      totalTabletsInStock: Number(form.stock) * Number(form.tabletsPerStrip),
+      discountPercent: Number(form.discountPercent) || 0
     };
 
     try {
@@ -294,13 +495,14 @@ export default function InventoryPage() {
     } catch (err: any) {
       setLoading(false);
       setMessage({ text: err.message || "An error occurred", type: 'error' });
+      setTimeout(() => setMessage(null), 4000);
     }
   };
 
   const handleEdit = (med: Medicine) => {
     setForm({
       ...med,
-      expiryDate: med.expiryDate ? med.expiryDate.slice(0, 10) : "",
+      expiryDate: med.expiryDate ? formatToMMYY(med.expiryDate) : "",
     });
     setEditingId(med._id!);
     setShowForm(true);
@@ -402,27 +604,11 @@ export default function InventoryPage() {
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <button 
-            onClick={downloadTemplate}
-            className="flex items-center gap-2 bg-white text-gray-600 border border-gray-200 px-4 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-gray-50 transition-all shadow-sm active:scale-95"
+            onClick={() => router.push('/purchases/import')}
+            className="flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-indigo-100 transition-all shadow-sm active:scale-95"
           >
-            <Download size={16} strokeWidth={2.5} />
-            Template
-          </button>
-          
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            accept=".csv, .xlsx, .xls" 
-            className="hidden" 
-          />
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-indigo-100 transition-all shadow-sm disabled:opacity-50 active:scale-95"
-          >
-            {uploading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} strokeWidth={2.5} />}
-            {uploading ? "Uploading..." : "Upload CSV"}
+            <FileSpreadsheet size={16} strokeWidth={2.5} />
+            Auto Purchase Import
           </button>
 
           <button 
@@ -433,7 +619,7 @@ export default function InventoryPage() {
             }}
             className="flex items-center gap-2 bg-[#11327c] text-white px-5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-[#1e4db7] transition-all shadow-lg shadow-[#11327c]/20 active:scale-95"
           >
-            <Plus size={18} strokeWidth={3} />
+            {showForm ? <X size={18} strokeWidth={3} /> : <Plus size={18} strokeWidth={3} />}
             {showForm ? "Cancel" : "Add Medicine"}
           </button>
         </div>
@@ -452,11 +638,19 @@ export default function InventoryPage() {
       <AnimatePresence>
       {showForm && (
         <motion.div 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -20 }}
-          className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-[0_20px_50px_-20px_rgba(17,50,124,0.12)]"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex justify-center items-center p-4 overflow-y-auto"
+          onClick={() => { setForm(emptyMedicine); setEditingId(null); setShowForm(false); }}
         >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 20 }}
+            className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-2xl max-w-5xl w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
           <div className="flex items-center gap-4 mb-8">
             <div className="w-12 h-12 bg-[#11327c]/5 rounded-2xl flex items-center justify-center text-[#11327c]">
               <Edit3 size={24} strokeWidth={2.5} />
@@ -525,6 +719,49 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Category</label>
+              <select
+                value={form.category || "Tablet"}
+                onChange={e => {
+                  const cat = e.target.value;
+                  const isCatMulti = cat === "Tablet" || cat === "Capsule";
+                  setForm({
+                    ...form,
+                    category: cat,
+                    tabletsPerStrip: isCatMulti ? "" : 1
+                  });
+                }}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 cursor-pointer"
+              >
+                <option value="Tablet">Tablet</option>
+                <option value="Capsule">Capsule</option>
+                <option value="Syrup">Syrup</option>
+                <option value="Drops">Drops</option>
+                <option value="Ointment">Ointment</option>
+                <option value="Injection">Injection</option>
+                <option value="Spray">Spray</option>
+                <option value="Device">Device / Condoms</option>
+                <option value="Other">Other / Pieces</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${!gstEnabled ? 'text-gray-300 line-through' : 'text-gray-400'}`}>GST Slab (%)</label>
+              <select
+                disabled={!gstEnabled}
+                value={form.gstPercent}
+                onChange={e => setForm({...form, gstPercent: Number(e.target.value)})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100/50"
+              >
+                <option value="0">0% (Tax Free / Exempt)</option>
+                <option value="5">5% (Insulin / Life Saving)</option>
+                <option value="12">12% (General Formulations)</option>
+                <option value="18">18% (Supplements, Devices, Cosmetics)</option>
+                <option value="28">28% (Luxury / Special)</option>
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Barcode</label>
               <input 
                 placeholder="Scan barcode" 
@@ -578,7 +815,8 @@ export default function InventoryPage() {
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Expiry Date</label>
               <input 
-                type="date"
+                type="text"
+                placeholder="MM/YY or MM/YYYY (e.g. 12/28)"
                 value={form.expiryDate}
                 onChange={e => setForm({...form, expiryDate: e.target.value})}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
@@ -586,7 +824,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Stock (Strips)</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.stock}</label>
               <input 
                 type="number" 
                 placeholder="0" 
@@ -596,19 +834,32 @@ export default function InventoryPage() {
               />
             </div>
 
+            {isMultiUnit && (
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.subUnit}</label>
+                <input 
+                  type="number" 
+                  placeholder="0" 
+                  value={form.tabletsPerStrip}
+                  onChange={e => setForm({...form, tabletsPerStrip: e.target.value === "" ? "" : Number(e.target.value)})}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                />
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Tablets / Strip</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Pack Label</label>
               <input 
-                type="number" 
-                placeholder="0" 
-                value={form.tabletsPerStrip}
-                onChange={e => setForm({...form, tabletsPerStrip: e.target.value === "" ? "" : Number(e.target.value)})}
+                type="text" 
+                placeholder="e.g. 10 TAB" 
+                value={form.pack}
+                onChange={e => setForm({...form, pack: e.target.value})}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Cost Price</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.cost}</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
                 <input 
@@ -622,7 +873,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">MRP / Selling Price</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.mrp}</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
                 <input 
@@ -635,7 +886,44 @@ export default function InventoryPage() {
               </div>
             </div>
 
-            <div className="flex items-end">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Default Discount (%)</label>
+              <input 
+                type="number" 
+                placeholder="0" 
+                value={form.discountPercent}
+                onChange={e => setForm({...form, discountPercent: e.target.value === "" ? "" : Number(e.target.value)})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Supplier Name</label>
+              <select
+                value={form.supplierName || "Direct Purchase"}
+                onChange={e => setForm({...form, supplierName: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 cursor-pointer"
+              >
+                <option value="Direct Purchase">Direct Purchase</option>
+                {suppliers.map((sup) => (
+                  <option key={sup._id} value={sup.name}>
+                    {sup.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Invoice Number</label>
+              <input 
+                placeholder="e.g. INV-101" 
+                value={form.purchaseInvoiceNumber || ""}
+                onChange={e => setForm({...form, purchaseInvoiceNumber: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+              />
+            </div>
+
+            <div className="flex items-end lg:col-span-4">
               <button 
                 onClick={handleSubmit}
                 disabled={loading}
@@ -645,6 +933,7 @@ export default function InventoryPage() {
               </button>
             </div>
           </div>
+          </motion.div>
         </motion.div>
       )}
       </AnimatePresence>
@@ -686,7 +975,7 @@ export default function InventoryPage() {
                 {[
                   { label: 'Name', key: 'name' },
                   { label: 'Expiry Date', key: 'expiryDate' },
-                  { label: 'Stock Level', key: 'stock' },
+                  { label: 'Qty', key: 'stock' },
                   { label: 'Selling Price', key: 'sellingPrice' }
                 ].map((s) => (
                   <button
@@ -730,8 +1019,8 @@ export default function InventoryPage() {
               <tr>
                 <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Medicine Details</th>
                 <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Rack</th>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Strips</th>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Tablets</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Qty</th>
+                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Pack</th>
                 <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Expiry</th>
                 <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">Cost</th>
                 <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">MRP</th>
@@ -756,8 +1045,11 @@ export default function InventoryPage() {
                       </div>
                       <div>
                         <div className="font-black text-[#11327c] uppercase text-[13px] tracking-tight mb-0.5">{med.name}</div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">
-                          {med.brand} <span className="mx-1 opacity-20">/</span> <span className="font-mono text-gray-500">#{med.batchNumber}</span>
+                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
+                          <span>{med.brand}</span>
+                          <span className="opacity-20">/</span>
+                          <span className="font-mono text-gray-500">#{med.batchNumber}</span>
+                          <span className="bg-orange-50 text-orange-600 px-1 rounded text-[8px] font-black">{med.category || "Tablet"}</span>
                         </div>
                       </div>
                     </div>
@@ -776,7 +1068,7 @@ export default function InventoryPage() {
                     )}
                   </td>
                   <td className="px-7 py-5 text-[13px] font-bold text-gray-500">
-                    {med.totalTabletsInStock || (Number(med.stock) * Number(med.tabletsPerStrip)) || 0}
+                    {med.pack || med.tabletsPerStrip || "-"}
                   </td>
                   <td className="px-7 py-5">
                     <div className={`text-[13px] font-black tracking-tight ${new Date(med.expiryDate) < new Date() ? 'text-rose-600' : 'text-gray-600'}`}>
@@ -822,11 +1114,26 @@ export default function InventoryPage() {
         </div>
         <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
           <p>Total Catalog Size: <span className="text-[#11327c] ml-1">{filteredMeds.length} Items</span></p>
-          <div className="flex gap-2">
-            <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30" disabled>Previous</button>
-            <button className="px-4 py-2 bg-[#11327c] text-white border border-[#11327c] rounded-xl shadow-md shadow-[#11327c]/20">1</button>
-            <button className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm">Next</button>
-          </div>
+          
+          {totalPages > 1 && (
+            <div className="flex gap-2 items-center">
+              <span className="mr-2 normal-case tracking-normal">Page {page} of {totalPages}</span>
+              <button 
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              >
+                Previous
+              </button>
+              <button 
+                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

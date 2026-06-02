@@ -4,6 +4,8 @@ import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
 import MedicineBatch from "@/src/models/MedicineBatch";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(request: Request) {
     try {
         await connectDB();
@@ -16,9 +18,10 @@ export async function GET(request: Request) {
             MedicineBatch.find({})
         ]);
 
-        // 1. Calculate Summary Stats
-        const totalSales = bills.reduce((sum, bill) => sum + (bill.grandTotal || 0), 0);
-        const totalOrders = bills.length;
+        // 1. Calculate Summary Stats (exclude return bills from all metrics)
+        const saleBills = bills.filter(b => !b.isReturn);
+        const totalSales = saleBills.reduce((sum, bill) => sum + (bill.grandTotal || 0), 0);
+        const totalOrders = saleBills.length;
         const lowStockItems = batches.filter(b => (b.stock || 0) <= 10).length;
 
         // Check expiry
@@ -50,7 +53,7 @@ export async function GET(request: Request) {
                 hourlyMap[label] = 0;
             }
 
-            bills.forEach(bill => {
+            saleBills.forEach(bill => {
                 const billDate = new Date(bill.createdAt);
                 if (now.getTime() - billDate.getTime() <= 24 * 60 * 60 * 1000) {
                     const label = `${billDate.getHours()}:00`;
@@ -77,7 +80,7 @@ export async function GET(request: Request) {
                 chartDataMap[label] = 0;
             }
 
-            bills.forEach(bill => {
+            saleBills.forEach(bill => {
                 const d = new Date(bill.createdAt);
                 const diffTime = Math.abs(today.getTime() - d.getTime());
                 const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -104,8 +107,8 @@ export async function GET(request: Request) {
             }
         }
 
-        // 3. Recent Transactions (Top 5)
-        const recentTransactions = bills.slice(0, 5).map(b => ({
+        // 3. Recent Transactions (Top 5) — only sales, not returns
+        const recentTransactions = saleBills.slice(0, 5).map(b => ({
             _id: b._id,
             grandTotal: b.grandTotal,
             items: b.items ? b.items.map((i: any) => ({ name: i.name, qty: i.qty })) : [],

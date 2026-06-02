@@ -3,26 +3,34 @@ import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
 import MedicineBatch from "@/src/models/MedicineBatch";
 import { createReturnJournalEntry } from "@/src/lib/accounting";
+import mongoose from "mongoose";
 
 export const runtime = "nodejs";
 
 export async function POST(req: Request) {
     try {
         await connectDB();
+        const session = await mongoose.startSession();
+        
+        let result: any;
+        
+        try {
+          await session.withTransaction(async () => {
+          
         const data = await req.json();
         const { originalBillId, returnedItems } = data; // { batchNumber, name, returnQty }[]
 
         if (!originalBillId || !returnedItems || returnedItems.length === 0) {
-            return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+            throw new Error("Invalid payload");
         }
 
-        const originalBill = await Bill.findById(originalBillId);
+        const originalBill = await Bill.findById(originalBillId).session(session);
         if (!originalBill) {
-            return NextResponse.json({ error: "Original bill not found" }, { status: 404 });
+            throw new Error("Original bill not found");
         }
 
         if (originalBill.returnStatus === 'Full') {
-            return NextResponse.json({ error: "Bill is already fully returned" }, { status: 400 });
+            throw new Error("Bill is already fully returned");
         }
 
         const newBillItems = [];
@@ -38,7 +46,7 @@ export async function POST(req: Request) {
 
             const maxReturnable = (originalItem.qty || 0) - (originalItem.returnedQty || 0);
             if (returnQtyNum > maxReturnable) {
-                return NextResponse.json({ error: `Cannot return ${returnQtyNum} of ${originalItem.name}. Maximum is ${maxReturnable}` }, { status: 400 });
+                throw new Error(`Cannot return ${returnQtyNum} of ${originalItem.name}. Maximum is ${maxReturnable}`);
             }
 
             // Math matches original billing structure exactly
@@ -56,6 +64,7 @@ export async function POST(req: Request) {
                 batchNumber: originalItem.batchNumber,
                 hsnCode: originalItem.hsnCode,
                 unitType: originalItem.unitType,
+                pack: originalItem.pack,
                 qty: returnQtyNum,
                 sellingPrice: originalItem.sellingPrice,
                 buyingPrice: originalItem.buyingPrice,
@@ -67,27 +76,34 @@ export async function POST(req: Request) {
             // originalItem.batchNumber might be a comma-separated list due to FEFO (e.g. "B1, B2")
             // We'll just return the physical stock to the first batch in the list for simplicity.
             const primaryBatchNum = originalItem.batchNumber?.split(',')[0].trim() || '';
-            const batch = await MedicineBatch.findOne({ batchNumber: primaryBatchNum }).populate('medicineId');
+            const medicine = await mongoose.models.Medicine.findOne({ name: originalItem.name }).session(session);
             
-            if (batch) {
-                const masterMedicine = batch.medicineId as any;
-                const tabletsPerStrip = masterMedicine?.tabletsPerStrip || 1;
+            if (medicine) {
+                const batch = await MedicineBatch.findOne({ 
+                    medicineId: medicine._id, 
+                    batchNumber: primaryBatchNum 
+                }).populate('medicineId').session(session);
                 
-                let stockToAdd = 0;
-                if (originalItem.unitType === 'strip') {
-                    stockToAdd = returnQtyNum;
-                } else {
-                    stockToAdd = returnQtyNum / tabletsPerStrip;
-                }
+                if (batch) {
+                    const masterMedicine = batch.medicineId as any;
+                    const tabletsPerStrip = masterMedicine?.tabletsPerStrip || 1;
+                    
+                    let stockToAdd = 0;
+                    if (originalItem.unitType === 'strip') {
+                        stockToAdd = returnQtyNum;
+                    } else {
+                        stockToAdd = returnQtyNum / tabletsPerStrip;
+                    }
 
-                batch.stock += stockToAdd;
-                batch.totalTabletsInStock = batch.stock * tabletsPerStrip;
-                await batch.save();
+                    batch.stock += stockToAdd;
+                    batch.totalTabletsInStock = batch.stock * tabletsPerStrip;
+                    await batch.save({ session });
+                }
             }
         }
 
         if (newBillItems.length === 0) {
-            return NextResponse.json({ error: "No valid items to return" }, { status: 400 });
+            throw new Error("No valid items to return");
         }
 
         // Determine return status on the original bill
@@ -99,7 +115,7 @@ export async function POST(req: Request) {
         }
 
         originalBill.returnStatus = allFullyReturned ? 'Full' : (anyReturned ? 'Partial' : 'None');
-        await originalBill.save();
+        await originalBill.save({ session });
 
         // Scale discounts and taxes exactly identically to the original receipt
         const discountAmount = returnSubTotal * ((originalBill.discountPercent || 0) / 100);
@@ -112,17 +128,21 @@ export async function POST(req: Request) {
         // Negate the totals for the return ledger entry
         const roundedDiscountAmount = Math.round(discountAmount * 100) / 100;
         const roundedGstAmount = Math.round(gstAmount * 100) / 100;
-        const roundedGrandTotal = Math.round(grandTotal * 100) / 100;
+        
+        // Nearest Rupee rounding for returns
+        const finalGrandTotal = Math.round(grandTotal);
+        const roundingAdjustment = Math.round((finalGrandTotal - grandTotal) * 100) / 100;
 
         // Create the "Credit Note" Bill
-        const returnBill = await Bill.create({
+        const returnBill = await Bill.create([{
             items: newBillItems,
             subTotal: -returnSubTotal,
             discountPercent: originalBill.discountPercent,
             discountAmount: -roundedDiscountAmount,
             gstAmount: -roundedGstAmount,
             gstPercent: originalBill.gstPercent,
-            grandTotal: -roundedGrandTotal,
+            grandTotal: -finalGrandTotal,
+            roundingAdjustment: -roundingAdjustment,
             gstEnabled: originalBill.gstEnabled,
             printInvoice: false,
             isReturn: true,
@@ -130,16 +150,22 @@ export async function POST(req: Request) {
             patientName: originalBill.patientName,
             patientPhone: originalBill.patientPhone,
             doctorName: originalBill.doctorName,
-        });
+        }], { session }).then(res => res[0]);
 
         // 🏦 ACCOUNTING: Create Double Entry Journal
-        await createReturnJournalEntry(returnBill);
+        await createReturnJournalEntry(returnBill, session);
 
-        return NextResponse.json({ success: true, returnBill, originalBill });
-    } catch (error) {
+        result = { success: true, returnBill, originalBill };
+        
+        }); // end withTransaction
+        } finally {
+            session.endSession();
+        }
+        return NextResponse.json(result);
+    } catch (error: any) {
         console.error("RETURN ERROR:", error);
         return NextResponse.json(
-            { error: "Failed to process return" },
+            { error: error.message || "Failed to process return" },
             { status: 500 }
         );
     }

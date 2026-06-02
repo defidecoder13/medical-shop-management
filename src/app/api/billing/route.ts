@@ -4,6 +4,7 @@ import MedicineBatch from "@/src/models/MedicineBatch";
 import Bill from "@/src/models/Bill";
 import Settings from "@/src/models/Settings";
 import { createSaleJournalEntry } from "@/src/lib/accounting";
+import mongoose from "mongoose";
 
 export async function POST(req: Request) {
   // 🔁 Keep original batch states for rollback
@@ -15,6 +16,12 @@ export async function POST(req: Request) {
 
   try {
     await connectDB();
+    const session = await mongoose.startSession();
+    
+    let result: any;
+    
+    try {
+      await session.withTransaction(async () => {
 
     const {
       items = [],
@@ -23,14 +30,13 @@ export async function POST(req: Request) {
       gstEnabled: reqGstEnabled,
       patientName,
       patientPhone,
-      doctorName
+      patientAddress,
+      doctorName,
+      paymentMethod = "Cash",
     } = await req.json();
 
     if (!items || items.length === 0) {
-      return NextResponse.json(
-        { error: "No bill items provided" },
-        { status: 400 }
-      );
+      throw new Error("No bill items provided");
     }
 
     const settings = await Settings.findOne();
@@ -38,6 +44,8 @@ export async function POST(req: Request) {
     const gstEnabled = reqGstEnabled !== undefined ? reqGstEnabled : (settings?.gstEnabled ?? false);
 
     let subTotal = 0;
+    let accumulatedDiscountAmount = 0;
+    let accumulatedGstAmount = 0;
     const billItems: any[] = [];
 
     for (const item of items) {
@@ -45,10 +53,7 @@ export async function POST(req: Request) {
       const requestedBatch = await MedicineBatch.findById(item.medicineId).populate('medicineId');
 
       if (!requestedBatch) {
-        return NextResponse.json(
-          { error: `Item/Batch not found: ${item.name}` },
-          { status: 400 }
-        );
+        throw new Error(`Item/Batch not found: ${item.name}`);
       }
 
       const masterMedicine = requestedBatch.medicineId;
@@ -61,52 +66,39 @@ export async function POST(req: Request) {
         tabletsRequested = item.qty;
       }
 
-      // Query all batches for this master medicine, sorted by expiry Date ascending (FEFO)
-      const allBatches = await MedicineBatch.find({ 
-        medicineId: masterMedicine._id, 
-        totalTabletsInStock: { $gt: 0 } 
-      }).sort({ expiryDate: 1 });
-
-      const totalAvailable = allBatches.reduce((sum, b) => sum + b.totalTabletsInStock, 0);
-      if (totalAvailable < tabletsRequested) {
-        return NextResponse.json(
-          { error: `Insufficient total stock for: ${masterMedicine.name}. Available: ${totalAvailable} tablets.` },
-          { status: 400 }
-        );
+      // Enforce strict stock check on the selected batch
+      if (requestedBatch.totalTabletsInStock < tabletsRequested) {
+        throw new Error(`Insufficient stock in batch ${requestedBatch.batchNumber} for ${masterMedicine.name}. Available: ${requestedBatch.totalTabletsInStock} tablets.`);
       }
 
-      let remainingTabletsToDeduct = tabletsRequested;
-      let totalCostAccumulated = 0;
-      const batchesUsed = [];
+      // Save state for rollback
+      updatedBatches.push({
+        _id: requestedBatch._id.toString(),
+        stock: requestedBatch.stock,
+        totalTabletsInStock: requestedBatch.totalTabletsInStock,
+      });
 
-      // 🔐 Apply FEFO (First Expire, First Out) Deduction
-      for (const batch of allBatches) {
-        if (remainingTabletsToDeduct <= 0) break;
+      // Deduct stock strictly from requestedBatch
+      requestedBatch.totalTabletsInStock -= tabletsRequested;
+      requestedBatch.stock = requestedBatch.totalTabletsInStock / masterMedicine.tabletsPerStrip;
+      await requestedBatch.save({ session });
 
-        // Save state for rollback
-        updatedBatches.push({
-          _id: batch._id.toString(),
-          stock: batch.stock,
-          totalTabletsInStock: batch.totalTabletsInStock,
-        });
-
-        const tabletsToDeductFromThisBatch = Math.min(batch.totalTabletsInStock, remainingTabletsToDeduct);
-        
-        batch.totalTabletsInStock -= tabletsToDeductFromThisBatch;
-        batch.stock = batch.totalTabletsInStock / masterMedicine.tabletsPerStrip;
-        await batch.save();
-
-        remainingTabletsToDeduct -= tabletsToDeductFromThisBatch;
-
-        // Calculate cost for this portion
-        const unitCostPerTablet = batch.buyingPricePerStrip / masterMedicine.tabletsPerStrip;
-        totalCostAccumulated += (tabletsToDeductFromThisBatch * unitCostPerTablet);
-
-        batchesUsed.push(batch.batchNumber);
-      }
+      // Calculate cost
+      const unitCostPerTablet = requestedBatch.buyingPricePerStrip / masterMedicine.tabletsPerStrip;
+      const totalCostAccumulated = tabletsRequested * unitCostPerTablet;
 
       const itemTotal = item.sellingPrice * item.qty;
       subTotal += itemTotal;
+
+      const itemDiscountPercent = Number(item.discountPercent) || 0;
+      const itemDiscountAmount = Math.round(itemTotal * (itemDiscountPercent / 100) * 100) / 100;
+      accumulatedDiscountAmount += itemDiscountAmount;
+
+      // Calculate item GST
+      const itemTaxableValue = itemTotal - itemDiscountAmount;
+      const itemGstPercent = masterMedicine.gstPercent || 0;
+      const itemGstAmount = gstEnabled ? Math.round(itemTaxableValue * (itemGstPercent / 100) * 100) / 100 : 0;
+      accumulatedGstAmount += itemGstAmount;
 
       // Calculate the average buying price per sold unit (strip or tablet)
       const avgBuyingPrice = item.unitType === "strip" 
@@ -116,85 +108,96 @@ export async function POST(req: Request) {
       billItems.push({
         name: masterMedicine.name,
         brand: masterMedicine.brand,
-        batchNumber: batchesUsed.join(", "), // Log all batches used in FEFO
+        batchNumber: requestedBatch.batchNumber,
         expiryDate: requestedBatch.expiryDate, 
         hsnCode: masterMedicine.hsnCode,
+        pack: item.pack,
         unitType: item.unitType,
         qty: item.qty,
         sellingPrice: item.sellingPrice,
         buyingPrice: avgBuyingPrice,
         total: itemTotal,
+        discountPercent: itemDiscountPercent,
+        discountAmount: itemDiscountAmount,
+        gstPercent: itemGstPercent,
+        gstAmount: itemGstAmount,
       });
     }
 
     // Calculate discount (preserve decimals)
-    const discountAmount = subTotal * (discountPercent / 100);
+    const discountAmount = accumulatedDiscountAmount;
     const subTotalAfterDiscount = subTotal - discountAmount;
-
-    const gstPercent = settings?.defaultGstPercent ?? 0; // Default to 0 if not set in settings
-    const gstAmount = gstEnabled ? subTotalAfterDiscount * (gstPercent / 100) : 0;
+    const gstAmount = accumulatedGstAmount;
     const grandTotal = subTotalAfterDiscount + gstAmount;
 
     // Round only the final totals for storage
     const roundedDiscountAmount = Math.round(discountAmount * 100) / 100;
     const roundedGstAmount = Math.round(gstAmount * 100) / 100;
-    const roundedGrandTotal = Math.round(grandTotal * 100) / 100;
+    
+    // Nearest Rupee rounding
+    const finalGrandTotal = Math.round(grandTotal);
+    const roundingAdjustment = Math.round((finalGrandTotal - grandTotal) * 100) / 100;
+
+    const calculatedDiscountPercent = subTotal > 0 ? Math.round((roundedDiscountAmount / subTotal) * 100 * 100) / 100 : 0;
+    const calculatedGstPercent = subTotalAfterDiscount > 0 ? Math.round((roundedGstAmount / subTotalAfterDiscount) * 100 * 100) / 100 : 0;
 
     // 💾 CREATE BILL
-    const bill = await Bill.create({
+    const bill = await Bill.create([{
       items: billItems,
       subTotal,
-      discountPercent,
+      discountPercent: calculatedDiscountPercent,
       discountAmount: roundedDiscountAmount,
       gstAmount: roundedGstAmount,
-      gstPercent: gstEnabled ? gstPercent : 0,
-      grandTotal: roundedGrandTotal,
+      gstPercent: gstEnabled ? calculatedGstPercent : 0,
+      grandTotal: finalGrandTotal,
+      roundingAdjustment: roundingAdjustment,
       gstEnabled,
       printInvoice,
       patientName,
       patientPhone,
+      patientAddress,
       doctorName,
-    });
+      paymentMethod,
+    }], { session }).then(res => res[0]);
 
     // 🏦 ACCOUNTING: Create Double Entry Journal
-    await createSaleJournalEntry(bill);
+    await createSaleJournalEntry(bill, session);
 
     // 🧑‍⚕️ PATIENT CRM: Update or Create Patient Record
     if (patientPhone) {
       // Lazy load to prevent cyclic dependencies if any
       const Patient = (await import("@/src/models/Patient")).default;
       
-      let patient = await Patient.findOne({ phone: patientPhone });
+      let patient = await Patient.findOne({ phone: patientPhone }).session(session);
       if (patient) {
         // Update total spent and latest doctor
-        patient.totalSpent += roundedGrandTotal;
+        patient.totalSpent += finalGrandTotal;
         if (patientName) patient.name = patientName;
+        if (patientAddress) patient.address = patientAddress;
         if (doctorName) patient.doctorName = doctorName;
-        await patient.save();
+        await patient.save({ session });
       } else {
         // Create brand new profile
-        await Patient.create({
+        await Patient.create([{
           name: patientName || "Guest",
           phone: patientPhone,
+          address: patientAddress || "",
           doctorName: doctorName || "",
-          totalSpent: roundedGrandTotal
-        });
+          totalSpent: finalGrandTotal
+        }], { session });
       }
     }
 
-    return NextResponse.json(bill);
-  } catch (error) {
-    // 🔁 ROLLBACK BATCH STOCK ON ERROR
-    for (const b of updatedBatches) {
-      await MedicineBatch.findByIdAndUpdate(b._id, {
-        stock: b.stock,
-        totalTabletsInStock: b.totalTabletsInStock,
-      });
+    result = bill;
+    }); // end withTransaction
+    } finally {
+      session.endSession();
     }
-
+    return NextResponse.json(result, { status: 201 });
+  } catch (error: any) {
     console.error("BILLING ERROR:", error);
     return NextResponse.json(
-      { error: "Failed to create bill" },
+      { error: error.message || "Failed to create bill" },
       { status: 500 }
     );
   }

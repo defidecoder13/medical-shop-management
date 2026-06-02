@@ -12,6 +12,10 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
     const idsParam = searchParams.get("ids"); // Comma-separated medicine IDs
+    const inStock = searchParams.get("inStock"); // Filter out 0 qty items
+    const pageParam = searchParams.get("page");
+    const page = parseInt(pageParam || "1");
+    const pageSize = parseInt(searchParams.get("limit") || "20");
 
     let batchQuery: any = {};
     let medicineQuery: any = {};
@@ -42,10 +46,28 @@ export async function GET(req: Request) {
       };
     }
 
-    const batches = await MedicineBatch.find(batchQuery)
+    if (inStock === "true") {
+      batchQuery.stock = { $gt: 0 };
+    }
+
+    let totalCount = 0;
+    if (!idsParam) {
+      totalCount = await MedicineBatch.countDocuments(batchQuery);
+    } else {
+      totalCount = idsParam.split(',').length; // approximation for IDs query
+    }
+    
+    const totalPages = Math.ceil(totalCount / pageSize);
+
+    const query = MedicineBatch.find(batchQuery)
       .populate("medicineId")
-      .sort({ createdAt: -1 })
-      .lean();
+      .sort({ createdAt: -1 });
+
+    if (!idsParam) {
+       query.skip((page - 1) * pageSize).limit(pageSize);
+    }
+
+    const batches = await query.lean();
 
     // Map to the flat structure expected by the frontend
     const safeBatches = batches.map((batch: any) => {
@@ -66,10 +88,27 @@ export async function GET(req: Request) {
         hsnCode: med.hsnCode || "3004",
         gstPercent: med.gstPercent || 5,
         totalTabletsInStock: batch.totalTabletsInStock || 0,
+        discountPercent: batch.discountPercent || 0,
+        supplierName: batch.supplierName || "Direct Purchase",
+        purchaseInvoiceNumber: batch.purchaseInvoiceNumber || "",
+        category: med.category || "Tablet",
+        pack: batch.pack || med.pack || "",
       };
     });
 
-    return NextResponse.json(safeBatches);
+    if (pageParam) {
+      return NextResponse.json({
+        data: safeBatches,
+        pagination: {
+          totalCount,
+          totalPages,
+          currentPage: page,
+          limit: pageSize
+        }
+      });
+    } else {
+      return NextResponse.json(safeBatches);
+    }
   } catch (error) {
     console.error("INVENTORY GET ERROR:", error);
     return NextResponse.json(
@@ -108,6 +147,10 @@ export async function POST(req: Request) {
       rackNumber, 
       composition, 
       hsnCode, 
+      discountPercent,
+      supplierName,
+      purchaseInvoiceNumber,
+      category,
     } = body;
 
     if (
@@ -139,10 +182,21 @@ export async function POST(req: Request) {
         composition: composition || "",
         hsnCode: hsnCode || "3004",
         gstPercent: gstPercent || 5,
+        category: category || "Tablet",
       });
-    } else if (barcode && medicine.barcode !== barcode) {
-      medicine.barcode = barcode;
-      await medicine.save();
+    } else {
+      let changed = false;
+      if (barcode && medicine.barcode !== barcode) {
+        medicine.barcode = barcode;
+        changed = true;
+      }
+      if (category && medicine.category !== category) {
+        medicine.category = category;
+        changed = true;
+      }
+      if (changed) {
+        await medicine.save();
+      }
     }
 
     // 2. Prevent Duplicate Batch for the same medicine
@@ -169,6 +223,9 @@ export async function POST(req: Request) {
       buyingPricePerStrip,
       sellingPricePerStrip,
       rackNumber: rackNumber || "",
+      discountPercent: Number(discountPercent) || 0,
+      supplierName: supplierName || "Direct Purchase",
+      purchaseInvoiceNumber: purchaseInvoiceNumber || "",
     });
 
     return NextResponse.json(batch);
@@ -214,10 +271,22 @@ export async function PUT(req: Request) {
 
     const medicine = batch.medicineId;
 
+    // Allow changing tabletsPerStrip if provided, because auto-import might have guessed it wrong
+    let masterChanged = false;
+    let currentTabletsPerStrip = medicine.tabletsPerStrip;
+    if (typeof body.tabletsPerStrip === "number" && body.tabletsPerStrip > 0 && body.tabletsPerStrip !== medicine.tabletsPerStrip) {
+      medicine.tabletsPerStrip = body.tabletsPerStrip;
+      currentTabletsPerStrip = body.tabletsPerStrip;
+      masterChanged = true;
+    }
+
     // UPDATE BATCH FIELDS
     if (typeof body.stock === "number" && body.stock >= 0) {
       batch.stock = body.stock;
-      batch.totalTabletsInStock = body.stock * medicine.tabletsPerStrip;
+      batch.totalTabletsInStock = body.stock * currentTabletsPerStrip;
+    } else if (masterChanged) {
+      // If stock didn't change but tabletsPerStrip did, we must still recalculate totalTabletsInStock
+      batch.totalTabletsInStock = batch.stock * currentTabletsPerStrip;
     }
     
     if (body.batchNumber !== undefined) batch.batchNumber = body.batchNumber;
@@ -230,15 +299,28 @@ export async function PUT(req: Request) {
     if (typeof body.sellingPrice === "number" && body.sellingPrice > 0) {
       batch.sellingPricePerStrip = body.sellingPrice;
     }
+    if (body.discountPercent !== undefined) {
+      batch.discountPercent = Number(body.discountPercent) || 0;
+    }
+    if (body.supplierName !== undefined) {
+      batch.supplierName = body.supplierName || "Direct Purchase";
+    }
+    if (body.purchaseInvoiceNumber !== undefined) {
+      batch.purchaseInvoiceNumber = body.purchaseInvoiceNumber || "";
+    }
+    if (body.pack !== undefined) {
+      batch.pack = body.pack || "";
+    }
 
     // UPDATE MASTER MEDICINE FIELDS
-    let masterChanged = false;
     if (body.name !== undefined && body.name !== medicine.name) { medicine.name = body.name; masterChanged = true; }
     if (body.brand !== undefined && body.brand !== medicine.brand) { medicine.brand = body.brand; masterChanged = true; }
     if (body.barcode !== undefined && body.barcode !== medicine.barcode) { medicine.barcode = body.barcode; masterChanged = true; }
     if (body.composition !== undefined && body.composition !== medicine.composition) { medicine.composition = body.composition; masterChanged = true; }
     if (body.hsnCode !== undefined && body.hsnCode !== medicine.hsnCode) { medicine.hsnCode = body.hsnCode; masterChanged = true; }
     if (typeof body.gstPercent === "number" && body.gstPercent !== medicine.gstPercent) { medicine.gstPercent = body.gstPercent; masterChanged = true; }
+    if (body.category !== undefined && body.category !== medicine.category) { medicine.category = body.category; masterChanged = true; }
+    if (body.pack !== undefined && body.pack !== medicine.pack) { medicine.pack = body.pack; masterChanged = true; }
 
     await batch.save();
     if (masterChanged) {

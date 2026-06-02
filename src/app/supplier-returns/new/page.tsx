@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, Suspense } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { 
   Search, 
   ShoppingCart, 
@@ -32,6 +32,8 @@ type Medicine = {
   expiryDate: string;
   rackNumber: string;
   composition?: string;
+  supplierName?: string;
+  purchaseInvoiceNumber?: string;
 };
 
 type CartItem = {
@@ -44,6 +46,9 @@ type CartItem = {
   tabletBuyingPrice: number;
   stock: number;
   rackNumber: string;
+  supplierName?: string;
+  purchaseInvoiceNumber?: string;
+  tabletsPerStrip: number;
 };
 
 export default function NewSupplierReturnPage() {
@@ -56,6 +61,8 @@ export default function NewSupplierReturnPage() {
 
 function ReturnContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const incomingBatches = searchParams.get('batches');
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
@@ -70,6 +77,15 @@ function ReturnContent() {
   
   const [grandTotal, setGrandTotal] = useState(0);
 
+  const hasAnyMismatch = cart.some(
+    (item) =>
+      supplierName.trim() &&
+      item.supplierName &&
+      item.supplierName.trim().toLowerCase() !== supplierName.trim().toLowerCase()
+  );
+
+  const [suppliers, setSuppliers] = useState<any[]>([]);
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -80,7 +96,77 @@ function ReturnContent() {
       }
     };
     checkAuth();
+    fetchSuppliers();
   }, [router]);
+
+  const fetchSuppliers = async () => {
+    try {
+      const res = await apiClient.get('/api/suppliers');
+      if (res && Array.isArray(res)) setSuppliers(res);
+    } catch(err) {
+      console.error(err);
+    }
+  };
+
+  // Handle Auto-fill from Expiry Page
+  useEffect(() => {
+    if (incomingBatches) {
+      const fetchIncomingBatches = async () => {
+        try {
+          const batchesArray = incomingBatches.split(',');
+          let itemsToAdd: CartItem[] = [];
+          let detectedSupplier = "";
+
+          for (const batchNum of batchesArray) {
+             // We can use the bulk API or standard search
+             const res = await fetch(`/api/inventory?q=${batchNum}`);
+             if (res.ok) {
+                const results = await res.json();
+                const exactMatch = results.find((r: any) => r.batchNumber === batchNum);
+                
+                if (exactMatch) {
+                   const sellingPrice = exactMatch.sellingPricePerStrip || exactMatch.sellingPrice || 0;
+                   const tabletsPerStrip = exactMatch.tabletsPerStrip || 1;
+                   const tabletPrice = sellingPrice > 0 ? Number((sellingPrice / tabletsPerStrip).toFixed(2)) : 0;
+                   
+                   // We need buying price for returns ideally, but we'll fallback to selling price if not available
+                   const stripBuying = exactMatch.buyingPricePerStrip || exactMatch.buyingPrice || sellingPrice;
+                   const tabletBuying = exactMatch.buyingPricePerStrip ? exactMatch.buyingPricePerStrip / tabletsPerStrip : tabletPrice;
+
+                   itemsToAdd.push({
+                      medicineId: exactMatch._id,
+                      name: exactMatch.name,
+                      batchNumber: exactMatch.batchNumber,
+                      stripQty: exactMatch.stock, // Auto-fill with FULL physical stock for expiry return
+                      tabletQty: 0,
+                      stripBuyingPrice: stripBuying,
+                      tabletBuyingPrice: tabletBuying,
+                      stock: exactMatch.stock,
+                      rackNumber: exactMatch.rackNumber || "",
+                      tabletsPerStrip: tabletsPerStrip,
+                      supplierName: exactMatch.supplierName || ""
+                   });
+
+                   if (exactMatch.supplierName && !detectedSupplier) {
+                     detectedSupplier = exactMatch.supplierName;
+                   }
+                }
+             }
+          }
+
+          if (itemsToAdd.length > 0) {
+             setCart(itemsToAdd);
+             if (detectedSupplier) setSupplierName(detectedSupplier);
+             setMessage({ text: `Auto-filled ${itemsToAdd.length} expired batches ready for return.`, type: 'success' });
+             setTimeout(() => setMessage(null), 4000);
+          }
+        } catch (error) {
+           console.error("Failed to auto-fetch batches", error);
+        }
+      };
+      fetchIncomingBatches();
+    }
+  }, [incomingBatches]);
 
   useEffect(() => {
     if (!debouncedSearch) {
@@ -116,6 +202,9 @@ function ReturnContent() {
       ? Number((buyingPrice / tabletsPerStrip).toFixed(2)) 
       : 0;
 
+    const itemSupplier = med.supplierName || "Direct Purchase";
+    const itemInvoice = med.purchaseInvoiceNumber || "";
+
     setCart([
       ...cart,
       {
@@ -128,8 +217,22 @@ function ReturnContent() {
         tabletBuyingPrice: tabletPrice,
         stock: med.stock,
         rackNumber: med.rackNumber || "",
+        supplierName: itemSupplier,
+        purchaseInvoiceNumber: itemInvoice,
+        tabletsPerStrip: tabletsPerStrip,
       },
     ]);
+
+    if (!supplierName.trim()) {
+      setSupplierName(itemSupplier);
+    } else if (supplierName.trim().toLowerCase() !== itemSupplier.trim().toLowerCase()) {
+      setMessage({
+        text: `Supplier mismatch! Added batch belongs to "${itemSupplier}" but return is for "${supplierName}"`,
+        type: 'error'
+      });
+      setTimeout(() => setMessage(null), 5000);
+    }
+
     setSearch("");
   };
 
@@ -146,6 +249,12 @@ function ReturnContent() {
     if (!supplierName.trim()) {
         setMessage({text: "Supplier Name is required", type: "error"});
         setTimeout(() => setMessage(null), 3000);
+        return;
+    }
+
+    if (hasAnyMismatch) {
+        setMessage({text: "Supplier mismatch in cart items", type: "error"});
+        setTimeout(() => setMessage(null), 4000);
         return;
     }
 
@@ -248,7 +357,7 @@ function ReturnContent() {
             </h2>
             <div className="relative group">
               <input
-                className="w-full bg-gray-50 border border-gray-200 pl-12 pr-6 py-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-gray-800 font-bold placeholder:text-gray-400 text-sm"
+                className="w-full bg-white border border-gray-300 shadow-sm pl-12 pr-6 py-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-gray-800 font-bold placeholder:text-gray-400 text-sm"
                 placeholder="Search by medicine name, brand or batch..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -277,9 +386,14 @@ function ReturnContent() {
                         </div>
                         <div>
                           <div className="font-black text-[#11327c] uppercase text-[13px] tracking-tight">{med.name}</div>
-                          <div className="text-[10px] text-gray-400 font-bold flex gap-3 mt-1 uppercase tracking-wider">
-                            <span>BATCH: <span className="text-[#11327c]/60">{med.batchNumber}</span></span>
-                            <span>STOCK: <span className="text-orange-600">{med.stock}</span></span>
+                          <div className="text-[10px] text-gray-400 font-bold flex flex-wrap gap-x-3 gap-y-1 mt-1 uppercase tracking-wider">
+                            <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">Rack: {med.rackNumber || 'N/A'}</span>
+                            <span className={med.stock < 10 ? 'text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded' : 'text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded'}>Stock: {med.stock}</span>
+                            <span className="bg-indigo-50 px-1.5 py-0.5 rounded text-indigo-600">Batch: {med.batchNumber || 'N/A'}</span>
+                            <span className="bg-amber-50 px-1.5 py-0.5 rounded text-amber-700">MRP: ₹{(med.sellingPricePerStrip || med.sellingPrice || 0).toFixed(2)}</span>
+                          </div>
+                          <div className="mt-1">
+                            <span>SUPPLIER: <span className="text-indigo-600 font-black">{med.supplierName || 'Direct Purchase'}</span>{med.purchaseInvoiceNumber ? ` (INV: ${med.purchaseInvoiceNumber})` : ''}</span>
                           </div>
                         </div>
                       </div>
@@ -323,29 +437,44 @@ function ReturnContent() {
                 </div>
               ) : (
                 <AnimatePresence>
-                  {cart.map((item) => (
-                    <motion.div 
-                      key={item.medicineId} 
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="group relative p-6 rounded-3xl border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all shadow-sm hover:shadow-[0_10px_30px_-10px_rgba(17,50,124,0.1)] flex flex-col gap-6"
-                    >
-                      <div className="flex justify-between items-start">
-                        <div className="flex items-center gap-4">
-                          <div className="w-12 h-12 bg-[#f8fafc] rounded-2xl flex items-center justify-center text-[#11327c]">
-                            <Package size={24} strokeWidth={2} />
-                          </div>
-                          <div>
-                            <div className="font-black text-[#11327c] uppercase text-[15px] tracking-tight">{item.name}</div>
-                            <div className="flex items-center gap-3 text-[10px] font-black text-gray-400 mt-1 uppercase tracking-widest">
-                              <span>BATCH: <span className="text-[#11327c]/60">{item.batchNumber}</span></span>
-                              <div className="w-1 h-1 rounded-full bg-gray-200" />
-                              <span>STOCK: <span className="text-orange-600">{item.stock}</span></span>
+                  {cart.map((item) => {
+                    const isMismatched = supplierName.trim() && item.supplierName && item.supplierName.trim().toLowerCase() !== supplierName.trim().toLowerCase();
+                    const isMulti = item.tabletsPerStrip > 1;
+                    return (
+                      <motion.div 
+                        key={item.medicineId} 
+                        layout
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className={`group relative p-6 rounded-3xl border transition-all shadow-sm flex flex-col gap-6 ${
+                          isMismatched 
+                            ? 'border-amber-200 bg-amber-50/5 hover:border-amber-300 hover:bg-amber-50/10 hover:shadow-[0_10px_30px_-10px_rgba(217,119,6,0.1)]' 
+                            : 'border-gray-100 bg-white hover:border-[#11327c]/20 hover:shadow-[0_10px_30px_-10px_rgba(17,50,124,0.1)]'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[#f8fafc] rounded-2xl flex items-center justify-center text-[#11327c]">
+                              <Package size={24} strokeWidth={2} />
+                            </div>
+                            <div>
+                              <div className="font-black text-[#11327c] uppercase text-[15px] tracking-tight">{item.name}</div>
+                              <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-black text-gray-400 mt-1 uppercase tracking-widest">
+                                <span>BATCH: <span className="text-[#11327c]/60">{item.batchNumber}</span></span>
+                                <div className="w-1 h-1 rounded-full bg-gray-200" />
+                                <span>STOCK: <span className="text-orange-600">{item.stock}</span></span>
+                                <div className="w-1 h-1 rounded-full bg-gray-200" />
+                                <span>SUPPLIER: <span className="text-indigo-600 font-black">{item.supplierName || 'Direct Purchase'}</span>{item.purchaseInvoiceNumber ? ` (INV: ${item.purchaseInvoiceNumber})` : ''}</span>
+                              </div>
+                              {isMismatched && (
+                                <div className="mt-2.5 flex items-center gap-2 text-[10px] font-black text-amber-700 bg-amber-50 border border-amber-100/70 px-3 py-1.5 rounded-xl uppercase tracking-wider w-fit">
+                                  <AlertCircle size={12} strokeWidth={3} className="text-amber-600" />
+                                  <span>Distributor mismatch: expected "{supplierName}"</span>
+                                </div>
+                              )}
                             </div>
                           </div>
-                        </div>
 
                         <button
                           onClick={() => removeItem(item.medicineId)}
@@ -356,61 +485,64 @@ function ReturnContent() {
                         </button>
                       </div>
                       
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        {/* Strip Input Container */}
-                        <div className="p-5 rounded-2xl bg-[#f8fafc] border border-gray-100 group/input focus-within:border-[#11327c]/30 transition-all">
-                          <div className="flex justify-between items-center mb-3">
-                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-blue-500" />
-                              Return Strips
-                            </label>
-                            <span className="text-[11px] font-black text-[#11327c] tabular-nums bg-white px-2 py-0.5 rounded-lg border border-gray-100 shadow-sm">₹{item.stripBuyingPrice}/ea</span>
+                      <div className={`grid grid-cols-1 gap-4 ${isMulti ? 'sm:grid-cols-2' : ''}`}>
+                          {/* Strip Input Container */}
+                          <div className="p-5 rounded-2xl bg-[#f8fafc] border border-gray-100 group/input focus-within:border-[#11327c]/30 transition-all">
+                            <div className="flex justify-between items-center mb-3">
+                              <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                {isMulti ? "Return Strips" : "Return Quantity"}
+                              </label>
+                              <span className="text-[11px] font-black text-[#11327c] tabular-nums bg-white px-2 py-0.5 rounded-lg border border-gray-100 shadow-sm">₹{item.stripBuyingPrice}/ea</span>
+                            </div>
+                            <div className="relative">
+                              <input
+                                type="number"
+                                min="0"
+                                placeholder="00"
+                                className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-lg font-black text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all tabular-nums placeholder:text-gray-200"
+                                value={item.stripQty || ''}
+                                onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
+                              />
+                              {item.stripQty > 0 && (
+                                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
+                                  TOTAL: ₹{(item.stripQty * item.stripBuyingPrice).toLocaleString()}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              min="0"
-                              placeholder="00"
-                              className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-lg font-black text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all tabular-nums placeholder:text-gray-200"
-                              value={item.stripQty || ''}
-                              onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
-                            />
-                            {item.stripQty > 0 && (
-                              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-blue-600 bg-blue-50 px-2 py-1 rounded-lg">
-                                TOTAL: ₹{(item.stripQty * item.stripBuyingPrice).toLocaleString()}
+                          
+                          {/* Tablet Input Container */}
+                          {isMulti && (
+                            <div className="p-5 rounded-2xl bg-[#f8fafc] border border-gray-100 group/input focus-within:border-[#11327c]/30 transition-all">
+                              <div className="flex justify-between items-center mb-3">
+                                <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest flex items-center gap-2">
+                                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                  Return Tablets
+                                </label>
+                                <span className="text-[11px] font-black text-[#11327c] tabular-nums bg-white px-2 py-0.5 rounded-lg border border-gray-100 shadow-sm">₹{item.tabletBuyingPrice}/ea</span>
                               </div>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {/* Tablet Input Container */}
-                        <div className="p-5 rounded-2xl bg-[#f8fafc] border border-gray-100 group/input focus-within:border-[#11327c]/30 transition-all">
-                          <div className="flex justify-between items-center mb-3">
-                            <label className="text-[10px] uppercase font-black text-gray-400 tracking-widest flex items-center gap-2">
-                              <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                              Return Tablets
-                            </label>
-                            <span className="text-[11px] font-black text-[#11327c] tabular-nums bg-white px-2 py-0.5 rounded-lg border border-gray-100 shadow-sm">₹{item.tabletBuyingPrice}/ea</span>
-                          </div>
-                          <div className="relative">
-                            <input
-                              type="number"
-                              min="0"
-                              placeholder="00"
-                              className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-lg font-black text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all tabular-nums placeholder:text-gray-200"
-                              value={item.tabletQty || ''}
-                              onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
-                            />
-                            {item.tabletQty > 0 && (
-                              <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
-                                TOTAL: ₹{(item.tabletQty * item.tabletBuyingPrice).toLocaleString()}
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  placeholder="00"
+                                  className="w-full bg-white border border-gray-200 px-4 py-3 rounded-xl text-lg font-black text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all tabular-nums placeholder:text-gray-200"
+                                  value={item.tabletQty || ''}
+                                  onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
+                                />
+                                {item.tabletQty > 0 && (
+                                  <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">
+                                    TOTAL: ₹{(item.tabletQty * item.tabletBuyingPrice).toLocaleString()}
+                                  </div>
+                                )}
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    </motion.div>
-                  ))}
+                      </motion.div>
+                    );
+                  })}
                 </AnimatePresence>
               )}
             </div>
@@ -426,13 +558,19 @@ function ReturnContent() {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Supplier Name *</label>
-                <input 
-                  type="text" 
-                  placeholder="E.g., Global Pharma Dist." 
-                  value={supplierName} 
-                  onChange={(e) => setSupplierName(e.target.value)} 
-                  className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all placeholder:text-gray-300" 
-                />
+                <select
+                  value={supplierName}
+                  onChange={(e) => setSupplierName(e.target.value)}
+                  className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all cursor-pointer"
+                >
+                  <option value="">Select Supplier</option>
+                  <option value="Direct Purchase">Direct Purchase</option>
+                  {suppliers.map((sup) => (
+                    <option key={sup._id} value={sup.name}>
+                      {sup.name}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <div className="space-y-2">
@@ -470,7 +608,7 @@ function ReturnContent() {
               </div>
 
               <button
-                disabled={loading || cart.length === 0 || !supplierName.trim()}
+                disabled={loading || cart.length === 0 || !supplierName.trim() || hasAnyMismatch}
                 onClick={submitReturn}
                 className="w-full py-5 bg-orange-500 hover:bg-orange-600 text-white rounded-[24px] font-black text-[13px] uppercase tracking-[0.15em] transition-all shadow-xl shadow-orange-950/20 active:scale-95 disabled:opacity-20 disabled:grayscale disabled:cursor-not-allowed flex items-center justify-center gap-3"
               >
@@ -482,6 +620,15 @@ function ReturnContent() {
                 )}
               </button>
               
+              {hasAnyMismatch && (
+                <div className="mt-4 flex items-start gap-3 p-4 bg-rose-500/20 rounded-2xl border border-rose-500/30">
+                  <AlertCircle size={16} className="text-rose-300 shrink-0 mt-0.5" strokeWidth={2.5} />
+                  <p className="text-[10px] font-black text-rose-200 leading-relaxed uppercase tracking-wider">
+                    Warning: Cart contains items from suppliers other than "{supplierName}". Please resolve the mismatch to proceed.
+                  </p>
+                </div>
+              )}
+
               {cart.length > 0 && (
                 <div className="mt-6 flex items-start gap-3 p-4 bg-white/5 rounded-2xl border border-white/10">
                   <AlertCircle size={16} className="text-orange-400 shrink-0 mt-0.5" />

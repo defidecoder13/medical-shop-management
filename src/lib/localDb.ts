@@ -134,7 +134,14 @@ export async function processSyncQueue(
             });
 
             if (!response.ok) {
-                throw new Error(`Sync failed with status: ${response.status}`);
+                let errText = "";
+                try {
+                    errText = await response.text();
+                } catch (e) {
+                    errText = "Could not parse response";
+                }
+                console.error(`Sync error detail for ${item.url}:`, errText);
+                throw new Error(`Sync failed with status: ${response.status}. Details: ${errText}`);
             }
 
             await removeFromSyncQueue(item.id);

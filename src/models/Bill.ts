@@ -7,12 +7,17 @@ const BillItemSchema = new Schema(
     expiryDate: Date,
     batchNumber: String,
     hsnCode: String,
+    pack: String,
     unitType: { type: String, enum: ["strip", "tablet"] },
     qty: Number,
     sellingPrice: Number, // MRP at time of sale
     buyingPrice: Number,  // Cost Price at time of sale
     total: Number,
     returnedQty: { type: Number, default: 0 },
+    discountPercent: { type: Number, default: 0 },
+    discountAmount: { type: Number, default: 0 },
+    gstPercent: { type: Number, default: 0 },
+    gstAmount: { type: Number, default: 0 },
   },
   { _id: false }
 );
@@ -30,10 +35,13 @@ const BillSchema = new Schema(
     printInvoice: Boolean,
     patientName: String,
     patientPhone: String,
+    patientAddress: String,
     doctorName: String,
     isReturn: { type: Boolean, default: false },
     returnStatus: { type: String, enum: ["None", "Partial", "Full"], default: "None" },
     originalBillId: { type: Schema.Types.ObjectId, ref: "Bill" },
+    paymentMethod: { type: String, enum: ["Cash", "UPI", "Card"], default: "Cash" },
+    roundingAdjustment: { type: Number, default: 0 },
   },
   { timestamps: true }
 );
