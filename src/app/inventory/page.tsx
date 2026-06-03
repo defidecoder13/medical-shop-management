@@ -887,8 +887,8 @@ export default function InventoryPage() {
               <input 
                 type="number" 
                 placeholder="0" 
-                value={form.discountPercent}
-                onChange={e => setForm({...form, discountPercent: e.target.value === "" ? "" : Number(e.target.value)})}
+                value={form.discountPercent === 0 ? "" : form.discountPercent}
+                onChange={e => setForm({...form, discountPercent: e.target.value === "" ? 0 : Number(e.target.value)})}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
