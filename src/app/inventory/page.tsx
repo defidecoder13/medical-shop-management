@@ -237,7 +237,6 @@ export default function InventoryPage() {
   // Removed autocomplete state
 
   // Refs for auto-focus
-  const autocompleteRef = useRef<HTMLDivElement>(null);
   const batchNumberInputRef = useRef<HTMLInputElement>(null);
 
   // Sorting State
@@ -414,16 +413,6 @@ export default function InventoryPage() {
     fetchSettings();
   }, []);
 
-  // Handle Autocomplete Click Outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (autocompleteRef.current && !autocompleteRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const handleMedicineNameChange = async (val: string) => {
     setForm({...form, name: val});
