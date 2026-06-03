@@ -234,11 +234,7 @@ export default function InventoryPage() {
   const labels = getLabels(form.category || "Tablet");
   const isMultiUnit = form.category === "Tablet" || form.category === "Capsule";
 
-  // Autocomplete State
-  const [suggestions, setSuggestions] = useState<any[]>([]);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  // Removed autocomplete state
 
   // Refs for auto-focus
   const autocompleteRef = useRef<HTMLDivElement>(null);
@@ -431,42 +427,6 @@ export default function InventoryPage() {
 
   const handleMedicineNameChange = async (val: string) => {
     setForm({...form, name: val});
-    
-    if (val.length < 2) {
-      setSuggestions([]);
-      setShowSuggestions(false);
-      return;
-    }
-
-    if (searchTimeoutRef.current) clearTimeout(searchTimeoutRef.current);
-
-    searchTimeoutRef.current = setTimeout(async () => {
-      setLoadingSuggestions(true);
-      try {
-        const data = await apiClient.get(`/api/global-medicines?q=${encodeURIComponent(val)}`);
-        setSuggestions(data);
-        setShowSuggestions(data.length > 0);
-      } catch (error) {
-        console.error("Autocomplete fetch error", error);
-      } finally {
-        setLoadingSuggestions(false);
-      }
-    }, 300); // 300ms debounce
-  };
-
-  const handleSuggestionSelect = (suggestion: any) => {
-    setForm({
-      ...form,
-      composition: suggestion.composition || "",
-    });
-    setShowSuggestions(false);
-    
-    // Jump focus to Batch Number input after brief delay to allow React state to settle
-    setTimeout(() => {
-      if (batchNumberInputRef.current) {
-        batchNumberInputRef.current.focus();
-      }
-    }, 50);
   };
 
   const handleSubmit = async () => {
@@ -739,50 +699,14 @@ export default function InventoryPage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="flex flex-col gap-2 relative" ref={autocompleteRef}>
+            <div className="flex flex-col gap-2 relative">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Medicine Name</label>
-              <div className="relative group">
-                <input 
-                  placeholder="Search and select name..." 
-                  value={form.name}
-                  onChange={e => handleMedicineNameChange(e.target.value)}
-                  onFocus={() => {
-                    if (suggestions.length > 0) setShowSuggestions(true);
-                  }}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 placeholder:text-gray-400"
-                  autoComplete="off"
-                />
-                {loadingSuggestions && (
-                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                    <Loader2 size={16} className="animate-spin text-[#11327c]" />
-                  </div>
-                )}
-              </div>
-              
-              <AnimatePresence>
-                {showSuggestions && (
-                  <motion.div 
-                    initial={{ opacity: 0, y: 5 }} 
-                    animate={{ opacity: 1, y: 0 }} 
-                    exit={{ opacity: 0, y: 5 }}
-                    className="absolute z-50 top-full mt-2 w-[150%] sm:w-[200%] bg-white border border-gray-100 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] overflow-hidden max-h-64 overflow-y-auto p-2"
-                  >
-                    {suggestions.map((s, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => handleSuggestionSelect(s)}
-                        className="w-full text-left px-4 py-3.5 hover:bg-[#f8fafc] rounded-xl transition-colors flex flex-col items-start gap-1 group/item"
-                      >
-                        <div className="flex justify-between w-full items-center">
-                          <span className="font-black text-[13px] text-[#11327c] group-hover/item:text-[#11327c]">{s.name}</span>
-                          <span className="text-[9px] font-black px-2 py-0.5 bg-indigo-50 text-[#11327c] rounded-md uppercase tracking-wider">{s.brand}</span>
-                        </div>
-                        <span className="text-[11px] text-gray-400 font-medium line-clamp-1">{s.composition}</span>
-                      </button>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              <input 
+                placeholder="e.g. Paracetamol 500mg" 
+                value={form.name}
+                onChange={e => setForm({...form, name: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+              />
             </div>
 
             <div className="flex flex-col gap-2">

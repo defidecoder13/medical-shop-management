@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
-import GlobalMedicine from "@/src/models/GlobalMedicine";
 
 export const runtime = "nodejs";
 
@@ -77,14 +76,9 @@ export async function POST(req: Request) {
             return;
         }
 
-        // Try to fetch compositions from GlobalMedicine dataset
-        await connectDB();
+        // Removed GlobalMedicine composition lookup
         for (let i = 0; i < items.length; i++) {
-            const rawName = items[i]["Medicine Name"];
-            // Extract first word for faster lookup
-            const firstWord = rawName.split(' ')[0];
-            const match = await GlobalMedicine.findOne({ name: { $regex: new RegExp(`^${firstWord}`, 'i') } }).lean();
-            (items[i] as any)["Composition"] = match && match.composition ? match.composition : "";
+            (items[i] as any)["Composition"] = "";
         }
 
         const headers = ["Medicine Name", "Pack", "Batch Number", "Expiry Date", "Billed Qty", "MRP", "Buying Price", "Composition"];
