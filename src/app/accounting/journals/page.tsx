@@ -13,8 +13,7 @@ export default function JournalEntriesPage() {
 
   useEffect(() => {
     setLoading(true);
-    apiClient.get(`/api/accounting/journals?page=${page}&limit=20`)
-      .then((res: any) => {
+    const handleData = (res: any) => {
         if (res?.data && Array.isArray(res.data)) {
           setJournals(res.data);
           setTotalPages(res.pagination?.totalPages || 1);
@@ -24,9 +23,11 @@ export default function JournalEntriesPage() {
         } else {
           setJournals([]);
         }
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+        setLoading(false);
+    };
+    apiClient.get(`/api/accounting/journals?page=${page}&limit=20`, {}, handleData)
+      .then(handleData)
+      .catch(console.error);
   }, [page]);
 
   const totalValue = journals.reduce((sum, j) => {

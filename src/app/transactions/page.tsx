@@ -100,8 +100,7 @@ export default function TransactionsPage() {
   useEffect(() => {
     setLoading(true);
     const delayDebounceFn = setTimeout(() => {
-      apiClient.get(`/api/transactions?range=${dateFilter}&page=${page}&search=${searchQuery}&paymentMethod=${paymentMethod}&status=${status}`)
-        .then((response: any) => {
+      const handleData = (response: any) => {
           if (response?.data && Array.isArray(response.data)) {
             setTransactions(response.data);
             setTotalPages(response.pagination?.totalPages || 1);
@@ -113,7 +112,10 @@ export default function TransactionsPage() {
             setTransactions([]);
           }
           setLoading(false);
-        })
+      };
+
+      apiClient.get(`/api/transactions?range=${dateFilter}&page=${page}&search=${searchQuery}&paymentMethod=${paymentMethod}&status=${status}`, {}, handleData)
+        .then(handleData)
         .catch((error) => {
           console.error("Failed to fetch transactions:", error);
           setTransactions([]);

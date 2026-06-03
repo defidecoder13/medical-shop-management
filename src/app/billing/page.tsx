@@ -202,8 +202,9 @@ function BillingContent() {
       setMedicines([]);
       return;
     }
-    apiClient.get(`/api/inventory?q=${debouncedSearch}&inStock=true`)
-      .then(setMedicines)
+    const handleMeds = (res: any) => setMedicines(res);
+    apiClient.get(`/api/inventory?q=${debouncedSearch}&inStock=true`, {}, handleMeds)
+      .then(handleMeds)
       .catch((err) => console.error(err));
   }, [debouncedSearch]);
 
@@ -215,20 +216,22 @@ function BillingContent() {
     }
     const fetchPatient = async () => {
       try {
-        const patients = await apiClient.get(`/api/patients?search=${debouncedPhone}`);
-        if (patients && patients.length > 0) {
-           const p = patients[0];
-           if (p.phone === debouncedPhone) {
-              if (!patientName) setPatientName(p.name || "");
-              if (!doctorName) setDoctorName(p.doctorName || "");
-              if (!patientAddress) setPatientAddress(p.address || "");
-              if (p.regularMedicines?.length > 0) {
-                 setRegularMedicines(p.regularMedicines);
-              }
-           }
-        } else {
-           setRegularMedicines([]);
-        }
+        const handlePatient = (patients: any) => {
+          if (patients && patients.length > 0) {
+             const p = patients[0];
+             if (p.phone === debouncedPhone) {
+                if (!patientName) setPatientName(p.name || "");
+                if (!doctorName) setDoctorName(p.doctorName || "");
+                if (!patientAddress) setPatientAddress(p.address || "");
+                if (p.regularMedicines?.length > 0) {
+                   setRegularMedicines(p.regularMedicines);
+                }
+             }
+          } else {
+             setRegularMedicines([]);
+          }
+        };
+        await apiClient.get(`/api/patients?search=${debouncedPhone}`, {}, handlePatient).then(handlePatient);
       } catch (err) {
         console.error("Failed to fetch patient details", err);
       }
@@ -239,12 +242,13 @@ function BillingContent() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const settings = await apiClient.get('/api/settings');
-        if (settings) {
-          // Logic: Default Enabled if settings say so, but user can toggle later.
-          setGstEnabled(settings.gstEnabled || false);
-          setGstPercent(settings.defaultGstPercent || 0);
-        }
+        const handleSettings = (settings: any) => {
+          if (settings) {
+            setGstEnabled(settings.gstEnabled || false);
+            setGstPercent(settings.defaultGstPercent || 0);
+          }
+        };
+        await apiClient.get('/api/settings', {}, handleSettings).then(handleSettings);
       } catch {
         setGstEnabled(false);
       }

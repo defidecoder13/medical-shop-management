@@ -9,10 +9,13 @@ export default function TrialBalancePage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    apiClient.get("/api/accounting/ledgers")
-      .then(setAccounts)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+    const handleData = (accounts: any) => {
+      setAccounts(accounts);
+      setLoading(false);
+    };
+    apiClient.get("/api/accounting/ledgers", {}, handleData)
+      .then(handleData)
+      .catch(console.error);
   }, []);
 
   let totalDebit = 0;

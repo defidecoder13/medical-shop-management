@@ -70,15 +70,17 @@ export default function ExpiryPage() {
   useEffect(() => {
     const fetchExpiryData = async () => {
       try {
-        const data = await apiClient.get('/api/inventory?limit=5000');
-        if (data) {
-          const items = data?.data ? data.data : (Array.isArray(data) ? data : []);
-          const validItems = items.filter((m: any) => m.expiryDate);
-          setMedicines(validItems);
-        }
+        const handleData = (data: any) => {
+          if (data) {
+            const items = data?.data ? data.data : (Array.isArray(data) ? data : []);
+            const validItems = items.filter((m: any) => m.expiryDate);
+            setMedicines(validItems);
+          }
+          setLoading(false);
+        };
+        await apiClient.get('/api/inventory?limit=5000', {}, handleData).then(handleData);
       } catch (error) {
         console.error('Error fetching expiry data:', error);
-      } finally {
         setLoading(false);
       }
     };

@@ -20,8 +20,7 @@ export default function ChartOfAccountsPage() {
   useEffect(() => {
     setLoading(true);
     const delayDebounceFn = setTimeout(() => {
-      apiClient.get(`/api/accounting/ledgers?page=${page}&limit=20&search=${search}`)
-        .then((res: any) => {
+      const handleData = (res: any) => {
           if (res?.data && Array.isArray(res.data)) {
             setAccounts(res.data);
             setTotalPages(res.pagination?.totalPages || 1);
@@ -31,9 +30,11 @@ export default function ChartOfAccountsPage() {
           } else {
             setAccounts([]);
           }
-        })
-        .catch(console.error)
-        .finally(() => setLoading(false));
+          setLoading(false);
+      };
+      apiClient.get(`/api/accounting/ledgers?page=${page}&limit=20&search=${search}`, {}, handleData)
+        .then(handleData)
+        .catch(console.error);
     }, 300);
 
     return () => clearTimeout(delayDebounceFn);

@@ -59,16 +59,18 @@ export default function SuppliersPage() {
 
   const fetchSuppliers = async () => {
     try {
-      const res = await apiClient.get(`/api/suppliers?search=${search}&page=${page}&limit=20`);
-      if (res?.data && Array.isArray(res.data)) {
-        setSuppliers(res.data);
-        setTotalPages(res.pagination?.totalPages || 1);
-      } else if (Array.isArray(res)) {
-        setSuppliers(res);
-        setTotalPages(1);
-      } else {
-        setSuppliers([]);
-      }
+      const handleData = (res: any) => {
+        if (res?.data && Array.isArray(res.data)) {
+          setSuppliers(res.data);
+          setTotalPages(res.pagination?.totalPages || 1);
+        } else if (Array.isArray(res)) {
+          setSuppliers(res);
+          setTotalPages(1);
+        } else {
+          setSuppliers([]);
+        }
+      };
+      await apiClient.get(`/api/suppliers?search=${search}&page=${page}&limit=20`, {}, handleData).then(handleData);
     } catch (error) {
       console.error("Failed to fetch suppliers", error);
     } finally {

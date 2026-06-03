@@ -22,8 +22,7 @@ export default function PurchaseHistoryPage() {
   useEffect(() => {
     setLoading(true);
     const timeoutId = setTimeout(() => {
-      apiClient.get(`/api/purchases/history?page=${page}&limit=20&search=${searchQuery}`)
-        .then((res: any) => {
+      const handleData = (res: any) => {
           if (res?.data && Array.isArray(res.data)) {
             setInvoices(res.data);
             setTotalPages(res.pagination?.totalPages || 1);
@@ -33,7 +32,9 @@ export default function PurchaseHistoryPage() {
           } else {
             setInvoices([]);
           }
-        })
+      };
+      apiClient.get(`/api/purchases/history?page=${page}&limit=20&search=${searchQuery}`, {}, handleData)
+        .then(handleData)
         .catch(console.error)
         .finally(() => setLoading(false));
     }, 300);

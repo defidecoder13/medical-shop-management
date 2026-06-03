@@ -53,15 +53,16 @@ export default function LowStockPage() {
   useEffect(() => {
     const fetchLowStockData = async () => {
       try {
-        const data = await apiClient.get('/api/inventory');
-        if (data && Array.isArray(data)) {
-          // Filter for medicines with stock <= 10 (low stock threshold)
-          const lowStockItems = data.filter((med: Medicine) => med.stock <= 10);
-          setLowStockMedicines(lowStockItems);
-        }
+        const handleData = (data: any) => {
+          if (data && Array.isArray(data)) {
+            const lowStockItems = data.filter((med: Medicine) => med.stock <= 10);
+            setLowStockMedicines(lowStockItems);
+          }
+          setLoading(false);
+        };
+        await apiClient.get('/api/inventory', {}, handleData).then(handleData);
       } catch (error) {
         console.error('Error fetching low stock data:', error);
-      } finally {
         setLoading(false);
       }
     };

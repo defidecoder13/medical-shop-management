@@ -36,17 +36,18 @@ export default function PatientsPage() {
 
     const fetchPatients = async () => {
         try {
-            const res = await apiClient.get(`/api/patients?search=${search}&page=${page}&limit=20`);
-            
-            if (res?.data && Array.isArray(res.data)) {
-                setPatients(res.data);
-                setTotalPages(res.pagination?.totalPages || 1);
-            } else if (Array.isArray(res)) {
-                setPatients(res);
-                setTotalPages(1);
-            } else {
-                setPatients([]);
-            }
+            const handleData = (res: any) => {
+                if (res?.data && Array.isArray(res.data)) {
+                    setPatients(res.data);
+                    setTotalPages(res.pagination?.totalPages || 1);
+                } else if (Array.isArray(res)) {
+                    setPatients(res);
+                    setTotalPages(1);
+                } else {
+                    setPatients([]);
+                }
+            };
+            await apiClient.get(`/api/patients?search=${search}&page=${page}&limit=20`, {}, handleData).then(handleData);
         } catch (error) {
             console.error("Failed to fetch patients", error);
         } finally {

@@ -53,11 +53,12 @@ export default function MedicineListPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
-    apiClient.get("/api/inventory")
-      .then((data) => {
-        setMedicines(data);
-        setLoading(false);
-      })
+    const handleData = (data: any) => {
+      setMedicines(data);
+      setLoading(false);
+    };
+    apiClient.get("/api/inventory", {}, handleData)
+      .then(handleData)
       .catch(() => setLoading(false));
   }, []);
 

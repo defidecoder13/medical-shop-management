@@ -59,8 +59,7 @@ export default function SupplierReturnsPage() {
   useEffect(() => {
     setLoading(true);
     const timeoutId = setTimeout(() => {
-      apiClient.get(`/api/supplier-returns?range=${dateFilter}&page=${page}&limit=20&search=${searchQuery}`)
-        .then((res: any) => {
+      const handleData = (res: any) => {
           if (res?.data && Array.isArray(res.data)) {
             setReturns(res.data);
             setTotalPages(res.pagination?.totalPages || 1);
@@ -71,7 +70,9 @@ export default function SupplierReturnsPage() {
             setReturns([]);
           }
           setLoading(false);
-        })
+      };
+      apiClient.get(`/api/supplier-returns?range=${dateFilter}&page=${page}&limit=20&search=${searchQuery}`, {}, handleData)
+        .then(handleData)
         .catch((error) => {
           console.error("Failed to fetch supplier returns:", error);
           setReturns([]);
