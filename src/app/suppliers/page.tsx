@@ -174,6 +174,9 @@ export default function SuppliersPage() {
     setTimeout(() => setMessage(null), 4000);
   };
 
+  const totalOutstanding = suppliers.reduce((sum, s) => sum + (s.outstandingBalance || 0), 0);
+  const suppliersWithDue = suppliers.filter(s => (s.outstandingBalance || 0) > 0).length;
+
   return (
     <div className="space-y-8 pb-10 max-w-[1400px] mx-auto">
       {/* Header Area */}
@@ -207,6 +210,39 @@ export default function SuppliersPage() {
             <Plus size={18} strokeWidth={3} />
             Register Supplier
           </button>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
+             <Building2 size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Distributors</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{suppliers.length} Active</h2>
+           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+             <IndianRupee size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Outstanding</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{totalOutstanding.toFixed(2)}</h2>
+           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+             <AlertCircle size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Accounts Payable</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{suppliersWithDue} Accounts</h2>
+           </div>
         </div>
       </div>
 

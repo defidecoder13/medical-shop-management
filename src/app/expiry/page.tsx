@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { format } from "date-fns";
+import { apiClient } from "@/src/lib/apiClient";
 
 interface Medicine {
   _id: string;
@@ -24,6 +25,11 @@ interface Medicine {
   batchNumber: string;
   expiryDate: string;
   stock: number;
+  category?: string;
+  supplierName?: string;
+  sellingPrice?: number;
+  pack?: string;
+  barcode?: string;
 }
 
 export default function ExpiryPage() {
@@ -32,8 +38,8 @@ export default function ExpiryPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) router.push('/login');
+        const res = await apiClient.get('/api/auth/check');
+        if (!res) router.push('/login');
       } catch {
         router.push('/login');
       }
@@ -53,21 +59,22 @@ export default function ExpiryPage() {
   };
 
   const handleSelectAll = (batches: string[]) => {
-    if (selectedBatches.length === batches.length) {
-      setSelectedBatches([]); // deselect all
+    const allSelected = batches.length > 0 && batches.every(b => selectedBatches.includes(b));
+    if (allSelected) {
+      setSelectedBatches(prev => prev.filter(b => !batches.includes(b))); // deselect current tab's items
     } else {
-      setSelectedBatches(batches); // select all
+      setSelectedBatches(prev => Array.from(new Set([...prev, ...batches]))); // select all in current tab, preserving others
     }
   };
 
   useEffect(() => {
     const fetchExpiryData = async () => {
       try {
-        const response = await fetch('/api/inventory?limit=5000');
-        if (response.ok) {
-          const data = await response.json();
+        const data = await apiClient.get('/api/inventory?limit=5000');
+        if (data) {
           const items = data?.data ? data.data : (Array.isArray(data) ? data : []);
-          setMedicines(items);
+          const validItems = items.filter((m: any) => m.expiryDate);
+          setMedicines(validItems);
         }
       } catch (error) {
         console.error('Error fetching expiry data:', error);
@@ -83,6 +90,18 @@ export default function ExpiryPage() {
   thirtyDaysLater.setDate(today.getDate() + 30);
   const sixtyDaysLater = new Date();
   sixtyDaysLater.setDate(today.getDate() + 60);
+
+  const getCategoryStyles = (category?: string) => {
+    switch(category?.toLowerCase()) {
+      case "pain relief": return "bg-indigo-50 text-indigo-600 border border-indigo-100";
+      case "antibiotic": return "bg-emerald-50 text-emerald-600 border border-emerald-100";
+      case "antihistamine": return "bg-purple-50 text-purple-600 border border-purple-100";
+      case "wellness": return "bg-orange-50 text-orange-600 border border-orange-100";
+      case "supplements": return "bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100";
+      case "gastric care": return "bg-teal-50 text-teal-600 border border-teal-100";
+      default: return "bg-blue-50 text-blue-600 border border-blue-100";
+    }
+  };
 
   const expiredItems = medicines.filter(med => new Date(med.expiryDate) < today);
   const under30Items = medicines.filter(med => {
@@ -222,19 +241,22 @@ export default function ExpiryPage() {
           <table className="w-full text-left border-collapse">
             <thead className="bg-[#f8fafc] border-b border-gray-100">
               <tr>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] w-12 text-center">
+                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center w-12">
                    <div 
                       onClick={() => handleSelectAll(filteredItems.map(m => m.batchNumber))}
-                      className="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:border-[#11327c] transition-all bg-white"
+                      className="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:border-[#11327c] transition-all bg-white mx-auto"
                    >
-                     {selectedBatches.length > 0 && selectedBatches.length === filteredItems.length && <div className="w-2.5 h-2.5 bg-[#11327c] rounded-sm" />}
-                     {selectedBatches.length > 0 && selectedBatches.length < filteredItems.length && <div className="w-2.5 h-0.5 bg-[#11327c] rounded-sm" />}
+                     {filteredItems.length > 0 && filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-2.5 bg-[#11327c] rounded-sm" />}
+                     {filteredItems.length > 0 && !filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && filteredItems.some(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-0.5 bg-[#11327c] rounded-sm" />}
                    </div>
                 </th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Product Details</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Batch Ident.</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Expiry Timeline</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Physical Stock</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Medicine Name & Pack</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Category</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Company / Supplier</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Batch No.</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Expiry Date</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">MRP (₹)</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Physical Stock</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -243,7 +265,7 @@ export default function ExpiryPage() {
                   const isExpired = new Date(med.expiryDate) < today;
                   return (
                     <tr key={med._id} className={`transition-all group animate-in fade-in slide-in-from-bottom-1 duration-300 ${selectedBatches.includes(med.batchNumber) ? 'bg-blue-50/50' : 'hover:bg-[#f8fafc]/50'}`} style={{ animationDelay: `${idx * 20}ms` }}>
-                      <td className="px-8 py-6 text-center">
+                      <td className="px-5 py-4 text-center">
                          <div 
                             onClick={() => handleToggleBatch(med.batchNumber)}
                             className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all mx-auto ${selectedBatches.includes(med.batchNumber) ? 'border-[#11327c] bg-[#11327c]' : 'border-gray-300 bg-white hover:border-[#11327c]'}`}
@@ -251,39 +273,39 @@ export default function ExpiryPage() {
                            {selectedBatches.includes(med.batchNumber) && <CheckCircle2 size={14} className="text-white" strokeWidth={4} />}
                          </div>
                       </td>
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
-                            isExpired ? 'bg-rose-50 text-rose-500' : 'bg-[#f8fafc] text-[#11327c]'
-                          }`}>
-                            <Package size={20} strokeWidth={2} />
-                          </div>
-                          <div>
-                             <div className="text-[13px] font-black text-[#11327c] uppercase tracking-tight">{med.name}</div>
-                             <div className="text-[10px] text-gray-400 font-bold uppercase tracking-widest mt-1">{med.brand || "Generics"}</div>
-                          </div>
-                        </div>
+                      <td className="px-4 py-4">
+                         <div className="text-[13px] font-black text-[#11327c] uppercase tracking-tight mb-0.5 line-clamp-1">{med.name}</div>
+                         <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{med.pack || 'Unit'} • {med.barcode || 'NO BARCODE'}</div>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="px-4 py-4">
+                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${getCategoryStyles(med.category || 'Tablet')}`}>
+                           {med.category || 'Tablet'}
+                         </span>
+                      </td>
+                      <td className="px-4 py-4">
+                         <div className="text-[13px] font-bold text-gray-800 line-clamp-1">{med.brand || "Generics"}</div>
+                         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 line-clamp-1">{med.supplierName || "Direct"}</div>
+                      </td>
+                      <td className="px-4 py-4">
+                         <span className="text-[12px] font-black text-gray-600 font-mono tracking-wider bg-gray-50 px-2 py-1 rounded border border-gray-100">
+                           {med.batchNumber}
+                         </span>
+                      </td>
+                      <td className="px-4 py-4">
                          <div className="flex items-center gap-2">
-                           <Hash size={14} className="text-gray-300" strokeWidth={3} />
-                           <span className="text-[11px] font-black text-gray-500 font-mono tracking-wider">
-                             {med.batchNumber}
-                           </span>
-                         </div>
-                      </td>
-                      <td className="px-8 py-6">
-                         <div className="flex items-center gap-3">
-                           <div className={`w-2 h-2 rounded-full ${isExpired ? 'bg-rose-500 animate-pulse' : 'bg-orange-500'}`} />
+                           <div className={`w-2 h-2 rounded-full ${isExpired ? 'bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-orange-500'}`} />
                            <span className={`text-[13px] font-black tracking-tight ${isExpired ? 'text-rose-600' : 'text-gray-700'}`}>
                              {format(new Date(med.expiryDate), "dd MMM, yyyy")}
                            </span>
                          </div>
                       </td>
-                      <td className="px-8 py-6 text-right">
-                         <div className="flex flex-col items-end">
-                           <span className="text-lg font-black text-[#11327c] tracking-tighter">{med.stock} Units</span>
-                           <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest">In Stock</span>
+                      <td className="px-4 py-4 text-right">
+                         <div className="text-[13px] font-bold text-gray-800">{Number(med.sellingPrice || 0).toFixed(2)}</div>
+                      </td>
+                      <td className="px-4 py-4 text-center">
+                         <div className="inline-flex flex-col items-center justify-center bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-xl">
+                           <span className="text-[14px] font-black text-[#11327c] tracking-tighter leading-none">{med.stock}</span>
+                           <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1">Units</span>
                          </div>
                       </td>
                     </tr>
@@ -291,7 +313,7 @@ export default function ExpiryPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={5} className="px-8 py-32 text-center">
+                  <td colSpan={8} className="px-8 py-32 text-center">
                      <div className="flex flex-col items-center gap-4 opacity-20">
                         <CheckCircle2 size={56} strokeWidth={1} className="text-emerald-500" />
                         <div className="space-y-1">

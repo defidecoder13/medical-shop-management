@@ -23,6 +23,16 @@ export async function GET(request: Request) {
         const totalSales = saleBills.reduce((sum, bill) => sum + (bill.grandTotal || 0), 0);
         const totalOrders = saleBills.length;
         const lowStockItems = batches.filter(b => (b.stock || 0) <= 10).length;
+        
+        // Calculate unique customers (based on non-empty patient names or phone numbers)
+        const uniqueCustomers = new Set();
+        saleBills.forEach(bill => {
+            if (bill.patientName && bill.patientName.trim().length > 0) {
+                uniqueCustomers.add(bill.patientName.trim().toLowerCase());
+            } else if (bill.patientPhone && bill.patientPhone.trim().length > 0) {
+                uniqueCustomers.add(bill.patientPhone.trim());
+            }
+        });
 
         // Check expiry
         const today = new Date();
@@ -117,8 +127,9 @@ export async function GET(request: Request) {
 
         return NextResponse.json({
             stats: {
-                sales: `₹${totalSales.toLocaleString()}`,
+                sales: `₹${totalSales.toFixed(2)}`,
                 orders: totalOrders,
+                customers: uniqueCustomers.size,
                 lowStock: lowStockItems,
                 expiring: expiring
             },

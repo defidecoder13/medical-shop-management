@@ -29,8 +29,13 @@ export default function JournalEntriesPage() {
       .finally(() => setLoading(false));
   }, [page]);
 
+  const totalValue = journals.reduce((sum, j) => {
+    const debitSum = j.entries?.filter((e: any) => e.type === 'Debit').reduce((s: number, e: any) => s + (e.amount || 0), 0) || 0;
+    return sum + debitSum;
+  }, 0);
+
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-6">
+    <div className="space-y-8 pb-10 max-w-[1400px] mx-auto animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-[#11327c] flex items-center gap-2">
@@ -40,7 +45,40 @@ export default function JournalEntriesPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
+             <ScrollText size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Transactions</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{journals.length} Records</h2>
+           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+             <CheckCircle2 size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Balanced Entries</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{journals.length} Verified</h2>
+           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+             <ArrowRightLeft size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Audited Value</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] overflow-hidden">
         {loading ? (
           <div className="p-10 text-center text-gray-500 font-bold">Loading Ledger...</div>
         ) : journals.length === 0 ? (

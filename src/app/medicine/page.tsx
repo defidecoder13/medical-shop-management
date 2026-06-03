@@ -37,8 +37,8 @@ export default function MedicineListPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) {
+        const res = await apiClient.get('/api/auth/check');
+        if (!res) {
           router.push('/login');
         }
       } catch (error) {

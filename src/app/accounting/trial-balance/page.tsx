@@ -41,7 +41,7 @@ export default function TrialBalancePage() {
   const isBalanced = Math.abs(totalDebit - totalCredit) < 0.01;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-8 flex flex-col h-[calc(100vh-2rem)]">
+    <div className="space-y-8 pb-10 max-w-[1400px] mx-auto animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 shrink-0">
         <div>
           <h1 className="text-2xl font-extrabold text-[#11327c] flex items-center gap-2 tracking-tight">
@@ -66,9 +66,44 @@ export default function TrialBalancePage() {
         )}
       </div>
 
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] flex-1 flex flex-col overflow-hidden">
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
+             <Scale size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Debit Volume</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{totalDebit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
+             <Scale size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Credit Volume</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{totalCredit.toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${isBalanced ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}`}>
+             {isBalanced ? <CheckCircle2 size={28} strokeWidth={2.5} /> : <AlertCircle size={28} strokeWidth={2.5} />}
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Discrepancy</p>
+             <h2 className={`text-2xl font-black tracking-tighter ${isBalanced ? 'text-[#11327c]' : 'text-rose-500'}`}>
+                ₹{Math.abs(totalDebit - totalCredit).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+             </h2>
+           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] flex-1 flex flex-col overflow-hidden">
         {loading ? (
-          <div className="flex-1 flex justify-center items-center">
+          <div className="flex-1 flex justify-center items-center p-20">
             <div className="w-10 h-10 border-4 border-[#0047ab] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
@@ -114,27 +149,6 @@ export default function TrialBalancePage() {
                   ))}
                 </tbody>
               </table>
-            </div>
-
-            <div className={`px-8 py-6 border-t flex justify-between items-center shrink-0 ${isBalanced ? 'bg-gray-50 border-gray-200' : 'bg-rose-50 border-rose-200'}`}>
-               <div className="flex items-center gap-3">
-                  <Scale className={isBalanced ? "text-gray-400" : "text-rose-500"} size={24} />
-                  <span className={`text-[14px] font-black uppercase tracking-widest ${isBalanced ? 'text-gray-600' : 'text-rose-700'}`}>
-                     Grand Totals
-                  </span>
-               </div>
-               <div className="flex gap-16 pr-8">
-                  <div className="text-right w-32">
-                     <p className={`text-xl font-black ${isBalanced ? 'text-gray-900' : 'text-rose-600'}`}>
-                        ₹{totalDebit.toFixed(2)}
-                     </p>
-                  </div>
-                  <div className="text-right w-32">
-                     <p className={`text-xl font-black ${isBalanced ? 'text-gray-900' : 'text-rose-600'}`}>
-                        ₹{totalCredit.toFixed(2)}
-                     </p>
-                  </div>
-               </div>
             </div>
           </>
         )}

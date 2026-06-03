@@ -34,6 +34,7 @@ type Medicine = {
   composition?: string;
   supplierName?: string;
   purchaseInvoiceNumber?: string;
+  sellingPricePerStrip?: number;
 };
 
 type CartItem = {
@@ -119,9 +120,8 @@ function ReturnContent() {
 
           for (const batchNum of batchesArray) {
              // We can use the bulk API or standard search
-             const res = await fetch(`/api/inventory?q=${batchNum}`);
-             if (res.ok) {
-                const results = await res.json();
+             const results = await apiClient.get(`/api/inventory?q=${batchNum}`);
+             if (results) {
                 const exactMatch = results.find((r: any) => r.batchNumber === batchNum);
                 
                 if (exactMatch) {
@@ -390,7 +390,7 @@ function ReturnContent() {
                             <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">Rack: {med.rackNumber || 'N/A'}</span>
                             <span className={med.stock < 10 ? 'text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded' : 'text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded'}>Stock: {med.stock}</span>
                             <span className="bg-indigo-50 px-1.5 py-0.5 rounded text-indigo-600">Batch: {med.batchNumber || 'N/A'}</span>
-                            <span className="bg-amber-50 px-1.5 py-0.5 rounded text-amber-700">MRP: ₹{(med.sellingPricePerStrip || med.sellingPrice || 0).toFixed(2)}</span>
+                            <span className="bg-amber-50 px-1.5 py-0.5 rounded text-amber-700">MRP: ₹{(med.sellingPricePerStrip || 0).toFixed(2)}</span>
                           </div>
                           <div className="mt-1">
                             <span>SUPPLIER: <span className="text-indigo-600 font-black">{med.supplierName || 'Direct Purchase'}</span>{med.purchaseInvoiceNumber ? ` (INV: ${med.purchaseInvoiceNumber})` : ''}</span>

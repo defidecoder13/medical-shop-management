@@ -83,6 +83,10 @@ export async function POST(req: Request) {
       requestedBatch.stock = requestedBatch.totalTabletsInStock / masterMedicine.tabletsPerStrip;
       await requestedBatch.save({ session });
 
+      // Sync the master Medicine record
+      masterMedicine.stock -= (tabletsRequested / masterMedicine.tabletsPerStrip);
+      await masterMedicine.save({ session });
+
       // Calculate cost
       const unitCostPerTablet = requestedBatch.buyingPricePerStrip / masterMedicine.tabletsPerStrip;
       const totalCostAccumulated = tabletsRequested * unitCostPerTablet;

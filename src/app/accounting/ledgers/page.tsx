@@ -59,8 +59,11 @@ export default function ChartOfAccountsPage() {
     }
   };
 
+  const totalAssets = accounts.filter(a => a.type === 'Asset').reduce((sum, a) => sum + (a.balance || 0), 0);
+  const totalLiabilities = accounts.filter(a => a.type === 'Liability').reduce((sum, a) => sum + (a.balance || 0), 0);
+
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
+    <div className="space-y-8 pb-10 max-w-[1400px] mx-auto animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-extrabold text-[#11327c] flex items-center gap-2 tracking-tight">
@@ -79,25 +82,58 @@ export default function ChartOfAccountsPage() {
         </button>
       </div>
 
-        <div className="flex bg-white border border-gray-200 rounded-2xl shadow-sm mb-6 max-w-sm">
-          <div className="pl-4 flex items-center justify-center">
-            <Search className="text-gray-400" size={18} />
-          </div>
-          <input
-            type="text"
-            placeholder="Search accounts..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-3 pr-4 py-2.5 bg-transparent text-sm font-bold focus:outline-none"
-          />
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
+             <Landmark size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Active Accounts</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{accounts.length} Buckets</h2>
+           </div>
         </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+             <Landmark size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Net Assets</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{Math.abs(totalAssets).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+             <Landmark size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Liabilities</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{Math.abs(totalLiabilities).toLocaleString(undefined, { minimumFractionDigits: 2 })}</h2>
+           </div>
+        </div>
+      </div>
+
+      <div className="flex bg-white border border-gray-200 rounded-2xl shadow-sm max-w-sm">
+        <div className="pl-4 flex items-center justify-center">
+          <Search className="text-gray-400" size={18} />
+        </div>
+        <input
+          type="text"
+          placeholder="Search accounts..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full pl-3 pr-4 py-3 bg-transparent text-sm font-bold focus:outline-none"
+        />
+      </div>
 
       {loading ? (
         <div className="flex justify-center p-20">
           <div className="w-10 h-10 border-4 border-[#0047ab] border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-white rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] overflow-hidden flex flex-col">
+        <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] overflow-hidden flex flex-col">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b border-gray-100">

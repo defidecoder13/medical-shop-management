@@ -42,7 +42,6 @@ const navigationGroups = [
     group: "INVENTORY",
     routes: [
       { label: "Stock Items", icon: Package, href: "/inventory" },
-      { label: "Shortage Engine", icon: AlertTriangle, href: "/inventory/shortage" },
       { label: "Expiry Tracker", icon: CalendarClock, href: "/expiry" },
     ]
   },

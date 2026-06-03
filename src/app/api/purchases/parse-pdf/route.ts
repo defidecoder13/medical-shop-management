@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { connectDB } from "@/src/lib/db";
+import GlobalMedicine from "@/src/models/GlobalMedicine";
 
 export const runtime = "nodejs";
 
@@ -16,13 +18,13 @@ export async function POST(req: Request) {
         const PDFParser = require("pdf2json");
         const pdfParser = new PDFParser(null, 1); // 1 = extract raw text
         
-        return new Promise((resolve) => {
+        return new Promise<Response>((resolve) => {
             pdfParser.on("pdfParser_dataError", (errData: any) => {
                 console.error("PDF Parsing Error:", errData.parserError);
                 resolve(NextResponse.json({ error: "Failed to parse PDF" }, { status: 500 }));
             });
             
-            pdfParser.on("pdfParser_dataReady", () => {
+            pdfParser.on("pdfParser_dataReady", async () => {
                 const text = pdfParser.getRawTextContent();
                 const lines = text.split('\n');
                 const items = [];
@@ -33,7 +35,7 @@ export async function POST(req: Request) {
             if (!dateMatch) continue;
             
             const parts = line.trim().split(/\s+/);
-            const dateIndex = parts.findIndex(p => p.includes(dateMatch[1]));
+            const dateIndex = parts.findIndex((p: string) => p.includes(dateMatch[1]));
             if (dateIndex < 3) continue;
 
             const batch = parts[dateIndex - 1];
@@ -75,7 +77,17 @@ export async function POST(req: Request) {
             return;
         }
 
-        const headers = ["Medicine Name", "Pack", "Batch Number", "Expiry Date", "Billed Qty", "MRP", "Buying Price"];
+        // Try to fetch compositions from GlobalMedicine dataset
+        await connectDB();
+        for (let i = 0; i < items.length; i++) {
+            const rawName = items[i]["Medicine Name"];
+            // Extract first word for faster lookup
+            const firstWord = rawName.split(' ')[0];
+            const match = await GlobalMedicine.findOne({ name: { $regex: new RegExp(`^${firstWord}`, 'i') } }).lean();
+            (items[i] as any)["Composition"] = match && match.composition ? match.composition : "";
+        }
+
+        const headers = ["Medicine Name", "Pack", "Batch Number", "Expiry Date", "Billed Qty", "MRP", "Buying Price", "Composition"];
         
         resolve(NextResponse.json({
             headers,

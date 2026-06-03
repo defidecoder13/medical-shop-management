@@ -82,6 +82,7 @@ export default function ImportPurchasePage() {
               buyingPrice: "Buying Price",
               pack: "Pack",
               rackNumber: "Rack No",
+              composition: "Composition",
            }));
 
            setError(null);
@@ -188,15 +189,7 @@ export default function ImportPurchasePage() {
             paymentMethod: "Credit"
         };
 
-        const res = await fetch("/api/purchases", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
-        });
-        
-        const data = await res.json();
-        
-        if (!res.ok) throw new Error(data.error || "Failed to save purchase");
+        const res = await apiClient.post("/api/purchases", payload);
         
         router.push("/transactions");
     } catch (err: any) {
@@ -207,16 +200,29 @@ export default function ImportPurchasePage() {
   };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-8 pb-10 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-2xl font-extrabold text-[#11327c]">Auto-Purchase Import</h1>
-          <p className="text-gray-500 text-sm font-medium">Dynamically map and load supplier invoices</p>
+          <h1 className="text-[28px] font-black text-[#11327c] tracking-tight">Auto-Purchase Import</h1>
+          <p className="text-[13px] text-gray-500 font-medium">Dynamically map and load supplier invoices</p>
         </div>
-        <div className="flex items-center gap-2">
-            <span className={`h-2.5 w-8 rounded-full ${step >= 1 ? 'bg-[#0047ab]' : 'bg-gray-200'}`} />
-            <span className={`h-2.5 w-8 rounded-full ${step >= 2 ? 'bg-[#0047ab]' : 'bg-gray-200'}`} />
-            <span className={`h-2.5 w-8 rounded-full ${step >= 3 ? 'bg-[#0047ab]' : 'bg-gray-200'}`} />
+        
+        {/* Labeled Stepper */}
+        <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)]">
+           <div className={`flex items-center gap-2 ${step >= 1 ? 'opacity-100' : 'opacity-40 grayscale'}`}>
+             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black ${step === 1 ? 'bg-[#11327c] text-white shadow-md shadow-[#11327c]/30' : 'bg-[#11327c]/10 text-[#11327c]'}`}>1</div>
+             <span className="text-[11px] font-black uppercase tracking-widest text-[#11327c] hidden sm:block">Upload</span>
+           </div>
+           <div className="w-8 h-0.5 bg-gray-100" />
+           <div className={`flex items-center gap-2 ${step >= 2 ? 'opacity-100' : 'opacity-40 grayscale'}`}>
+             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black ${step === 2 ? 'bg-[#11327c] text-white shadow-md shadow-[#11327c]/30' : 'bg-[#11327c]/10 text-[#11327c]'}`}>2</div>
+             <span className="text-[11px] font-black uppercase tracking-widest text-[#11327c] hidden sm:block">Map Data</span>
+           </div>
+           <div className="w-8 h-0.5 bg-gray-100" />
+           <div className={`flex items-center gap-2 ${step >= 3 ? 'opacity-100' : 'opacity-40 grayscale'}`}>
+             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black ${step === 3 ? 'bg-[#11327c] text-white shadow-md shadow-[#11327c]/30' : 'bg-[#11327c]/10 text-[#11327c]'}`}>3</div>
+             <span className="text-[11px] font-black uppercase tracking-widest text-[#11327c] hidden sm:block">Finalize</span>
+           </div>
         </div>
       </div>
 
@@ -229,10 +235,18 @@ export default function ImportPurchasePage() {
 
       {/* STEP 1: UPLOAD */}
       {step === 1 && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm space-y-6">
-          <h2 className="text-lg font-bold text-gray-900 border-b border-gray-100 pb-3">1. Invoice Details & File</h2>
+        <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] space-y-8">
+          <div className="flex items-center gap-4 border-b border-gray-100 pb-5">
+             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center">
+               <UploadCloud size={24} strokeWidth={2.5} />
+             </div>
+             <div>
+                <h2 className="text-xl font-black text-[#11327c] tracking-tight">Invoice Details & File Upload</h2>
+                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Provide invoice meta data and upload the distributor invoice (PDF or Excel)</p>
+             </div>
+          </div>
           
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="space-y-1.5">
               <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Supplier</label>
               <select 

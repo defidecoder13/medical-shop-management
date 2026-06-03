@@ -8,7 +8,9 @@ import {
   FileSpreadsheet, 
   Search,
   CheckCircle2,
-  Plus
+  Plus,
+  IndianRupee,
+  Package
 } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
 
@@ -81,6 +83,9 @@ export default function SupplierReturnsPage() {
   }, [dateFilter, page, searchQuery]);
 
   const filteredReturns = returns;
+
+  const totalRefund = returns.reduce((sum, r) => sum + (r.totalRefundAmount || 0), 0);
+  const totalItems = returns.reduce((sum, r) => sum + (r.items?.length || 0), 0);
 
   const exportToExcel = async () => {
     if (filteredReturns.length === 0) return;
@@ -159,6 +164,39 @@ export default function SupplierReturnsPage() {
             <FileSpreadsheet size={18} strokeWidth={2.5} />
             Export Data
           </button>
+        </div>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
+             <FileSpreadsheet size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Returns</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{returns.length} Notes</h2>
+           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
+             <IndianRupee size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Refund Value</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{totalRefund.toFixed(2)}</h2>
+           </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+             <Package size={28} strokeWidth={2.5} />
+           </div>
+           <div>
+             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Items Returned</p>
+             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{totalItems} Batches</h2>
+           </div>
         </div>
       </div>
 

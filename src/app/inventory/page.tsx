@@ -19,7 +19,11 @@ import {
   Download,
   Package,
   Layers,
-  FileSpreadsheet
+  FileSpreadsheet,
+  TrendingUp,
+  AlertTriangle,
+  Clock,
+  LayoutGrid
 } from "lucide-react";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
@@ -131,6 +135,9 @@ export default function InventoryPage() {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 300);
+  const [filterCategory, setFilterCategory] = useState("All Categories");
+  const [filterCompany, setFilterCompany] = useState("All Companies");
+  const [filterStatus, setFilterStatus] = useState("All Status");
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showForm, setShowForm] = useState(false);
@@ -141,6 +148,19 @@ export default function InventoryPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [gstEnabled, setGstEnabled] = useState(false);
+  const [stats, setStats] = useState<{ totalItems: number, totalStockValue: number, lowStockItems: number, expiringSoon: number, outOfStock: number } | null>(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const data = await apiClient.get('/api/inventory/stats');
+        setStats(data);
+      } catch (e) {
+        console.error("Error fetching stats", e);
+      }
+    };
+    fetchStats();
+  }, []);
 
   const getLabels = (category: string) => {
     switch (category) {
@@ -232,8 +252,8 @@ export default function InventoryPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) router.push('/login');
+        const res = await apiClient.get('/api/auth/check');
+        if (!res) router.push('/login');
       } catch {
         router.push('/login');
       }
@@ -253,7 +273,15 @@ export default function InventoryPage() {
 
   const fetchMedicines = async () => {
     try {
-      const res = await apiClient.get(`/api/inventory?q=${debouncedSearch}&page=${page}&limit=20`);
+      const params = new URLSearchParams();
+      if (debouncedSearch) params.append("q", debouncedSearch);
+      params.append("page", page.toString());
+      params.append("limit", "20");
+      if (filterCategory !== "All Categories") params.append("category", filterCategory);
+      if (filterCompany !== "All Companies") params.append("company", filterCompany);
+      if (filterStatus !== "All Status") params.append("status", filterStatus);
+
+      const res = await apiClient.get(`/api/inventory?${params.toString()}`);
       
       const payload = res?.data ? res.data : (Array.isArray(res) ? res : []);
       if (res?.pagination) {
@@ -347,15 +375,7 @@ export default function InventoryPage() {
           purchaseInvoiceNumber: row["Invoice Number"] || ""
         }));
 
-        const res = await fetch("/api/inventory/bulk", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(formattedPayload)
-        });
-
-        const result = await res.json();
-        
-        if (!res.ok) throw new Error(result.error || "Failed to upload file");
+        const result = await apiClient.post("/api/inventory/bulk", formattedPayload);
 
         let msg = `Successfully added ${result.added || 0} and updated ${result.updated || 0} items.`;
         if (result.errors && result.errors.length > 0) {
@@ -377,11 +397,11 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchMedicines();
-  }, [debouncedSearch, page]);
+  }, [debouncedSearch, page, filterCategory, filterCompany, filterStatus]);
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch]);
+  }, [debouncedSearch, filterCategory, filterCompany, filterStatus]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -436,8 +456,6 @@ export default function InventoryPage() {
   const handleSuggestionSelect = (suggestion: any) => {
     setForm({
       ...form,
-      name: suggestion.name,
-      brand: suggestion.brand || "",
       composition: suggestion.composition || "",
     });
     setShowSuggestions(false);
@@ -563,14 +581,6 @@ export default function InventoryPage() {
   };
 
   const filteredMeds = medicines
-    .filter(m => {
-       const matchesSearch = m.name.toLowerCase().includes(search.toLowerCase()) || 
-                           m.brand?.toLowerCase().includes(search.toLowerCase()) ||
-                           m.batchNumber.toLowerCase().includes(search.toLowerCase()) ||
-                           m.composition?.toLowerCase().includes(search.toLowerCase());
-       
-       return matchesSearch;
-    })
     .sort((a, b) => {
        if (sortConfig.key === 'none') return 0;
        
@@ -594,34 +604,100 @@ export default function InventoryPage() {
           : String(bValue).localeCompare(String(aValue));
     });
 
+  const renderExpiry = (expiryDate: string) => {
+    if (!expiryDate) return { date: "-", text: "", color: "text-gray-500" };
+    const exp = new Date(expiryDate);
+    const now = new Date();
+    const diffMonths = (exp.getTime() - now.getTime()) / (1000 * 60 * 60 * 24 * 30.44);
+    const formattedDate = format(exp, "MMM yyyy");
+    
+    if (diffMonths <= 0) {
+      return { date: formattedDate, text: "(Expired)", color: "text-rose-600" };
+    } else if (diffMonths < 6) {
+      return { date: formattedDate, text: `(${Math.floor(diffMonths)} months left)`, color: "text-rose-500" };
+    } else if (diffMonths < 12) {
+      return { date: formattedDate, text: `(${Math.floor(diffMonths)} months left)`, color: "text-orange-500" };
+    } else {
+      const yrs = (diffMonths / 12).toFixed(1);
+      return { date: formattedDate, text: `(${yrs} yrs left)`, color: "text-emerald-500" };
+    }
+  };
+
+  const getCategoryStyles = (category: string) => {
+    switch(category?.toLowerCase()) {
+      case "pain relief": return "bg-indigo-50 text-indigo-600";
+      case "antibiotic": return "bg-emerald-50 text-emerald-600";
+      case "antihistamine": return "bg-purple-50 text-purple-600";
+      case "wellness": return "bg-orange-50 text-orange-600";
+      case "supplements": return "bg-fuchsia-50 text-fuchsia-600";
+      case "gastric care": return "bg-teal-50 text-teal-600";
+      default: return "bg-blue-50 text-blue-600";
+    }
+  };
+
+  const getStatus = (stock: number, minStock: number = 10) => {
+    if (stock <= 0) return { label: "Out of Stock", bg: "bg-rose-50 text-rose-600" };
+    if (stock <= minStock) return { label: "Low Stock", bg: "bg-orange-50 text-orange-600" };
+    return { label: "In Stock", bg: "bg-emerald-50 text-emerald-600" };
+  };
+
   return (
     <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
-      {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-[26px] font-bold text-[#11327c] tracking-tight">Inventory Management</h2>
-          <p className="text-[13px] text-gray-500 font-medium">Manage your medicine stock and pricing.</p>
+      {/* Stats Cards Row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-2">
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 bg-[#f0f4ff] rounded-xl flex items-center justify-center text-[#2563eb] shrink-0">
+             <Package size={26} strokeWidth={2} />
+           </div>
+           <div>
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Total Items</p>
+             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? stats.totalItems.toLocaleString() : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1">All medicines in stock</p>
+           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button 
-            onClick={() => router.push('/purchases/import')}
-            className="flex items-center gap-2 bg-indigo-50 text-indigo-700 border border-indigo-100 px-4 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-indigo-100 transition-all shadow-sm active:scale-95"
-          >
-            <FileSpreadsheet size={16} strokeWidth={2.5} />
-            Auto Purchase Import
-          </button>
 
-          <button 
-            onClick={() => {
-              setForm(emptyMedicine);
-              setEditingId(null);
-              setShowForm(!showForm);
-            }}
-            className="flex items-center gap-2 bg-[#11327c] text-white px-5 py-2.5 rounded-xl font-black text-[11px] uppercase tracking-wider hover:bg-[#1e4db7] transition-all shadow-lg shadow-[#11327c]/20 active:scale-95"
-          >
-            {showForm ? <X size={18} strokeWidth={3} /> : <Plus size={18} strokeWidth={3} />}
-            {showForm ? "Cancel" : "Add Medicine"}
-          </button>
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 bg-[#ecfdf5] rounded-xl flex items-center justify-center text-[#10b981] shrink-0">
+             <TrendingUp size={26} strokeWidth={2} />
+           </div>
+           <div>
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Total Stock Value</p>
+             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1">At purchase price</p>
+           </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 bg-[#fff7ed] rounded-xl flex items-center justify-center text-[#f97316] shrink-0">
+             <AlertTriangle size={26} strokeWidth={2} />
+           </div>
+           <div>
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Low Stock Items</p>
+             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? stats.lowStockItems : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1">Reorder soon</p>
+           </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 bg-[#fef2f2] rounded-xl flex items-center justify-center text-[#ef4444] shrink-0">
+             <Clock size={26} strokeWidth={2} />
+           </div>
+           <div>
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Expiring Soon</p>
+             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? stats.expiringSoon : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1">Within 30 days</p>
+           </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
+           <div className="w-14 h-14 bg-[#faf5ff] rounded-xl flex items-center justify-center text-[#a855f7] shrink-0">
+             <LayoutGrid size={26} strokeWidth={2} />
+           </div>
+           <div>
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Out of Stock</p>
+             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? stats.outOfStock : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1">Out of stock items</p>
+           </div>
         </div>
       </div>
 
@@ -923,11 +999,21 @@ export default function InventoryPage() {
               />
             </div>
 
-            <div className="flex items-end lg:col-span-4">
+            <div className="flex items-end lg:col-span-4 gap-3 mt-2">
+              <button 
+                onClick={() => {
+                  setShowForm(false);
+                  setEditingId(null);
+                  setForm(emptyMedicine);
+                }}
+                className="w-1/3 bg-gray-50 border border-gray-200 text-gray-500 hover:text-gray-700 font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-gray-100 transition-all shadow-sm"
+              >
+                CANCEL
+              </button>
               <button 
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-full bg-[#11327c] text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-[#1e4db7] transition-all disabled:opacity-50 shadow-lg shadow-[#11327c]/20"
+                className="w-2/3 bg-[#11327c] text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-[#1e4db7] transition-all disabled:opacity-50 shadow-lg shadow-[#11327c]/20"
               >
                 {loading ? "SAVING..." : "SAVE MEDICINE"}
               </button>
@@ -939,92 +1025,84 @@ export default function InventoryPage() {
       </AnimatePresence>
 
       {/* Filters Bar */}
-      <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col md:flex-row gap-4 w-full mb-6 mt-8 items-center">
+        <select 
+          value={filterCategory}
+          onChange={e => setFilterCategory(e.target.value)}
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 min-w-[150px] focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+        >
+           <option>All Categories</option>
+           <option>Tablet</option>
+           <option>Capsule</option>
+           <option>Syrup</option>
+           <option>Injection</option>
+           <option>Drops</option>
+           <option>Ointment</option>
+        </select>
+        <select 
+          value={filterCompany}
+          onChange={e => setFilterCompany(e.target.value)}
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 min-w-[150px] focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+        >
+           <option>All Companies</option>
+           {Array.from(new Set(medicines.map(m => m.brand).filter(Boolean))).map(brand => (
+             <option key={brand as string}>{brand}</option>
+           ))}
+        </select>
+        <select 
+          value={filterStatus}
+          onChange={e => setFilterStatus(e.target.value)}
+          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 min-w-[150px] focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+        >
+           <option>All Status</option>
+           <option>In Stock</option>
+           <option>Low Stock</option>
+           <option>Out of Stock</option>
+        </select>
         <div className="relative flex-1 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
           <input 
             type="text" 
-            placeholder="Search by name, brand, batch or composition..."
-            className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 placeholder:text-gray-400"
+            placeholder="Search medicine by name, barcode..."
+            className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 transition-all text-gray-800 placeholder:text-gray-400"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <div className="flex gap-2 relative">
-          <div className="relative">
-            <button 
-              onClick={() => setShowSort(!showSort)}
-              className={`flex items-center gap-2 px-5 py-3 border rounded-xl text-[11px] font-black uppercase tracking-widest transition-all ${
-                sortConfig.key !== 'none' 
-                ? 'bg-[#11327c] text-white border-[#11327c] shadow-lg shadow-[#11327c]/20' 
-                : 'bg-gray-50 border-gray-200 hover:bg-gray-100 text-gray-500'
-              }`}
-            >
-              <ArrowUpDown size={16} strokeWidth={2.5} />
-              Sort
-            </button>
 
-            <AnimatePresence>
-            {showSort && (
-              <motion.div 
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: 10 }}
-                className="absolute right-0 top-full mt-3 w-56 bg-white border border-gray-100 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] z-50 p-2 overflow-hidden"
-              >
-                {[
-                  { label: 'Name', key: 'name' },
-                  { label: 'Expiry Date', key: 'expiryDate' },
-                  { label: 'Qty', key: 'stock' },
-                  { label: 'Selling Price', key: 'sellingPrice' }
-                ].map((s) => (
-                  <button
-                    key={s.key}
-                    onClick={() => {
-                      setSortConfig({
-                        key: s.key as any,
-                        direction: sortConfig.key === s.key && sortConfig.direction === 'asc' ? 'desc' : 'asc'
-                      });
-                      setShowSort(false);
-                    }}
-                    className={`w-full text-left px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-[0.1em] flex items-center justify-between hover:bg-[#f8fafc] transition-all ${
-                      sortConfig.key === s.key ? 'text-[#11327c]' : 'text-gray-400'
-                    }`}
-                  >
-                    {s.label}
-                    {sortConfig.key === s.key && (
-                      <ArrowUpDown size={12} className={sortConfig.direction === 'desc' ? 'rotate-180' : ''} strokeWidth={3} />
-                    )}
-                  </button>
-                ))}
-                <div className="h-px bg-gray-50 my-1 mx-2" />
-                <button
-                  onClick={() => { setSortConfig({ key: 'none', direction: 'asc' }); setShowSort(false); }}
-                  className="w-full text-left px-4 py-3 rounded-xl text-[9px] font-black text-rose-500 uppercase tracking-widest hover:bg-rose-50 transition-all"
-                >
-                  Reset Sort
-                </button>
-              </motion.div>
-            )}
-            </AnimatePresence>
-          </div>
-        </div>
+        <button 
+           onClick={() => {
+              setForm(emptyMedicine);
+              setEditingId(null);
+              setShowForm(!showForm);
+           }}
+           className="flex items-center gap-2 bg-[#11327c] text-white px-5 py-2.5 rounded-xl text-[13px] font-bold shadow-md hover:bg-[#1e4db7] transition-all shrink-0"
+        >
+           <Plus size={18} strokeWidth={2} /> Add New Item
+        </button>
       </div>
 
       {/* Data Table Container */}
-      <div className="bg-white rounded-[32px] border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden">
         <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
           <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 bg-[#f8fafc] border-b border-gray-100 z-10">
+            <thead className="sticky top-0 bg-white border-b border-gray-100 z-10">
               <tr>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Medicine Details</th>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Rack</th>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Qty</th>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Pack</th>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Expiry</th>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">Cost</th>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">MRP</th>
-                <th className="px-7 py-5 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-center">Actions</th>
+                <th className="px-5 py-4 w-10">
+                   <div className="w-4 h-4 rounded border border-gray-300"></div>
+                </th>
+                <th className="px-2 py-4 text-[12px] font-bold text-gray-800">#</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Medicine Details</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Category</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Company</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Batch No.</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Expiry Date</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-right">MRP (₹)</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-center">Stock</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-right">Purchase (₹)</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-right">Sales Price (₹)</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-center">Status</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
@@ -1036,60 +1114,86 @@ export default function InventoryPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: Math.min(index * 0.03, 0.5) }}
-                  className="hover:bg-[#f8fafc]/80 transition-colors group"
+                  className="hover:bg-[#f8fafc]/80 transition-colors group border-b border-gray-50"
                 >
-                  <td className="px-7 py-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-indigo-50 rounded-xl flex items-center justify-center text-[#11327c] shadow-sm">
-                        <Package size={20} strokeWidth={2} />
-                      </div>
-                      <div>
-                        <div className="font-black text-[#11327c] uppercase text-[13px] tracking-tight mb-0.5">{med.name}</div>
-                        <div className="text-[10px] text-gray-400 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                          <span>{med.brand}</span>
-                          <span className="opacity-20">/</span>
-                          <span className="font-mono text-gray-500">#{med.batchNumber}</span>
-                          <span className="bg-orange-50 text-orange-600 px-1 rounded text-[8px] font-black">{med.category || "Tablet"}</span>
-                        </div>
-                      </div>
-                    </div>
+                  <td className="px-5 py-4">
+                     <div className="w-4 h-4 rounded border border-gray-300"></div>
                   </td>
-                  <td className="px-7 py-5">
-                    <span className="px-2 py-1 bg-gray-100 text-gray-600 rounded-lg text-[11px] font-black tracking-tight">
-                      {med.rackNumber || "-"}
+                  <td className="px-2 py-4 text-[13px] font-bold text-gray-800">{index + 1}</td>
+                  <td className="px-4 py-4">
+                     <div>
+                       <div className="font-bold text-[#2563eb] text-[13px] mb-0.5">{med.name}</div>
+                       <div className="text-[11px] text-gray-500 font-medium">
+                         {med.barcode || "8901234567890"}
+                       </div>
+                     </div>
+                  </td>
+                  <td className="px-4 py-4">
+                    <span className={`px-2 py-1 rounded text-[11px] font-semibold ${getCategoryStyles(med.category || "Tablet")}`}>
+                      {med.category || "Tablet"}
                     </span>
                   </td>
-                  <td className="px-7 py-5">
-                    <div className={`text-[14px] font-black tracking-tight ${Number(med.stock) < 10 ? 'text-rose-600' : 'text-[#11327c]'}`}>
-                      {med.stock}
-                    </div>
-                    {Number(med.stock) < 10 && (
-                      <div className="text-[9px] font-black text-rose-500 uppercase tracking-widest mt-0.5">Critical</div>
-                    )}
+                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800">
+                    {med.brand || "-"}
                   </td>
-                  <td className="px-7 py-5 text-[13px] font-bold text-gray-500">
-                    {med.pack || med.tabletsPerStrip || "-"}
+                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800">
+                    {med.batchNumber || "-"}
                   </td>
-                  <td className="px-7 py-5">
-                    <div className={`text-[13px] font-black tracking-tight ${new Date(med.expiryDate) < new Date() ? 'text-rose-600' : 'text-gray-600'}`}>
-                      {med.expiryDate ? format(new Date(med.expiryDate), "MMM yyyy") : "-"}
+                  <td className="px-4 py-4">
+                    <div className="text-[13px] font-medium text-gray-800">{renderExpiry(med.expiryDate).date}</div>
+                    <div className={`text-[11px] font-semibold mt-0.5 ${renderExpiry(med.expiryDate).color}`}>
+                      {renderExpiry(med.expiryDate).text}
                     </div>
                   </td>
-                  <td className="px-7 py-5 text-right text-[13px] font-bold text-gray-400">₹{Number(med.buyingPrice).toFixed(2)}</td>
-                  <td className="px-7 py-5 text-right text-[15px] font-black text-[#11327c] tracking-tight">₹{Number(med.sellingPrice).toFixed(2)}</td>
-                  <td className="px-7 py-5">
-                    <div className="flex items-center justify-center gap-1.5 opacity-40 group-hover:opacity-100 transition-opacity">
+                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800">
+                    {Number(med.sellingPrice).toFixed(2)}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <div className={`text-[13px] font-bold ${Number(med.stock) <= 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                      {
+                        Number(med.tabletsPerStrip) > 1 
+                        ? (() => {
+                            const tps = Number(med.tabletsPerStrip);
+                            const totalTabs = Math.round(Number(med.stock || 0) * tps);
+                            const strips = Math.floor(totalTabs / tps);
+                            const tabs = totalTabs % tps;
+                            if (strips > 0 && tabs > 0) return `${strips} S, ${tabs} T`;
+                            if (strips > 0) return `${strips} Strips`;
+                            if (tabs > 0) return `${tabs} Tabs`;
+                            return `0 Strips`;
+                          })()
+                        : `${Math.round(Number(med.stock || 0))} Units`
+                      }
+                    </div>
+                    <div className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">
+                      {med.pack || "Strip"}
+                    </div>
+                  </td>
+                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800">
+                    {Number(med.buyingPrice).toFixed(2)}
+                  </td>
+                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800">
+                    {Number(med.sellingPrice).toFixed(2)}
+                  </td>
+                  <td className="px-4 py-4 text-center">
+                    <span className={`px-2 py-1 rounded text-[11px] font-semibold ${getStatus(Number(med.stock)).bg}`}>
+                      {getStatus(Number(med.stock)).label}
+                    </span>
+                  </td>
+                  <td className="px-4 py-4">
+                    <div className="flex items-center justify-center gap-2">
                       <button 
                         onClick={() => handleEdit(med)}
-                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-[#11327c] hover:bg-[#11327c]/5 rounded-lg transition-all"
+                        className="w-7 h-7 flex items-center justify-center border border-gray-200 text-gray-500 rounded hover:text-[#11327c] hover:bg-gray-50 transition-all"
                       >
-                        <Edit3 size={16} strokeWidth={2.5} />
+                        <Edit3 size={14} />
                       </button>
                       <button 
-                        onClick={() => handleDelete(med._id!)}
-                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-all"
+                        onClick={() => med._id && handleDelete(med._id)}
+                        className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-all"
+                        title="Delete Medicine"
                       >
-                        <Trash2 size={16} strokeWidth={2.5} />
+                        <Trash2 size={16} />
                       </button>
                     </div>
                   </td>

@@ -288,11 +288,9 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
     return segment ? segment.charAt(0).toUpperCase() + segment.slice(1).replace("-", " ") : "Dashboard";
   };
 
-  const isDashboard = pathname === "/";
-
   return (
-    <div className="h-[88px] flex items-center justify-between px-4 md:px-8 bg-[#f8fafc] z-50 shrink-0 border-b border-gray-50">
-      <div className="flex items-center gap-3">
+    <div className="flex items-center justify-between lg:justify-end px-4 md:px-8 py-3 bg-[#f8fafc] z-50 shrink-0">
+      <div className="flex items-center gap-3 lg:hidden">
         {onMenuClick && (
           <button 
             onClick={onMenuClick}
@@ -301,16 +299,6 @@ export const Topbar = ({ onMenuClick }: TopbarProps) => {
             <Menu size={20} strokeWidth={2.5} />
           </button>
         )}
-        <div className="flex flex-col">
-          <h2 className="text-[20px] md:text-[26px] font-bold text-[#11327c] tracking-tight leading-tight">
-            {getPageTitle(pathname)}
-          </h2>
-          {isDashboard && (
-            <p className="text-[13px] text-gray-500 font-medium hidden md:block">
-              Welcome back, Admin! Here's what's happening in your pharmacy today.
-            </p>
-          )}
-        </div>
       </div>
 
       <div className="flex items-center gap-6">

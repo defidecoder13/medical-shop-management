@@ -142,6 +142,9 @@ export default function PatientsPage() {
         }
     };
 
+    const totalSpent = patients.reduce((sum, p) => sum + (p.totalSpent || 0), 0);
+    const chronicPatients = patients.filter(p => p.regularMedicines?.length > 0).length;
+
     return (
         <div className="space-y-8 pb-10 max-w-[1400px] mx-auto">
             {/* Header Area */}
@@ -157,6 +160,39 @@ export default function PatientsPage() {
                     <UserPlus size={18} strokeWidth={3} />
                     Register Patient
                 </button>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+                   <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
+                     <Users size={28} strokeWidth={2.5} />
+                   </div>
+                   <div>
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Patients</p>
+                     <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{patients.length} Enrolled</h2>
+                   </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+                   <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                     <CreditCard size={28} strokeWidth={2.5} />
+                   </div>
+                   <div>
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Lifetime Value</p>
+                     <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{totalSpent.toLocaleString()}</h2>
+                   </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
+                   <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+                     <Activity size={28} strokeWidth={2.5} />
+                   </div>
+                   <div>
+                     <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Chronic Care</p>
+                     <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{chronicPatients} Patients</h2>
+                   </div>
+                </div>
             </div>
 
             {/* Main Content Area */}

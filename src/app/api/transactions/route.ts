@@ -17,6 +17,8 @@ export async function GET(request: Request) {
     const endDate = searchParams.get("endDate");
     const range = searchParams.get("range");
     const limit = searchParams.get("limit");
+    const paymentMethod = searchParams.get("paymentMethod");
+    const status = searchParams.get("status");
 
     const filter: any = {};
     if (range && range !== "all") {
@@ -34,12 +36,56 @@ export async function GET(request: Request) {
 
     if (search) {
         filter.$or = [
-            { "items.name": { $regex: search, $options: "i" } }
+            { "items.name": { $regex: search, $options: "i" } },
+            { patientName: { $regex: search, $options: "i" } },
+            { patientPhone: { $regex: search, $options: "i" } },
+            { $expr: { $regexMatch: { input: { $toString: "$_id" }, regex: search, options: "i" } } },
+            { $expr: { $regexMatch: { input: { $toString: "$grandTotal" }, regex: search, options: "i" } } }
         ];
+    }
+
+    if (paymentMethod && paymentMethod !== "all") {
+        filter.paymentMethod = paymentMethod;
+    }
+
+    if (status && status !== "all") {
+        if (status === "completed") {
+            filter.isReturn = false;
+        } else if (status === "refunded") {
+            filter.isReturn = true;
+        }
     }
 
     const totalCount = await Bill.countDocuments(filter);
     const totalPages = Math.ceil(totalCount / pageSize);
+
+    const [summaryResult] = await Bill.aggregate([
+      { $match: filter },
+      { $group: {
+          _id: null,
+          totalSales: { $sum: { $cond: [{ $eq: ["$isReturn", false] }, "$grandTotal", 0] } },
+          totalSalesCount: { $sum: { $cond: [{ $eq: ["$isReturn", false] }, 1, 0] } },
+          totalRefunds: { $sum: { $cond: [{ $eq: ["$isReturn", true] }, "$grandTotal", 0] } },
+          totalRefundsCount: { $sum: { $cond: [{ $eq: ["$isReturn", true] }, 1, 0] } },
+          totalItemsSold: {
+            $sum: {
+              $cond: [
+                { $eq: ["$isReturn", false] },
+                { $sum: "$items.qty" },
+                0
+              ]
+            }
+          }
+      }}
+    ]);
+
+    const summary = summaryResult || {
+      totalSales: 0,
+      totalSalesCount: 0,
+      totalRefunds: 0,
+      totalRefundsCount: 0,
+      totalItemsSold: 0
+    };
 
     const query = Bill.find(filter).sort({ createdAt: -1 });
 
@@ -98,6 +144,7 @@ export async function GET(request: Request) {
     if (pageParam) {
       return NextResponse.json({
           data: billsWithProfit,
+          summary,
           pagination: {
               totalCount,
               totalPages,

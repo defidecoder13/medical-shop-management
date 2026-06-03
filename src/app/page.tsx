@@ -40,8 +40,8 @@ export default function Home() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) {
+        const res = await apiClient.get('/api/auth/check');
+        if (!res) {
           window.location.href = '/login';
         }
       } catch (error) {
@@ -132,34 +132,11 @@ export default function Home() {
         />
       </div>
 
-      {/* Row 2: Quick Actions & Today's Summary */}
+      {/* Row 2: Sales Chart & Today's Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 order-1 lg:order-2">
-        {/* Quick Actions */}
+        {/* Sales Chart */}
         <div className="lg:col-span-2">
-          <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] h-full">
-            <h3 className="text-[17px] font-extrabold text-[#11327c] mb-5 flex items-center gap-2">
-              <Zap className="w-5 h-5 text-[#11327c] fill-[#11327c]" strokeWidth={1} />
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <Link href="/billing" className="bg-[#11327c] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(17,50,124,0.3)] h-[110px]">
-                <FileText size={28} strokeWidth={2} />
-                <span className="text-[13px] font-bold">New Bill</span>
-              </Link>
-              <Link href="/inventory" className="bg-[#16a34a] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(22,163,74,0.3)] h-[110px]">
-                <Plus size={28} strokeWidth={3} />
-                <span className="text-[13px] font-bold">Add Medicine</span>
-              </Link>
-              <Link href="/transactions" className="bg-[#f97316] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(249,115,22,0.3)] h-[110px]">
-                <ReceiptText size={28} strokeWidth={2} />
-                <span className="text-[13px] font-bold">Transactions History</span>
-              </Link>
-              <Link href="/low-stock" className="bg-[#6366f1] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(99,102,241,0.3)] h-[110px]">
-                <AlertOctagon size={28} strokeWidth={2} />
-                <span className="text-[13px] font-bold">Low Stock</span>
-              </Link>
-            </div>
-          </div>
+          <SalesChart data={data.salesChart} range={chartRange} onRangeChange={setChartRange} />
         </div>
 
         {/* Today's Summary */}
@@ -188,16 +165,9 @@ export default function Home() {
               <div className="flex justify-between items-center pb-3 border-b border-gray-50">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500"><Users size={16} strokeWidth={2.5} /></div>
-                  <span className="text-gray-500 text-[13px] font-semibold">New Customers</span>
+                  <span className="text-gray-500 text-[13px] font-semibold">Unique Customers</span>
                 </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">{data.stats.orders ?? 0}</span>
-              </div>
-              <div className="flex justify-between items-center pb-3 border-b border-gray-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-orange-50 flex items-center justify-center text-orange-500"><Pill size={16} strokeWidth={2.5} /></div>
-                  <span className="text-gray-500 text-[13px] font-semibold">Prescriptions</span>
-                </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">0</span>
+                <span className="text-gray-900 font-extrabold text-[16px]">{data.stats.customers ?? 0}</span>
               </div>
               <div className="flex justify-between items-center pb-1">
                 <div className="flex items-center gap-3">
@@ -211,8 +181,36 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Row 3: Transactions */}
-      <div className="hidden md:grid grid-cols-1 gap-6 order-3">
+      {/* Row 3: Quick Actions */}
+      <div className="order-3">
+        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)]">
+          <h3 className="text-[17px] font-extrabold text-[#11327c] mb-5 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-[#11327c] fill-[#11327c]" strokeWidth={1} />
+            Quick Actions
+          </h3>
+            <div className="grid grid-cols-2 gap-4">
+              <Link href="/billing" className="bg-[#11327c] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(17,50,124,0.3)] h-[110px]">
+                <FileText size={28} strokeWidth={2} />
+                <span className="text-[13px] font-bold">New Bill</span>
+              </Link>
+              <Link href="/inventory" className="bg-[#16a34a] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(22,163,74,0.3)] h-[110px]">
+                <Plus size={28} strokeWidth={3} />
+                <span className="text-[13px] font-bold">Add Medicine</span>
+              </Link>
+              <Link href="/transactions" className="bg-[#f97316] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(249,115,22,0.3)] h-[110px]">
+                <ReceiptText size={28} strokeWidth={2} />
+                <span className="text-[13px] font-bold">Transactions History</span>
+              </Link>
+              <Link href="/low-stock" className="bg-[#6366f1] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(99,102,241,0.3)] h-[110px]">
+                <AlertOctagon size={28} strokeWidth={2} />
+                <span className="text-[13px] font-bold">Low Stock</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+
+      {/* Row 4: Transactions */}
+      <div className="hidden md:grid grid-cols-1 gap-6 order-4">
         <div className="w-full">
           <RecentTransactions data={data.recentTransactions} />
         </div>

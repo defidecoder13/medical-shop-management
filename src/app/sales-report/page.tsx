@@ -28,6 +28,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import Link from "next/link";
+import { apiClient } from "@/src/lib/apiClient";
 
 type BillItem = {
   name: string;
@@ -55,8 +56,8 @@ export default function SalesReportPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) router.push('/login');
+        const res = await apiClient.get('/api/auth/check');
+        if (!res) router.push('/login');
       } catch {
         router.push('/login');
       }
@@ -94,11 +95,10 @@ export default function SalesReportPage() {
     const fetchReportData = async () => {
       setLoading(true);
       try {
-        const response = await fetch(
+        const data = await apiClient.get(
           `/api/sales-report?startDate=${dateRange.start.toISOString()}&endDate=${dateRange.end.toISOString()}`
         );
-        if (response.ok) {
-          const data = await response.json();
+        if (data) {
           setReportData(data);
         }
       } catch (error) {

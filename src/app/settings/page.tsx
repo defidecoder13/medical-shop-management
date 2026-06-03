@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { apiClient } from "@/src/lib/apiClient";
 
 type SettingsData = {
   shopName: string;
@@ -41,8 +42,8 @@ export default function SettingsPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const res = await fetch('/api/auth/check');
-        if (!res.ok) router.push('/login');
+        const res = await apiClient.get('/api/auth/check');
+        if (!res) router.push('/login');
       } catch {
         router.push('/login');
       }
@@ -56,8 +57,7 @@ export default function SettingsPage() {
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
 
   useEffect(() => {
-    fetch("/api/settings")
-      .then((res) => res.json())
+    apiClient.get("/api/settings")
       .then((data) => {
         setSettings(data);
         setLoading(false);
@@ -69,19 +69,9 @@ export default function SettingsPage() {
 
     setSaving(true);
     try {
-      const res = await fetch("/api/settings", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(settings),
-      });
-
-      if (res.ok) {
-        setMessage({ text: "Configurations synchronized successfully", type: 'success' });
-        setTimeout(() => setMessage(null), 3000);
-      } else {
-        setMessage({ text: "Failed to update configuration", type: 'error' });
-        setTimeout(() => setMessage(null), 3000);
-      }
+      await apiClient.put("/api/settings", settings);
+      setMessage({ text: "Configurations synchronized successfully", type: 'success' });
+      setTimeout(() => setMessage(null), 3000);
     } catch (e) {
       setMessage({ text: "System error during update", type: 'error' });
       setTimeout(() => setMessage(null), 3000);

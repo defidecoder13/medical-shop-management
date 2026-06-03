@@ -16,6 +16,9 @@ export async function GET(req: Request) {
     const pageParam = searchParams.get("page");
     const page = parseInt(pageParam || "1");
     const pageSize = parseInt(searchParams.get("limit") || "20");
+    const category = searchParams.get("category");
+    const company = searchParams.get("company");
+    const status = searchParams.get("status");
 
     let batchQuery: any = {};
     let medicineQuery: any = {};
@@ -46,8 +49,40 @@ export async function GET(req: Request) {
       };
     }
 
+    if (category && category !== "All Categories") {
+      medicineQuery.category = category;
+    }
+
+    if (company && company !== "All Companies") {
+      medicineQuery.brand = company;
+    }
+
+    if (status && status !== "All Status") {
+      if (status === "In Stock") batchQuery.stock = { $gt: 10 };
+      else if (status === "Low Stock") batchQuery.stock = { $gt: 0, $lte: 10 };
+      else if (status === "Out of Stock") batchQuery.stock = { $lte: 0 };
+    }
+
     if (inStock === "true") {
       batchQuery.stock = { $gt: 0 };
+    }
+
+    // If we have medicine filters, we must apply them first and get the matching medicine IDs
+    if (Object.keys(medicineQuery).length > 0 && !idsParam && !q) {
+      const matchingMedicines = await Medicine.find(medicineQuery).select("_id");
+      const medicineIds = matchingMedicines.map(m => m._id);
+      batchQuery.medicineId = { $in: medicineIds };
+    } else if (q && (category && category !== "All Categories" || company && company !== "All Companies")) {
+      // If we had a q search AND filters, we need to ensure the previously found medicineIds 
+      // from the q search ALSO match the category/company filters
+      const matchingMedicines = await Medicine.find(medicineQuery).select("_id");
+      const medicineIds = matchingMedicines.map(m => m._id);
+      
+      // Update batchQuery to only include batches that match BOTH the text search AND the filters
+      batchQuery = {
+        ...batchQuery,
+        medicineId: { $in: medicineIds },
+      };
     }
 
     let totalCount = 0;
