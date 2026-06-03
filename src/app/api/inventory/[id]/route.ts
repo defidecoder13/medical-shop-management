@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import MedicineBatch from "@/src/models/MedicineBatch";
+import Medicine from "@/src/models/Medicine";
 
 export async function GET(
     request: Request,
@@ -51,6 +52,14 @@ export async function DELETE(
                 { error: "Batch not found" },
                 { status: 404 }
             );
+        }
+
+        // Clean up parent Medicine if this was the last batch
+        if (deletedBatch.medicineId) {
+            const remainingBatches = await MedicineBatch.countDocuments({ medicineId: deletedBatch.medicineId });
+            if (remainingBatches === 0) {
+                await Medicine.findByIdAndDelete(deletedBatch.medicineId);
+            }
         }
 
         return NextResponse.json(
