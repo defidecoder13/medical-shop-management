@@ -141,6 +141,17 @@ export async function processSyncQueue(
                     errText = "Could not parse response";
                 }
                 console.error(`Sync error detail for ${item.url}:`, errText);
+
+                // If it's a client error (4xx) or a business logic error (500, 501) that isn't a gateway/timeout issue, 
+                // it means the server processed it and rejected it permanently. Retrying won't help.
+                if (response.status >= 400 && response.status <= 501 && ![408, 429].includes(response.status)) {
+                    console.warn(`Sync item ${item.id} permanently rejected by server (Status ${response.status}). Discarding from queue to prevent loop.`);
+                    await removeFromSyncQueue(item.id);
+                    if (onError) onError(new Error(errText), item);
+                    continue; // Skip to next item in queue
+                }
+
+                // If it's a network gateway error or timeout, we throw to retry later.
                 throw new Error(`Sync failed with status: ${response.status}. Details: ${errText}`);
             }
 
