@@ -54,9 +54,19 @@ export default function Home() {
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
-        const analytics = await apiClient.get(`/api/dashboard-analytics?range=${chartRange}`);
+        const analytics = await apiClient.get(
+          `/api/dashboard-analytics?range=${chartRange}`,
+          {},
+          (cachedData) => {
+            if (cachedData) {
+              setData(cachedData);
+              setLoading(false); // Instantly render cached data in 0ms!
+            }
+          }
+        );
+        
         if (analytics) {
-          setData(analytics);
+          setData(analytics); // Update with fresh network data later
         }
       } catch (error) {
         console.error('Error fetching dashboard stats:', error);
