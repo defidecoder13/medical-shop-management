@@ -134,7 +134,6 @@ export default function InventoryPage() {
   const router = useRouter();
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 300);
   const [filterCategory, setFilterCategory] = useState("All Categories");
   const [filterCompany, setFilterCompany] = useState("All Companies");
   const [filterStatus, setFilterStatus] = useState("All Status");
@@ -269,7 +268,6 @@ export default function InventoryPage() {
   const fetchMedicines = async () => {
     try {
       const params = new URLSearchParams();
-      if (debouncedSearch) params.append("q", debouncedSearch);
       params.append("limit", "10000"); // Load all items on one page
       if (filterCategory !== "All Categories") params.append("category", filterCategory);
       if (filterCompany !== "All Companies") params.append("company", filterCompany);
@@ -393,11 +391,11 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchMedicines();
-  }, [debouncedSearch, page, filterCategory, filterCompany, filterStatus]);
+  }, [page, filterCategory, filterCompany, filterStatus]);
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, filterCategory, filterCompany, filterStatus]);
+  }, [filterCategory, filterCompany, filterStatus]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -531,6 +529,14 @@ export default function InventoryPage() {
   };
 
   const filteredMeds = medicines
+    .filter(m => {
+       if (!search) return true;
+       const q = search.toLowerCase();
+       return m.name.toLowerCase().includes(q) || 
+              (m.brand && m.brand.toLowerCase().includes(q)) || 
+              (m.batchNumber && m.batchNumber.toLowerCase().includes(q)) ||
+              (m.barcode && m.barcode.toLowerCase().includes(q));
+    })
     .sort((a, b) => {
        if (sortConfig.key === 'none') return 0;
        
