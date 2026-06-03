@@ -280,36 +280,38 @@ export default function InventoryPage() {
       if (filterCompany !== "All Companies") params.append("company", filterCompany);
       if (filterStatus !== "All Status") params.append("status", filterStatus);
 
-      const res = await apiClient.get(`/api/inventory?${params.toString()}`);
-      
-      const payload = res?.data ? res.data : (Array.isArray(res) ? res : []);
-      if (res?.pagination) {
-        setTotalPages(res.pagination.totalPages || 1);
-      } else {
+      const setMedsFromPayload = (res: any) => {
+        const payload = res?.data ? res.data : (Array.isArray(res) ? res : []);
         setTotalPages(1);
-      }
 
-      setMedicines(payload.map((m: any) => ({
-        _id: m._id,
-        name: m.name,
-        brand: m.brand,
-        batchNumber: m.batchNumber,
-        expiryDate: m.expiryDate,
-        stock: m.stock,
-        tabletsPerStrip: m.tabletsPerStrip,
-        buyingPrice: m.buyingPricePerStrip, // Cost
-        sellingPrice: m.sellingPricePerStrip, // MRP
-        rackNumber: m.rackNumber,
-        composition: m.composition,
-        hsnCode: m.hsnCode,
-        gstPercent: m.gstPercent,
-        totalTabletsInStock: m.totalTabletsInStock,
-        discountPercent: m.discountPercent || 0,
-        supplierName: m.supplierName || "Direct Purchase",
-        purchaseInvoiceNumber: m.purchaseInvoiceNumber || "",
-        category: m.category || "Tablet",
-        pack: m.pack || ""
-      })));
+        setMedicines(payload.map((m: any) => ({
+          _id: m._id,
+          name: m.name,
+          brand: m.brand,
+          batchNumber: m.batchNumber,
+          expiryDate: m.expiryDate,
+          stock: m.stock,
+          tabletsPerStrip: m.tabletsPerStrip,
+          buyingPrice: m.buyingPrice || m.buyingPricePerStrip || 0,
+          sellingPrice: m.mrp || m.sellingPricePerStrip || 0,
+          rackNumber: m.rackNumber,
+          composition: m.composition || m.medicineId?.composition || "",
+          pack: m.pack || "",
+          hsnCode: m.hsnCode || m.medicineId?.hsnCode || "",
+          gstPercent: m.gstPercent || m.medicineId?.gstPercent || 5,
+          barcode: m.barcode || m.medicineId?.barcode || "",
+          discountPercent: m.discountPercent || 0,
+          supplierName: m.supplierName || "",
+          purchaseInvoiceNumber: m.purchaseInvoiceNumber || "",
+          category: m.category || m.medicineId?.category || "Tablet"
+        })));
+      };
+
+      const res = await apiClient.get(`/api/inventory?${params.toString()}`, {}, (cachedData) => {
+        setMedsFromPayload(cachedData); // Instantly render cached data in 0ms!
+      });
+      
+      setMedsFromPayload(res); // Quietly update with fresh network data a few seconds later
     } catch (error) {
       console.error("Failed to fetch medicines", error);
     }

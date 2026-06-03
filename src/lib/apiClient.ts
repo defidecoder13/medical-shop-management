@@ -4,8 +4,15 @@ export const apiClient = {
     /**
      * GET Request wrapper
      */
-    async get(url: string, options: RequestInit = {}) {
+    async get(url: string, options: RequestInit = {}, onCache?: (data: any) => void) {
         const isOnline = navigator.onLine;
+
+        // Instantly return cache to the callback (Stale-While-Revalidate)
+        if (onCache) {
+            getApiCache(url).then(cachedData => {
+                if (cachedData) onCache(cachedData);
+            });
+        }
 
         if (isOnline) {
             try {
