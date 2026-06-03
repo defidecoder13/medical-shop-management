@@ -275,8 +275,7 @@ export default function InventoryPage() {
     try {
       const params = new URLSearchParams();
       if (debouncedSearch) params.append("q", debouncedSearch);
-      params.append("page", page.toString());
-      params.append("limit", "20");
+      params.append("limit", "10000"); // Load all items on one page
       if (filterCategory !== "All Categories") params.append("category", filterCategory);
       if (filterCompany !== "All Companies") params.append("company", filterCompany);
       if (filterStatus !== "All Status") params.append("status", filterStatus);
@@ -1218,26 +1217,6 @@ export default function InventoryPage() {
         </div>
         <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
           <p>Total Catalog Size: <span className="text-[#11327c] ml-1">{filteredMeds.length} Items</span></p>
-          
-          {totalPages > 1 && (
-            <div className="flex gap-2 items-center">
-              <span className="mr-2 normal-case tracking-normal">Page {page} of {totalPages}</span>
-              <button 
-                onClick={() => setPage(p => Math.max(1, p - 1))}
-                disabled={page === 1}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-              >
-                Previous
-              </button>
-              <button 
-                onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                disabled={page === totalPages}
-                className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-              >
-                Next
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>
