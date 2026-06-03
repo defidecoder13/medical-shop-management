@@ -78,12 +78,21 @@ export const apiClient = {
                 });
 
                 if (!response.ok) {
+                    // It's a server error, not a network drop
+                    if ([502, 503, 504].includes(response.status)) {
+                        throw new Error(`Gateway Error ${response.status} - queuing for offline`);
+                    }
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `Request failed with status ${response.status}`);
+                    const err = new Error(errorData.error || `Request failed with status ${response.status}`);
+                    (err as any).isBusinessError = true;
+                    throw err;
                 }
 
                 return await response.json();
-            } catch (error) {
+            } catch (error: any) {
+                if (error.isBusinessError) {
+                    throw error; // Throw business errors directly to UI
+                }
                 console.warn(`[Network Write Failed] Queuing ${method} ${url} for sync.`, error);
             }
         }
