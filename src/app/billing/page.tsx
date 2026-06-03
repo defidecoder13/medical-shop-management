@@ -62,6 +62,7 @@ type CartItem = {
   discountPercent?: number | "";
   tabletsPerStrip: number;
   gstPercent: number;
+  expiryDate?: string;
   composition?: string;
 };
 
@@ -364,6 +365,7 @@ function BillingContent() {
         discountPercent: med.discountPercent || 0,
         tabletsPerStrip: tabletsPerStrip,
         gstPercent: med.gstPercent || 0,
+        expiryDate: med.expiryDate,
       },
     ]);
     setSearch("");
@@ -413,6 +415,7 @@ function BillingContent() {
                    discountPercent: med.discountPercent || 0,
                    tabletsPerStrip: tabletsPerStrip,
                    gstPercent: med.gstPercent || 0,
+                   expiryDate: med.expiryDate,
                 });
                 addedCount++;
              }
@@ -748,7 +751,7 @@ function BillingContent() {
                               <div className="flex flex-wrap items-center gap-2 text-[12px] font-bold uppercase tracking-tight text-gray-400 mt-1">
                                 <span>Batch: <span className="text-[#11327c]">{item.batchNumber}</span></span>
                                 <span className="opacity-30">|</span>
-                                <span>Exp: <span className="text-[#11327c]">Jan 2026</span></span>
+                                <span>Exp: <span className="text-[#11327c]">{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "-"}</span></span>
                                 <span className="opacity-30">|</span>
                                 <span>Stock: <span className={item.stock < 10 ? "text-rose-500" : "text-gray-600"}>
                                   {
