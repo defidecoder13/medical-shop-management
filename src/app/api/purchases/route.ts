@@ -94,18 +94,27 @@ export async function POST(req: Request) {
         if (!item.name) {
             throw new Error("Medicine name is required for unmatched items");
         }
-        const heuristicInfo = determineCategoryAndPack(item.name, item.pack || "");
-        
-        const newMed = await Medicine.create([{
-          name: item.name,
-          brand: item.brand || supplier.name, // Use mapped brand or fallback
-          hsnCode: item.hsnCode || "",
-          pack: item.pack || "",
-          category: heuristicInfo.category,
-          tabletsPerStrip: heuristicInfo.tabletsPerStrip, 
-          gstPercent: typeof item.gstPercent === 'number' ? item.gstPercent : 0,
-        }], { session }).then(res => res[0]);
-        medicineId = newMed._id;
+        // SAFEGUARD: Check if it already exists (case-insensitive + trim)
+        const cleanName = String(item.name).trim();
+        const existingMed = await Medicine.findOne({ 
+            name: { $regex: new RegExp(`^${cleanName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } 
+        }).session(session);
+
+        if (existingMed) {
+            medicineId = existingMed._id;
+        } else {
+            const heuristicInfo = determineCategoryAndPack(cleanName, item.pack || "");
+            const newMed = await Medicine.create([{
+              name: cleanName,
+              brand: item.brand || supplier.name,
+              hsnCode: item.hsnCode || "",
+              pack: item.pack || "",
+              category: heuristicInfo.category,
+              tabletsPerStrip: heuristicInfo.tabletsPerStrip, 
+              gstPercent: typeof item.gstPercent === 'number' ? item.gstPercent : 0,
+            }], { session }).then(res => res[0]);
+            medicineId = newMed._id;
+        }
       }
 
       const medicine = await Medicine.findById(medicineId).session(session);
