@@ -7,12 +7,13 @@ import Supplier from "@/src/models/Supplier";
 import { createPurchaseJournalEntry } from "@/src/lib/accounting";
 import mongoose from "mongoose";
 
-function determineCategoryAndPack(name: string, packStr: string = "") {
-  const lower = name.toLowerCase();
+function determineCategoryAndPack(name: any, packStr: any = "") {
+  const lower = String(name || "").toLowerCase();
+  const safePackStr = String(packStr || "");
   
   let numericPack = 0;
-  if (packStr) {
-    const match = packStr.match(/^(\d+)/);
+  if (safePackStr) {
+    const match = safePackStr.match(/^(\d+)/);
     if (match) {
       numericPack = parseInt(match[1], 10);
     }
