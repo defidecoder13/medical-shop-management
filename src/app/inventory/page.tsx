@@ -420,8 +420,6 @@ export default function InventoryPage() {
       return;
     }
 
-    setLoading(true);
-    const method = editingId ? "PUT" : "POST";
     const payload = {
       ...form,
       expiryDate: parsedExpiry,
@@ -433,6 +431,18 @@ export default function InventoryPage() {
       discountPercent: Number(form.discountPercent) || 0
     };
 
+    // Optimistic UI Update
+    setForm(emptyMedicine);
+    setShowForm(false);
+    
+    setMedicines(prev => {
+        if (editingId) {
+           return prev.map(m => m._id === editingId ? { ...m, ...payload, _id: editingId } : m);
+        } else {
+           return [{ ...payload, _id: `temp-${Date.now()}` }, ...prev];
+        }
+    });
+
     try {
       let data;
       if (editingId) {
@@ -440,20 +450,20 @@ export default function InventoryPage() {
       } else {
         data = await apiClient.post("/api/inventory", payload);
       }
-      setLoading(false);
 
       setMessage({ 
-        text: data.offlineQueued ? (editingId ? "Update queued for sync" : "Addition queued for sync") : (editingId ? "Medicine updated successfully" : "Medicine added successfully"), 
+        text: editingId ? "Medicine updated successfully" : "Medicine added successfully", 
         type: 'success' 
       });
-      setForm(emptyMedicine);
       setEditingId(null);
-      setShowForm(false);
+      
+      // Fetch in background to sync true IDs
       fetchMedicines();
 
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
-      setLoading(false);
+      // Revert optimistic update
+      fetchMedicines();
       setMessage({ text: err.message || "An error occurred", type: 'error' });
       setTimeout(() => setMessage(null), 4000);
     }
@@ -652,10 +662,10 @@ export default function InventoryPage() {
       </div>
 
       {message && (
-        <div className={`px-4 py-3 rounded-xl flex items-center gap-3 text-[13px] font-bold shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 ${
-          message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
+        <div className={`fixed top-10 right-10 z-[200] px-5 py-4 rounded-xl flex items-center gap-3 text-[14px] font-bold shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 ${
+          message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-2 border-emerald-200' : 'bg-rose-50 text-rose-700 border-2 border-rose-200'
         }`}>
-          {message.type === 'success' ? <CheckCircle2 size={18} strokeWidth={2.5} /> : <AlertCircle size={18} strokeWidth={2.5} />}
+          {message.type === 'success' ? <CheckCircle2 size={20} strokeWidth={2.5} /> : <AlertCircle size={20} strokeWidth={2.5} />}
           {message.text}
         </div>
       )}
@@ -806,9 +816,16 @@ export default function InventoryPage() {
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Expiry Date</label>
               <input 
                 type="text"
-                placeholder="MM/YY or MM/YYYY (e.g. 12/28)"
+                placeholder="MM/YY (e.g. 12/28)"
                 value={form.expiryDate}
-                onChange={e => setForm({...form, expiryDate: e.target.value})}
+                onChange={e => {
+                  let val = e.target.value.replace(/\D/g, '');
+                  if (val.length > 2) {
+                    val = val.substring(0, 2) + '/' + val.substring(2, 4);
+                  }
+                  setForm({...form, expiryDate: val});
+                }}
+                maxLength={5}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
@@ -1028,7 +1045,8 @@ export default function InventoryPage() {
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: Math.min(index * 0.03, 0.5) }}
-                  className="hover:bg-[#f8fafc]/80 transition-colors group border-b border-gray-50"
+                  onClick={() => handleEdit(med)}
+                  className="hover:bg-[#f8fafc]/80 transition-colors group border-b border-gray-50 cursor-pointer"
                 >
                   <td className="px-5 py-4">
                      <div className="w-4 h-4 rounded border border-gray-300"></div>
@@ -1097,13 +1115,13 @@ export default function InventoryPage() {
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-center gap-2">
                       <button 
-                        onClick={() => handleEdit(med)}
+                        onClick={(e) => { e.stopPropagation(); handleEdit(med); }}
                         className="w-7 h-7 flex items-center justify-center border border-gray-200 text-gray-500 rounded hover:text-[#11327c] hover:bg-gray-50 transition-all"
                       >
                         <Edit3 size={14} />
                       </button>
                       <button 
-                        onClick={() => med._id && handleDelete(med._id)}
+                        onClick={(e) => { e.stopPropagation(); med._id && handleDelete(med._id); }}
                         className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-all"
                         title="Delete Medicine"
                       >
