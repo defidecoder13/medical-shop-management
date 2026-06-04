@@ -24,7 +24,7 @@ const PurchaseInvoiceSchema = new Schema(
   {
     supplierId: { type: Schema.Types.ObjectId, ref: "Supplier", required: true },
     supplierName: String,
-    invoiceNumber: { type: String, required: true },
+    invoiceNumber: { type: String },
     invoiceDate: { type: Date, required: true },
     dueDate: Date,
     
@@ -44,8 +44,7 @@ const PurchaseInvoiceSchema = new Schema(
   { timestamps: true }
 );
 
-// Ensure unique invoice numbers per supplier
-PurchaseInvoiceSchema.index({ supplierId: 1, invoiceNumber: 1 }, { unique: true });
+// Removed unique index to allow duplicate/empty invoice numbers
 
 // Force Schema Reload in Dev
 if (process.env.NODE_ENV !== "production") {

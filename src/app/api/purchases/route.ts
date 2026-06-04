@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       paymentMethod,
     } = body;
 
-    if (!supplierId || !invoiceNumber || !items || items.length === 0) {
+    if (!supplierId || !items || items.length === 0) {
       throw new Error("Missing required fields");
     }
 

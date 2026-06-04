@@ -123,8 +123,8 @@ export default function ImportPurchasePage() {
   };
 
   const handleProceedToMapping = () => {
-    if (!supplierId || !invoiceNumber || !invoiceDate) {
-      setError("Please fill all invoice details.");
+    if (!supplierId || !invoiceDate) {
+      setError("Please select a supplier and date.");
       return;
     }
     if (headers.length === 0) {
@@ -259,7 +259,7 @@ export default function ImportPurchasePage() {
               </select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Invoice Number</label>
+              <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Invoice Number (Optional)</label>
               <input 
                 type="text" 
                 value={invoiceNumber} 
