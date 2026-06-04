@@ -271,7 +271,7 @@ export async function POST(req: Request) {
     console.error("Purchase Creation Error:", error);
     // Handle Duplicate Invoice Error
     if (error.code === 11000) {
-        return NextResponse.json({ error: "Invoice number already exists for this supplier." }, { status: 400 });
+        return NextResponse.json({ error: `Duplicate key error: ${error.message}` }, { status: 400 });
     }
     return NextResponse.json({ error: error.message || "Failed to create purchase invoice" }, { status: 500 });
   }
