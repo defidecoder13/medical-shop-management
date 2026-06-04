@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Supplier from "@/src/models/Supplier";
 import PurchaseInvoice from "@/src/models/PurchaseInvoice";
-import { createSupplierPaymentEntry } from "@/src/lib/accounting";
 import mongoose from "mongoose";
 
 export async function POST(req: Request) {
@@ -34,13 +33,6 @@ export async function POST(req: Request) {
     supplier.outstandingBalance -= amount;
     await supplier.save({ session });
 
-    // 2. Log Journal Entry for payment
-    await createSupplierPaymentEntry({
-      supplierName: supplier.name,
-      amount,
-      method: method || "Cash",
-      referenceId: supplierId // Or a generated receipt ID
-    }, session);
 
     // 3. Mark old invoices as Paid
     let remainingPayment = amount;

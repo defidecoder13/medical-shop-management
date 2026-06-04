@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import SupplierReturn from "@/src/models/SupplierReturn";
 import MedicineBatch from "@/src/models/MedicineBatch";
-import { createSupplierReturnJournalEntry } from "@/src/lib/accounting";
 
 export const runtime = "nodejs";
 
@@ -135,8 +134,6 @@ export async function POST(req: Request) {
             totalRefundAmount: roundedTotal
         });
 
-        // 🏦 ACCOUNTING: Create Double Entry Journal
-        await createSupplierReturnJournalEntry(supplierReturn);
 
         return NextResponse.json({ success: true, supplierReturn });
     } catch (error) {

@@ -7,8 +7,7 @@ import Patient from "@/src/models/Patient";
 import PurchaseInvoice from "@/src/models/PurchaseInvoice";
 import SupplierReturn from "@/src/models/SupplierReturn";
 import Supplier from "@/src/models/Supplier";
-import JournalEntry from "@/src/models/JournalEntry";
-import Account from "@/src/models/Account";
+
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +19,7 @@ export async function POST(req: Request) {
     await Bill.deleteMany({});
     await PurchaseInvoice.deleteMany({});
     await SupplierReturn.deleteMany({});
-    await JournalEntry.deleteMany({});
+
     
     // 2. Delete all entities
     await Patient.deleteMany({});
@@ -30,11 +29,10 @@ export async function POST(req: Request) {
     await Medicine.deleteMany({});
     await MedicineBatch.deleteMany({});
 
-    // 4. Reset all accounting ledgers to 0 balance (don't delete the accounts themselves)
-    await Account.updateMany({}, { balance: 0 });
+
 
     return NextResponse.json({ 
-        message: "Factory Reset Successful! All transactional, inventory, and entity data has been permanently deleted. Ledgers have been reset to 0.",
+        message: "Factory Reset Successful! All transactional, inventory, and entity data has been permanently deleted.",
         success: true
     });
   } catch (error: any) {

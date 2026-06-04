@@ -62,14 +62,6 @@ const navigationGroups = [
       { label: "Settings", icon: Settings, href: "/settings" },
     ]
   },
-  {
-    group: "ACCOUNTING",
-    routes: [
-      { label: "Chart of Accounts", icon: Landmark, href: "/accounting/ledgers" },
-      { label: "Journal Entries", icon: ScrollText, href: "/accounting/journals" },
-      { label: "Trial Balance", icon: ArrowRightLeft, href: "/accounting/trial-balance" },
-    ]
-  }
 ];
 
 interface SidebarProps {

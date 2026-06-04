@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
 import MedicineBatch from "@/src/models/MedicineBatch";
-import { createReturnJournalEntry } from "@/src/lib/accounting";
 import mongoose from "mongoose";
 
 export const runtime = "nodejs";
@@ -152,8 +151,6 @@ export async function POST(req: Request) {
             doctorName: originalBill.doctorName,
         }], { session }).then(res => res[0]);
 
-        // 🏦 ACCOUNTING: Create Double Entry Journal
-        await createReturnJournalEntry(returnBill, session);
 
         result = { success: true, returnBill, originalBill };
         

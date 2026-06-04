@@ -3,7 +3,6 @@ import { connectDB } from "@/src/lib/db";
 import MedicineBatch from "@/src/models/MedicineBatch";
 import Bill from "@/src/models/Bill";
 import Settings from "@/src/models/Settings";
-import { createSaleJournalEntry } from "@/src/lib/accounting";
 import mongoose from "mongoose";
 
 export async function POST(req: Request) {
@@ -164,8 +163,6 @@ export async function POST(req: Request) {
       paymentMethod,
     }], { session }).then(res => res[0]);
 
-    // 🏦 ACCOUNTING: Create Double Entry Journal
-    await createSaleJournalEntry(bill, session);
 
     // 🧑‍⚕️ PATIENT CRM: Update or Create Patient Record
     if (patientPhone) {

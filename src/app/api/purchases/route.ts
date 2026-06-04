@@ -4,7 +4,7 @@ import PurchaseInvoice from "@/src/models/PurchaseInvoice";
 import MedicineBatch from "@/src/models/MedicineBatch";
 import Medicine from "@/src/models/Medicine";
 import Supplier from "@/src/models/Supplier";
-import { createPurchaseJournalEntry } from "@/src/lib/accounting";
+
 import mongoose from "mongoose";
 
 function determineCategoryAndPack(name: any, packStr: any = "") {
@@ -251,8 +251,6 @@ export async function POST(req: Request) {
       amountPaid: paymentMethod === "Cash" ? grandTotal : 0
     }], { session }).then(res => res[0]);
 
-    // Run Accounting Journal
-    await createPurchaseJournalEntry(purchaseInvoice, session);
 
     // If Credit, update Supplier outstanding balance
     if (purchaseInvoice.status !== "Paid") {
