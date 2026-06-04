@@ -82,41 +82,55 @@ export async function POST(req: Request) {
       throw new Error("Supplier not found");
     }
 
-    // Process items and create batches
+    // Process items and create batches FAST using Bulk Operations
     const processedItems = [];
+    const newBatchesToInsert = [];
+    const medicineUpdates = new Map();
+    const newMedicinesToInsert = [];
+    
+    // 1. Fetch existing medicines to avoid doing it sequentially in the loop
+    const itemNames = items.filter((i: any) => i.name).map((i: any) => String(i.name).trim());
+    const existingMedsList = await Medicine.find({ 
+        name: { $in: itemNames.map((n: string) => new RegExp(`^${n.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&')}$`, 'i')) } 
+    }).session(session);
+    
+    const medMap = new Map();
+    existingMedsList.forEach((m: any) => medMap.set(m.name.toLowerCase(), m));
+
+    let batchCounter = 0;
 
     for (const item of items) {
       let medicineId = item.medicineId;
+      let medicine: any = null;
+      const cleanName = String(item.name || "").trim();
 
-      // Auto-create basic medicine if it doesn't exist
-      if (!medicineId) {
-        if (!item.name) {
-            throw new Error("Medicine name is required for unmatched items");
-        }
-        // SAFEGUARD: Check if it already exists (case-insensitive + trim)
-        const cleanName = String(item.name).trim();
-        const existingMed = await Medicine.findOne({ 
-            name: { $regex: new RegExp(`^${cleanName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') } 
-        }).session(session);
-
-        if (existingMed) {
-            medicineId = existingMed._id;
-        } else {
-            const heuristicInfo = determineCategoryAndPack(cleanName, item.pack || "");
-            const newMed = await Medicine.create([{
-              name: cleanName,
-              brand: item.brand || supplier.name,
-              hsnCode: item.hsnCode || "",
-              pack: item.pack || "",
-              category: heuristicInfo.category,
-              tabletsPerStrip: heuristicInfo.tabletsPerStrip, 
-              gstPercent: typeof item.gstPercent === 'number' ? item.gstPercent : 0,
-            }], { session }).then(res => res[0]);
-            medicineId = newMed._id;
-        }
+      if (medicineId) {
+          medicine = existingMedsList.find((m: any) => m._id.toString() === medicineId.toString());
+          if (!medicine) {
+              medicine = await Medicine.findById(medicineId).session(session);
+              if (medicine) medMap.set(medicine.name.toLowerCase(), medicine);
+          }
+      } else if (cleanName) {
+          medicine = medMap.get(cleanName.toLowerCase());
+          
+          if (!medicine) {
+             const heuristicInfo = determineCategoryAndPack(cleanName, item.pack || "");
+             medicine = new Medicine({
+               _id: new mongoose.Types.ObjectId(),
+               name: cleanName,
+               brand: item.brand || supplier.name,
+               hsnCode: item.hsnCode || "",
+               pack: item.pack || "",
+               category: heuristicInfo.category,
+               tabletsPerStrip: heuristicInfo.tabletsPerStrip, 
+               gstPercent: typeof item.gstPercent === 'number' ? item.gstPercent : 0,
+               stock: 0,
+             });
+             newMedicinesToInsert.push(medicine);
+             medMap.set(cleanName.toLowerCase(), medicine);
+          }
       }
 
-      const medicine = await Medicine.findById(medicineId).session(session);
       if (!medicine) continue;
 
       // Normalize Expiry Date (Assume MM/YY format if string)
@@ -137,11 +151,14 @@ export async function POST(req: Request) {
          parsedExpiry.setFullYear(parsedExpiry.getFullYear() + 1);
       }
 
-      // Create Batch
+      // Create Batch Object in memory
       const totalUnits = (item.qty || 0) + (item.freeQty || 0);
-      const newBatch = await MedicineBatch.create([{
-        medicineId,
-        batchNumber: item.batchNumber || `BATCH-${Date.now().toString().slice(-6)}`,
+      const genBatchNumber = item.batchNumber || `B${Date.now().toString().slice(-6)}${batchCounter++}`;
+      
+      const newBatchObj = {
+        _id: new mongoose.Types.ObjectId(),
+        medicineId: medicine._id,
+        batchNumber: genBatchNumber,
         expiryDate: parsedExpiry,
         supplierName: supplier.name,
         purchaseInvoiceNumber: invoiceNumber,
@@ -151,25 +168,28 @@ export async function POST(req: Request) {
         buyingPricePerStrip: item.buyingPrice || 0,
         rackNumber: item.rackNumber || "",
         pack: item.pack || "",
-      }], { session }).then(res => res[0]);
+        discountPercent: item.discountPercent || 0,
+      };
+      
+      newBatchesToInsert.push(newBatchObj);
 
-      // Update Parent Medicine Stock
-      medicine.stock += totalUnits;
-      // Update MRP/Buying price to latest
-      if (item.mrp) medicine.mrp = item.mrp;
-      if (item.buyingPrice) medicine.buyingPrice = item.buyingPrice;
-      if (item.brand && !medicine.brand) medicine.brand = item.brand;
-      if (item.hsnCode && !medicine.hsnCode) medicine.hsnCode = item.hsnCode;
-      if (item.pack && !medicine.pack) medicine.pack = item.pack;
-      if (typeof item.gstPercent === 'number' && medicine.gstPercent !== item.gstPercent) {
-        medicine.gstPercent = item.gstPercent;
+      // Track Parent Medicine Stock updates in memory
+      if (!medicineUpdates.has(medicine._id.toString())) {
+          medicineUpdates.set(medicine._id.toString(), { doc: medicine, stockToAdd: 0 });
       }
-      await medicine.save({ session });
+      const updateData = medicineUpdates.get(medicine._id.toString());
+      updateData.stockToAdd += totalUnits;
+      if (item.mrp) updateData.doc.mrp = item.mrp;
+      if (item.buyingPrice) updateData.doc.buyingPrice = item.buyingPrice;
+      if (item.brand && !updateData.doc.brand) updateData.doc.brand = item.brand;
+      if (item.hsnCode && !updateData.doc.hsnCode) updateData.doc.hsnCode = item.hsnCode;
+      if (item.pack && !updateData.doc.pack) updateData.doc.pack = item.pack;
+      if (typeof item.gstPercent === 'number') updateData.doc.gstPercent = item.gstPercent;
 
       processedItems.push({
-        medicineId,
+        medicineId: medicine._id,
         name: medicine.name,
-        batchNumber: newBatch.batchNumber,
+        batchNumber: newBatchObj.batchNumber,
         expiryDate: parsedExpiry,
         pack: item.pack || "",
         qty: item.qty || 0,
@@ -182,6 +202,36 @@ export async function POST(req: Request) {
         gstAmount: item.gstAmount || 0,
         total: item.total || 0,
       });
+    }
+
+    // 2. Execute Bulk Writes OUTSIDE the loop for massive performance gain
+    if (newMedicinesToInsert.length > 0) {
+        await Medicine.insertMany(newMedicinesToInsert, { session });
+    }
+    
+    if (newBatchesToInsert.length > 0) {
+        await MedicineBatch.insertMany(newBatchesToInsert, { session });
+    }
+    
+    const bulkOps = Array.from(medicineUpdates.values()).map(update => ({
+        updateOne: {
+            filter: { _id: update.doc._id },
+            update: { 
+                $set: { 
+                    stock: (update.doc.stock || 0) + update.stockToAdd,
+                    mrp: update.doc.mrp,
+                    buyingPrice: update.doc.buyingPrice,
+                    brand: update.doc.brand,
+                    hsnCode: update.doc.hsnCode,
+                    pack: update.doc.pack,
+                    gstPercent: update.doc.gstPercent
+                }
+            }
+        }
+    }));
+    
+    if (bulkOps.length > 0) {
+        await Medicine.bulkWrite(bulkOps, { session });
     }
 
     // Create Purchase Invoice
