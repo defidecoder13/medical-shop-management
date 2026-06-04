@@ -216,7 +216,7 @@ export default function SuppliersPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 max-w-sm gap-6">
         <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
            <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
              <Building2 size={28} strokeWidth={2.5} />
@@ -224,26 +224,6 @@ export default function SuppliersPage() {
            <div>
              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Distributors</p>
              <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{suppliers.length} Active</h2>
-           </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-             <IndianRupee size={28} strokeWidth={2.5} />
-           </div>
-           <div>
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Outstanding</p>
-             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{totalOutstanding.toFixed(2)}</h2>
-           </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-             <AlertCircle size={28} strokeWidth={2.5} />
-           </div>
-           <div>
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Accounts Payable</p>
-             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{suppliersWithDue} Accounts</h2>
            </div>
         </div>
       </div>
@@ -341,23 +321,7 @@ export default function SuppliersPage() {
                       )}
                     </div>
                     
-                    {/* Outstanding Balance */}
-                    <div className="mt-4 pt-4 border-t border-gray-50 flex items-center justify-between">
-                       <div>
-                          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Due Amount</p>
-                          <p className={`text-[18px] font-black tracking-tight ${supplier.outstandingBalance > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                             ₹{(supplier.outstandingBalance || 0).toFixed(2)}
-                          </p>
-                       </div>
-                       {supplier.outstandingBalance > 0 && (
-                          <button 
-                             onClick={() => handleOpenPaymentModal(supplier)}
-                             className="bg-black text-white px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest hover:bg-gray-800 transition-colors shadow-md shadow-black/10 active:scale-95"
-                          >
-                             Settle Bill
-                          </button>
-                       )}
-                    </div>
+
                   </div>
                 </motion.div>
               ))}
@@ -522,82 +486,7 @@ export default function SuppliersPage() {
         )}
       </AnimatePresence>
 
-      {/* Payment Modal */}
-      <AnimatePresence>
-        {isPaymentModalOpen && selectedSupplierForPayment && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#11327c]/40 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-md rounded-[40px] shadow-2xl border border-white/20 overflow-hidden"
-            >
-              <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-[#f8fafc]">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-black text-white rounded-2xl flex items-center justify-center shadow-lg shadow-black/20">
-                    <IndianRupee size={24} strokeWidth={2.5}/>
-                  </div>
-                  <div>
-                     <h2 className="text-xl font-black text-[#11327c] uppercase tracking-tight">Make Payment</h2>
-                     <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">{selectedSupplierForPayment.name}</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setIsPaymentModalOpen(false)} 
-                  className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-400 hover:bg-rose-50 hover:text-rose-500 rounded-2xl transition-all"
-                >
-                  <X size={20} strokeWidth={3}/>
-                </button>
-              </div>
-              
-              <form onSubmit={handlePaymentSubmit} className="p-8 space-y-6">
-                 <div className="bg-red-50 text-red-700 p-4 rounded-2xl border border-red-100 flex items-center justify-between">
-                    <span className="text-[11px] font-black uppercase tracking-widest">Total Due:</span>
-                    <span className="text-xl font-black">₹{selectedSupplierForPayment.outstandingBalance.toFixed(2)}</span>
-                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Payment Amount (₹)</label>
-                  <input 
-                    type="number" 
-                    required
-                    step="0.01"
-                    max={selectedSupplierForPayment.outstandingBalance}
-                    value={paymentForm.amount}
-                    onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})}
-                    className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[16px] font-black text-gray-900 outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all" 
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Payment Mode</label>
-                  <select 
-                    value={paymentForm.method}
-                    onChange={e => setPaymentForm({...paymentForm, method: e.target.value})}
-                    className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all"
-                  >
-                     <option value="Bank Transfer">Bank Transfer</option>
-                     <option value="UPI">UPI</option>
-                     <option value="Cash">Cash</option>
-                     <option value="Cheque">Cheque</option>
-                  </select>
-                </div>
-
-                <div className="pt-6 flex gap-4">
-                  <button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="w-full py-4 rounded-2xl bg-black text-white font-black text-[12px] uppercase tracking-widest shadow-lg shadow-black/20 hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
-                  >
-                    {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : <CreditCard size={18} strokeWidth={3}/>}
-                    Process Payment
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
     </div>
   );
 }
