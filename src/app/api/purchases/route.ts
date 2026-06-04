@@ -54,13 +54,12 @@ export async function POST(req: Request) {
     await connectDB();
     const session = await mongoose.startSession();
     
+    const body = await req.json();
     let result: any;
     
     try {
       await session.withTransaction(async () => {
       
-    const body = await req.json();
-
     const {
       supplierId,
       invoiceNumber,
