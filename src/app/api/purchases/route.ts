@@ -122,7 +122,7 @@ export async function POST(req: Request) {
 
       // Normalize Expiry Date (Assume MM/YY format if string)
       let parsedExpiry = new Date();
-      if (typeof item.expiryDate === "string") {
+      if (typeof item.expiryDate === "string" && item.expiryDate.trim() !== "") {
          const parts = item.expiryDate.includes("-") ? item.expiryDate.split("-") : item.expiryDate.split("/");
          if (parts.length === 2) {
             const month = parseInt(parts[0], 10);
@@ -131,7 +131,7 @@ export async function POST(req: Request) {
          } else {
              parsedExpiry = new Date(item.expiryDate);
          }
-      } else if (item.expiryDate) {
+      } else if (item.expiryDate && item.expiryDate !== "") {
          parsedExpiry = new Date(item.expiryDate);
       } else {
          // Default to 1 year from now if totally missing
