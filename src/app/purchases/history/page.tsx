@@ -33,7 +33,7 @@ export default function PurchaseHistoryPage() {
             setInvoices([]);
           }
       };
-      apiClient.get(`/api/purchases/history?page=${page}&limit=20&search=${searchQuery}`, {}, handleData)
+      apiClient.get(`/api/purchases/history?page=${page}&limit=20&search=${searchQuery}&_t=${Date.now()}`, {}, handleData)
         .then(handleData)
         .catch(console.error)
         .finally(() => setLoading(false));

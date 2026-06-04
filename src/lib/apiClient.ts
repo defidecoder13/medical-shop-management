@@ -16,7 +16,11 @@ export const apiClient = {
 
         if (isOnline) {
             try {
-                const response = await fetch(url, options);
+                const fetchOptions = {
+                    ...options,
+                    cache: options.cache || 'no-store'
+                };
+                const response = await fetch(url, fetchOptions);
                 if (!response.ok) throw new Error("Network response was not ok");
 
                 const data = await response.json();
