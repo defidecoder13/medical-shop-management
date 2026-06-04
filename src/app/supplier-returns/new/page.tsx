@@ -88,15 +88,9 @@ function ReturnContent() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const data = await apiClient.get('/api/auth/check');
-        if (!data) router.push('/login');
-      } catch {
-        router.push('/login');
-      }
-    };
-    checkAuth();
+    if (!document.cookie.includes('is_logged_in=1')) {
+      router.push('/login');
+    }
     fetchSuppliers();
   }, [router]);
 

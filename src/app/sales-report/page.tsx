@@ -54,15 +54,9 @@ export default function SalesReportPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await apiClient.get('/api/auth/check');
-        if (!res) router.push('/login');
-      } catch {
-        router.push('/login');
-      }
-    };
-    checkAuth();
+    if (!document.cookie.includes('is_logged_in=1')) {
+      router.push('/login');
+    }
   }, [router]);
 
   const [reportData, setReportData] = useState<SalesReportData | null>(null);

@@ -34,17 +34,9 @@ export default function LowStockPage() {
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const data = await apiClient.get('/api/auth/check');
-        if (!data) {
-          router.push('/login');
-        }
-      } catch (error) {
-        router.push('/login');
-      }
-    };
-    checkAuth();
+    if (!document.cookie.includes('is_logged_in=1')) {
+      router.push('/login');
+    }
   }, [router]);
 
   const [lowStockMedicines, setLowStockMedicines] = useState<Medicine[]>([]);

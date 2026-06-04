@@ -23,12 +23,14 @@ import {
 } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { StatsCard } from "@/src/components/dashboard/stats-card";
 import { SalesChart } from "@/src/components/dashboard/sales-chart";
 import { RecentTransactions } from "@/src/components/dashboard/recent-transactions";
 
 export default function Home() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [chartRange, setChartRange] = useState("7d");
   const [data, setData] = useState<any>({
@@ -38,18 +40,10 @@ export default function Home() {
   });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await apiClient.get('/api/auth/check');
-        if (!res) {
-          window.location.href = '/login';
-        }
-      } catch (error) {
-        window.location.href = '/login';
-      }
-    };
-    checkAuth();
-  }, []);
+    if (!document.cookie.includes('is_logged_in=1')) {
+      router.push('/login');
+    }
+  }, [router]);
   
   useEffect(() => {
     const fetchDashboardData = async () => {
