@@ -204,8 +204,9 @@ export async function POST(req: Request) {
     }
 
     // 1. Find or Create Medicine Master
+    const safeName = String(name).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     let medicine = await Medicine.findOne({
-      name: { $regex: `^${name}$`, $options: "i" }
+      name: { $regex: `^${safeName}$`, $options: "i" }
     });
 
     if (!medicine) {
@@ -235,9 +236,10 @@ export async function POST(req: Request) {
     }
 
     // 2. Prevent Duplicate Batch for the same medicine
+    const safeBatch = String(batchNumber).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const existingBatch = await MedicineBatch.findOne({
       medicineId: medicine._id,
-      batchNumber: { $regex: `^${batchNumber}$`, $options: "i" },
+      batchNumber: { $regex: `^${safeBatch}$`, $options: "i" },
     });
 
     if (existingBatch) {
