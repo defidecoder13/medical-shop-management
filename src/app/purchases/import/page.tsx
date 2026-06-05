@@ -163,7 +163,7 @@ export default function ImportPurchasePage() {
          rackNumber: mapping.rackNumber ? row[mapping.rackNumber] : "",
          isMatched: !!matchedMed
        };
-    }).filter(item => item.rawName && item.qty > 0); // Ignore empty rows
+    }).filter(item => item.rawName && String(item.rawName).trim() !== ""); // Ignore empty rows, but allow 0/NaN qty for visibility
 
     setPreviewItems(processed);
     setError(null);
