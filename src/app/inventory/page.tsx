@@ -23,7 +23,8 @@ import {
   TrendingUp,
   AlertTriangle,
   Clock,
-  LayoutGrid
+  LayoutGrid,
+  PackagePlus
 } from "lucide-react";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
@@ -143,6 +144,7 @@ export default function InventoryPage() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Medicine>(emptyMedicine);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [isRestock, setIsRestock] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -457,6 +459,7 @@ export default function InventoryPage() {
         type: 'success' 
       });
       setEditingId(null);
+      setIsRestock(false);
       
       // Fetch in background to sync true IDs
       fetchMedicines();
@@ -476,6 +479,35 @@ export default function InventoryPage() {
       expiryDate: med.expiryDate ? formatToMMYY(med.expiryDate) : "",
     });
     setEditingId(med._id!);
+    setIsRestock(false);
+    setShowForm(true);
+  };
+
+  const handleRestock = (med: Medicine) => {
+    setForm({
+      ...emptyMedicine,
+      name: med.name || "",
+      brand: med.brand || "",
+      composition: med.composition || "",
+      hsnCode: med.hsnCode || "3004",
+      category: med.category || "Tablet",
+      gstPercent: med.gstPercent || 5,
+      tabletsPerStrip: med.tabletsPerStrip || 10,
+      pack: med.pack || "",
+      // Important: Leave these empty/0 for the user to fill
+      stock: "",
+      batchNumber: "",
+      expiryDate: "",
+      buyingPrice: "",
+      sellingPrice: "",
+      rackNumber: "",
+      discountPercent: 0,
+      supplierName: "Direct Purchase",
+      purchaseInvoiceNumber: "",
+      barcode: "",
+    } as any);
+    setEditingId(null);
+    setIsRestock(true);
     setShowForm(true);
   };
 
@@ -679,7 +711,7 @@ export default function InventoryPage() {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex justify-center items-center p-4 overflow-y-auto"
-          onClick={() => { setForm(emptyMedicine); setEditingId(null); setShowForm(false); }}
+          onClick={() => { setForm(emptyMedicine); setEditingId(null); setIsRestock(false); setShowForm(false); }}
         >
           <motion.div 
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -693,7 +725,7 @@ export default function InventoryPage() {
               <Edit3 size={24} strokeWidth={2.5} />
             </div>
             <div>
-              <h3 className="text-[18px] font-black text-[#11327c] tracking-tight">{editingId ? "Edit Medicine" : "Add New Medicine"}</h3>
+              <h3 className="text-[18px] font-black text-[#11327c] tracking-tight">{editingId ? "Edit Medicine" : isRestock ? "Restock Medicine Batch" : "Add New Medicine"}</h3>
               <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest">Update your catalog information</p>
             </div>
           </div>
@@ -1115,6 +1147,13 @@ export default function InventoryPage() {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center justify-center gap-2">
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleRestock(med); }}
+                        className="w-7 h-7 flex items-center justify-center border border-indigo-200 text-indigo-600 rounded hover:text-white hover:bg-indigo-600 transition-all"
+                        title="Restock (Add New Batch)"
+                      >
+                        <PackagePlus size={14} strokeWidth={2.5} />
+                      </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleEdit(med); }}
                         className="w-7 h-7 flex items-center justify-center border border-gray-200 text-gray-500 rounded hover:text-[#11327c] hover:bg-gray-50 transition-all"
