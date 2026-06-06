@@ -6,11 +6,19 @@ import MedicineBatch from "@/src/models/MedicineBatch";
 
 export const dynamic = "force-dynamic";
 
+import { getCache, setCache } from "@/src/lib/redis";
+
 export async function GET(request: Request) {
     try {
         await connectDB();
         const { searchParams } = new URL(request.url);
         const range = searchParams.get('range') || '7d';
+
+        const cacheKey = `dashboard:stats:${range}`;
+        const cachedData = await getCache<any>(cacheKey);
+        if (cachedData) {
+            return NextResponse.json(cachedData);
+        }
 
         // Parallel Fetching
         const [bills, batches] = await Promise.all([
@@ -125,7 +133,7 @@ export async function GET(request: Request) {
             createdAt: b.createdAt
         }));
 
-        return NextResponse.json({
+        const resData = {
             stats: {
                 sales: `₹${totalSales.toFixed(2)}`,
                 orders: totalOrders,
@@ -135,7 +143,11 @@ export async function GET(request: Request) {
             },
             salesChart,
             recentTransactions
-        });
+        };
+
+        await setCache(cacheKey, resData, 300); // Cache for 5 mins
+
+        return NextResponse.json(resData);
 
     } catch (error) {
         console.error("DASHBOARD STATS ERROR:", error);

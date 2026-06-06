@@ -5,11 +5,20 @@ import MedicineBatch from "@/src/models/MedicineBatch";
 
 export const dynamic = "force-dynamic";
 
+import { getCache, setCache, redis } from "@/src/lib/redis";
+
 export async function GET(req: Request) {
   try {
     await connectDB();
 
     const { searchParams } = new URL(req.url);
+
+    const cacheKey = `inventory:get:${searchParams.toString()}`;
+    const cachedData = await getCache<any>(cacheKey);
+    if (cachedData) {
+       return NextResponse.json(cachedData);
+    }
+
     const q = searchParams.get("q");
     const idsParam = searchParams.get("ids"); // Comma-separated medicine IDs
     const inStock = searchParams.get("inStock"); // Filter out 0 qty items
@@ -132,7 +141,7 @@ export async function GET(req: Request) {
     });
 
     if (pageParam) {
-      return NextResponse.json({
+      const resData = {
         data: safeBatches,
         pagination: {
           totalCount,
@@ -140,8 +149,11 @@ export async function GET(req: Request) {
           currentPage: page,
           limit: pageSize
         }
-      });
+      };
+      await setCache(cacheKey, resData, 300); // Cache for 5 mins
+      return NextResponse.json(resData);
     } else {
+      await setCache(cacheKey, safeBatches, 300);
       return NextResponse.json(safeBatches);
     }
   } catch (error) {
@@ -265,6 +277,11 @@ export async function POST(req: Request) {
       purchaseInvoiceNumber: purchaseInvoiceNumber || "",
     });
 
+    if (redis) {
+      const keys = await redis.keys("inventory:get:*");
+      if (keys.length > 0) await redis.del(...keys);
+    }
+
     return NextResponse.json(batch);
   } catch (error) {
     console.error("INVENTORY POST ERROR:", error);
@@ -362,6 +379,11 @@ export async function PUT(req: Request) {
     await batch.save();
     if (masterChanged) {
       await medicine.save();
+    }
+
+    if (redis) {
+      const keys = await redis.keys("inventory:get:*");
+      if (keys.length > 0) await redis.del(...keys);
     }
 
     return NextResponse.json(batch);

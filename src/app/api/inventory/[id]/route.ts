@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import MedicineBatch from "@/src/models/MedicineBatch";
 import Medicine from "@/src/models/Medicine";
+import { redis } from "@/src/lib/redis";
 
 export async function GET(
     request: Request,
@@ -60,6 +61,11 @@ export async function DELETE(
             if (remainingBatches === 0) {
                 await Medicine.findByIdAndDelete(deletedBatch.medicineId);
             }
+        }
+
+        if (redis) {
+            const keys = await redis.keys("inventory:get:*");
+            if (keys.length > 0) await redis.del(...keys);
         }
 
         return NextResponse.json(
