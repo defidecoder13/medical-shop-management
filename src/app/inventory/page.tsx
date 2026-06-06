@@ -642,10 +642,10 @@ export default function InventoryPage() {
            <div className="w-14 h-14 bg-[#f0f4ff] rounded-xl flex items-center justify-center text-[#2563eb] shrink-0">
              <Package size={26} strokeWidth={2} />
            </div>
-           <div>
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Total Items</p>
-             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? stats.totalItems.toLocaleString() : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1">All medicines in stock</p>
+           <div className="flex-1 overflow-hidden">
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Total Items</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate">{stats ? stats.totalItems.toLocaleString() : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">All medicines in stock</p>
            </div>
         </div>
 
@@ -653,10 +653,10 @@ export default function InventoryPage() {
            <div className="w-14 h-14 bg-[#ecfdf5] rounded-xl flex items-center justify-center text-[#10b981] shrink-0">
              <TrendingUp size={26} strokeWidth={2} />
            </div>
-           <div>
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Total Stock Value</p>
-             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1">At purchase price</p>
+           <div className="flex-1 overflow-hidden">
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Total Stock Value</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate" title={stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : ""}>{stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">At purchase price</p>
            </div>
         </div>
 
@@ -664,10 +664,10 @@ export default function InventoryPage() {
            <div className="w-14 h-14 bg-[#fff7ed] rounded-xl flex items-center justify-center text-[#f97316] shrink-0">
              <AlertTriangle size={26} strokeWidth={2} />
            </div>
-           <div>
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Low Stock Items</p>
-             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? stats.lowStockItems : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1">Reorder soon</p>
+           <div className="flex-1 overflow-hidden">
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Low Stock Items</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate">{stats ? stats.lowStockItems : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">Reorder soon</p>
            </div>
         </div>
 
@@ -675,10 +675,10 @@ export default function InventoryPage() {
            <div className="w-14 h-14 bg-[#fef2f2] rounded-xl flex items-center justify-center text-[#ef4444] shrink-0">
              <Clock size={26} strokeWidth={2} />
            </div>
-           <div>
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Expiring Soon</p>
-             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? stats.expiringSoon : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1">Within 30 days</p>
+           <div className="flex-1 overflow-hidden">
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Expiring Soon</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate">{stats ? stats.expiringSoon : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">Within 6 months</p>
            </div>
         </div>
 
@@ -686,10 +686,10 @@ export default function InventoryPage() {
            <div className="w-14 h-14 bg-[#faf5ff] rounded-xl flex items-center justify-center text-[#a855f7] shrink-0">
              <LayoutGrid size={26} strokeWidth={2} />
            </div>
-           <div>
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5">Out of Stock</p>
-             <h3 className="text-2xl font-black text-[#0f172a]">{stats ? stats.outOfStock : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1">Out of stock items</p>
+           <div className="flex-1 overflow-hidden">
+             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Out of Stock</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate">{stats ? stats.outOfStock : "..."}</h3>
+             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">Out of stock items</p>
            </div>
         </div>
       </div>
