@@ -803,201 +803,74 @@ function BillingContent() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="group relative p-5 rounded-2xl border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all shadow-sm hover:shadow-md flex flex-col gap-4"
+                        className="group relative p-3.5 rounded-xl border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all shadow-sm flex flex-col md:flex-row items-center gap-3"
                       >
-                        <div className="flex justify-between items-start mb-2">
-                          <div className="flex gap-4">
-                            <div className="w-16 h-16 bg-[#f8fafc] rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 shrink-0">
-                              <div className="w-8 h-8 rounded-full bg-blue-100/50 flex items-center justify-center">
-                                <Pill size={24} className="text-blue-600 -rotate-45" strokeWidth={2} />
-                              </div>
+                         {/* LEFT: Info */}
+                         <div className="flex-1 min-w-0 flex flex-col justify-center w-full">
+                            <div className="font-black text-[#11327c] text-[14px] truncate flex items-center gap-2 mb-1">
+                              {item.name}
+                              {item.stock < 10 && <span className="px-1.5 py-0.5 rounded text-rose-500 bg-rose-50 border border-rose-100 text-[9px] font-black uppercase tracking-wider">Low Stock</span>}
                             </div>
-                            <div className="space-y-1">
-                              <div className="font-black text-[#11327c] text-[20px] flex items-center gap-3 tracking-tight leading-none pt-1">
-                                {item.name}
-                                {item.stock < 10 && (
-                                  <span className="px-2 py-0.5 rounded text-rose-500 bg-rose-50 border border-rose-100 text-[10px] font-black uppercase tracking-wider">
-                                    Low Stock
-                                  </span>
-                                )}
-                              </div>
-                              <div className="text-[13px] text-gray-500 font-medium">
-                                {item.composition || `${item.name} Tablets`}
-                              </div>
-                              <div className="flex flex-wrap items-center gap-2 text-[12px] font-bold uppercase tracking-tight text-gray-400 mt-1">
-                                <span>Batch: <span className="text-[#11327c]">{item.batchNumber}</span></span>
-                                <span className="opacity-30">|</span>
-                                <span>Exp: <span className="text-[#11327c]">{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : "-"}</span></span>
-                                <span className="opacity-30">|</span>
-                                <span>Stock: <span className={item.stock < 10 ? "text-rose-500" : "text-gray-600"}>
-                                  {
-                                    item.tabletsPerStrip > 1 
-                                    ? (() => {
-                                        const totalTabs = Math.round((item.stock || 0) * item.tabletsPerStrip);
-                                        const strips = Math.floor(totalTabs / item.tabletsPerStrip);
-                                        const tabs = totalTabs % item.tabletsPerStrip;
-                                        if (strips > 0 && tabs > 0) return `${strips} Strips, ${tabs} Tabs`;
-                                        if (strips > 0) return `${strips} Strips`;
-                                        if (tabs > 0) return `${tabs} Tabs`;
-                                        return `0 Strips`;
-                                      })()
-                                    : `${Math.round(item.stock || 0)} Units`
-                                  }
+                            <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                                <span>Batch: <span className="text-gray-700">{item.batchNumber || '-'}</span></span>
+                                <span className="opacity-30">•</span>
+                                <span>Exp: <span className="text-gray-700">{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) : "-"}</span></span>
+                                <span className="opacity-30">•</span>
+                                <span>Stock: <span className={item.stock < 10 ? "text-rose-500" : "text-gray-700"}>
+                                  {Math.round(item.stock || 0)}
                                 </span></span>
-                              </div>
                             </div>
-                          </div>
+                         </div>
 
-                          <button
-                            onClick={() => removeFromCart(item.medicineId)}
-                            className="w-11 h-11 flex items-center justify-center text-rose-400 border border-gray-100 rounded-xl hover:text-rose-500 hover:bg-rose-50 hover:border-rose-100 transition-all shrink-0"
-                          >
-                            <Trash2 size={20} strokeWidth={2} />
-                          </button>
-                        </div>
-                        
-                        <div className={`grid grid-cols-1 gap-4 mt-2 ${isMulti ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
-                          {/* Strip Input */}
-                          <div className="flex flex-col p-4 rounded-xl bg-blue-50/30 border border-gray-100 hover:border-blue-200 transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-blue-600" />
-                                <span className="text-[12px] font-black text-[#11327c] uppercase tracking-widest">
-                                  {isMulti ? "Strips" : "Quantity"}
-                                </span>
-                              </div>
-                              <span className="text-[15px] font-black text-[#11327c]">₹{((item.stripQty || 0) * (item.stripSellingPrice || 0)).toFixed(2)}</span>
-                            </div>
-                            
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
-                                <button 
-                                  onClick={() => updateItem(item.medicineId, "stripQty", Math.max(0, (item.stripQty || 0) - 1))}
-                                  className="w-8 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                                >
-                                  <Minus size={16} strokeWidth={2.5} />
-                                </button>
-                                <input
-                                  type="number"
-                                  min="0"
-                                  className="w-12 bg-transparent text-[14px] font-bold text-center focus:outline-none text-gray-900 appearance-none"
-                                  value={item.stripQty === 0 ? '' : item.stripQty}
-                                  onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)}
-                                />
-                                <button 
-                                  onClick={() => updateItem(item.medicineId, "stripQty", (item.stripQty || 0) + 1)}
-                                  className="w-8 h-8 flex items-center justify-center text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
-                                >
-                                  <Plus size={16} strokeWidth={2.5} />
-                                </button>
-                              </div>
-                              <span className="text-[12px] font-bold text-gray-500">MRP: ₹{item.stripSellingPrice}</span>
-                            </div>
-                            
-                            <div className="h-px w-full border-b border-dashed border-gray-200 mb-3" />
-                            
-                            <div className="flex items-center justify-between">
-                               <div className="flex items-center gap-2 text-gray-500">
-                                  <Tag size={14} className="text-blue-500" strokeWidth={2} />
-                                  <span className="text-[12px] font-semibold">{isMulti ? "Per Strip" : "Per Unit"}</span>
-                               </div>
-                               <span className="text-[13px] font-black text-blue-700">₹{item.stripSellingPrice}</span>
-                            </div>
-                          </div>
-                          
-                          {/* Tablet Input */}
-                          {isMulti && (
-                            <div className="flex flex-col p-4 rounded-xl bg-emerald-50/30 border border-gray-100 hover:border-emerald-200 transition-all">
-                              <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
-                                  <span className="text-[12px] font-black text-emerald-700 uppercase tracking-widest">Tablets</span>
+                         {/* MIDDLE: Inputs */}
+                         <div className="flex items-center gap-3 w-full md:w-auto shrink-0 bg-[#f8fafc] px-3 py-2 rounded-lg border border-gray-100/80">
+                             {/* STRIP */}
+                             <div className="flex flex-col items-center">
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{isMulti ? "Strips" : "Qty"} <span className="text-[#11327c]/70 ml-0.5">(₹{item.stripSellingPrice})</span></span>
+                                <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
+                                  <button onClick={() => updateItem(item.medicineId, "stripQty", Math.max(0, (item.stripQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
+                                  <input type="number" min="0" className="w-10 text-[12px] font-bold text-center focus:outline-none bg-transparent appearance-none" value={item.stripQty === 0 ? '' : item.stripQty} onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)} />
+                                  <button onClick={() => updateItem(item.medicineId, "stripQty", (item.stripQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
                                 </div>
-                                <span className="text-[15px] font-black text-emerald-700">₹{((item.tabletQty || 0) * (item.tabletSellingPrice || 0)).toFixed(2)}</span>
-                              </div>
-                              
-                              <div className="flex items-center justify-between mb-4">
-                                <div className="flex items-center bg-white border border-gray-200 rounded-lg p-0.5 shadow-sm">
-                                  <button 
-                                    onClick={() => updateItem(item.medicineId, "tabletQty", Math.max(0, (item.tabletQty || 0) - 1))}
-                                    className="w-8 h-8 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
-                                  >
-                                    <Minus size={16} strokeWidth={2.5} />
-                                  </button>
-                                  <input
-                                    type="number"
-                                    min="0"
-                                    className="w-12 bg-transparent text-[14px] font-bold text-center focus:outline-none text-gray-900 appearance-none"
-                                    value={item.tabletQty === 0 ? '' : item.tabletQty}
-                                    onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)}
-                                  />
-                                  <button 
-                                    onClick={() => updateItem(item.medicineId, "tabletQty", (item.tabletQty || 0) + 1)}
-                                    className="w-8 h-8 flex items-center justify-center text-emerald-600 hover:bg-emerald-50 rounded-md transition-colors"
-                                  >
-                                    <Plus size={16} strokeWidth={2.5} />
-                                  </button>
-                                </div>
-                                <span className="text-[12px] font-bold text-gray-500">MRP: ₹{item.tabletSellingPrice}</span>
-                              </div>
-                              
-                              <div className="h-px w-full border-b border-dashed border-gray-200 mb-3" />
-                              
-                              <div className="flex items-center justify-between">
-                                 <div className="flex items-center gap-2 text-gray-500">
-                                    <Tag size={14} className="text-emerald-500" strokeWidth={2} />
-                                    <span className="text-[12px] font-semibold">Per Tablet</span>
+                             </div>
+
+                             {isMulti && (
+                               <>
+                                 <div className="w-px h-8 bg-gray-200 mx-1"></div>
+                                 {/* TABLET */}
+                                 <div className="flex flex-col items-center">
+                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tabs <span className="text-[#11327c]/70 ml-0.5">(₹{item.tabletSellingPrice})</span></span>
+                                    <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
+                                      <button onClick={() => updateItem(item.medicineId, "tabletQty", Math.max(0, (item.tabletQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
+                                      <input type="number" min="0" className="w-10 text-[12px] font-bold text-center focus:outline-none bg-transparent appearance-none" value={item.tabletQty === 0 ? '' : item.tabletQty} onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)} />
+                                      <button onClick={() => updateItem(item.medicineId, "tabletQty", (item.tabletQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
+                                    </div>
                                  </div>
-                                 <span className="text-[13px] font-black text-emerald-700">₹{item.tabletSellingPrice}</span>
-                              </div>
-                            </div>
-                          )}
+                               </>
+                             )}
+                         </div>
 
-                          {/* Discount Input */}
-                          <div className="flex flex-col p-4 rounded-xl bg-orange-50/30 border border-gray-100 hover:border-orange-200 transition-all">
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-2">
-                                <div className="w-2 h-2 rounded-full bg-orange-500" />
-                                <span className="text-[12px] font-black text-orange-600 uppercase tracking-widest">Discount</span>
-                              </div>
-                              <span className="text-[15px] font-black text-orange-600">
-                                -₹{(((item.stripQty || 0) * (item.stripSellingPrice || 0) + (item.tabletQty || 0) * (item.tabletSellingPrice || 0)) * ((item.discountPercent || 0) / 100)).toFixed(2)}
-                              </span>
+                         {/* RIGHT: Price & Delete */}
+                         <div className="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end md:justify-between">
+                            <div className="flex flex-col items-end">
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Disc %</span>
+                                <input type="number" min="0" max="100" className="w-12 h-7 bg-white border border-gray-200 rounded-md px-1 text-[12px] font-bold focus:ring-2 focus:ring-orange-500/10 outline-none text-center shadow-sm text-orange-600" value={item.discountPercent === 0 ? '' : item.discountPercent} onChange={(e) => updateItem(item.medicineId, "discountPercent", e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value))))} />
                             </div>
-                            
-                            <div className="flex items-center justify-between mb-4">
-                              <div className="flex items-center gap-2">
-                                <input
-                                  type="number"
-                                  min="0"
-                                  max="100"
-                                  className="w-16 bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-[14px] font-bold focus:ring-2 focus:ring-orange-500/10 outline-none text-gray-900 shadow-sm"
-                                  value={item.discountPercent === 0 ? '' : item.discountPercent}
-                                  onChange={(e) => {
-                                    const val = e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value)));
-                                    updateItem(item.medicineId, "discountPercent", val);
-                                  }}
-                                />
-                                <div className="bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-[13px] font-bold text-gray-600 shadow-sm flex items-center gap-2">
-                                   % <span className="text-[8px] opacity-50">▼</span>
-                                </div>
-                              </div>
+
+                            <div className="w-px h-8 bg-gray-100 hidden md:block mx-1"></div>
+
+                            <div className="flex flex-col items-end w-20">
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</span>
+                                <span className="text-[14px] font-black text-[#11327c]">
+                                   ₹{(((item.stripQty || 0) * (item.stripSellingPrice || 0) + (item.tabletQty || 0) * (item.tabletSellingPrice || 0)) * (1 - (item.discountPercent || 0) / 100)).toFixed(2)}
+                                </span>
                             </div>
-                            
-                            <div className="h-px w-full border-b border-dashed border-gray-200 mb-3" />
-                            
-                            <div className="flex items-center justify-between">
-                               <div className="flex items-center gap-2 text-gray-500">
-                                  <Tag size={14} className="text-orange-500" strokeWidth={2} />
-                                  <span className="text-[12px] font-semibold">Amount</span>
-                               </div>
-                               <span className="text-[13px] font-black text-orange-600">
-                                 -₹{(((item.stripQty || 0) * (item.stripSellingPrice || 0) + (item.tabletQty || 0) * (item.tabletSellingPrice || 0)) * ((item.discountPercent || 0) / 100)).toFixed(2)}
-                               </span>
-                            </div>
-                          </div>
-                        </div>
-                  </motion.div>
+
+                            <button onClick={() => removeFromCart(item.medicineId)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors ml-1">
+                               <Trash2 size={15} strokeWidth={2.5} />
+                            </button>
+                         </div>
+                      </motion.div>
                 );
               })}
                 </AnimatePresence>
