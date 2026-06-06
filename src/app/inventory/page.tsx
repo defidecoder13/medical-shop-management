@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useDeferredValue } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Plus, 
@@ -134,6 +134,7 @@ export default function InventoryPage() {
   const router = useRouter();
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
   const [filterCategory, setFilterCategory] = useState("All Categories");
   const [filterCompany, setFilterCompany] = useState("All Companies");
   const [filterStatus, setFilterStatus] = useState("All Status");
@@ -534,8 +535,8 @@ export default function InventoryPage() {
 
   const filteredMeds = medicines
     .filter(m => {
-       if (!search) return true;
-       const q = search.toLowerCase();
+       if (!deferredSearch) return true;
+       const q = deferredSearch.toLowerCase();
        return m.name.toLowerCase().includes(q) || 
               (m.brand && m.brand.toLowerCase().includes(q)) || 
               (m.batchNumber && m.batchNumber.toLowerCase().includes(q)) ||

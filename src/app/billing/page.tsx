@@ -74,14 +74,50 @@ export default function BillingPage() {
   );
 }
 
+function BillingSearchInput({ onSearch, onBarcodeScan, clearTrigger }: any) {
+  const [localSearch, setLocalSearch] = useState("");
+  const debouncedValue = useDebounce(localSearch, 300);
+
+  useEffect(() => {
+    onSearch(debouncedValue);
+  }, [debouncedValue, onSearch]);
+
+  useEffect(() => {
+    if (clearTrigger > 0) {
+      setLocalSearch("");
+    }
+  }, [clearTrigger]);
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && localSearch.trim() !== '') {
+      e.preventDefault();
+      onBarcodeScan(localSearch);
+    }
+  };
+
+  return (
+    <div className="relative">
+      <input
+        className="w-full bg-white border border-gray-300 shadow-sm pl-12 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-gray-800 placeholder:text-gray-400 font-medium shadow-sm"
+        placeholder="Scan Barcode or Search by name, brand, batch..."
+        value={localSearch}
+        onChange={(e) => setLocalSearch(e.target.value)}
+        onKeyDown={handleKeyDown}
+        autoFocus
+      />
+      <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" strokeWidth={2} />
+    </div>
+  );
+}
+
 function BillingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const addId = searchParams.get('add');
   const processedAddId = useRef<string | null>(null);
 
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebounce(search, 300);
+  const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [clearTrigger, setClearTrigger] = useState(0);
   const [medicines, setMedicines] = useState<Medicine[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [discountPercent, setDiscountPercent] = useState<number | "">("");
@@ -181,6 +217,7 @@ function BillingContent() {
                 gstPercent: med.gstPercent || 0,
               },
             ]);
+            setClearTrigger(prev => prev + 1);
           }
         } catch (error) {
           console.error("Failed to auto-add item", error);
@@ -189,8 +226,6 @@ function BillingContent() {
       fetchAndAdd();
     }
   }, [addId, router]);
-
-
 
   useEffect(() => {
     if (!debouncedSearch) {
@@ -293,13 +328,11 @@ function BillingContent() {
     setGrandTotal(roundedFinalTotal);
   }, [cart, gstEnabled]);
 
-  const handleBarcodeScan = async (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && search.trim() !== '') {
-      e.preventDefault();
-      try {
+  const handleBarcodeScan = async (scannedValue: string) => {
+    try {
         setLoading(true);
         // Fast fetch bypasses debounce - perfectly suited for barcode scanners!
-        const res = await apiClient.get(`/api/inventory?q=${search}`);
+        const res = await apiClient.get(`/api/inventory?q=${scannedValue}`);
         if (res && res.length > 0) {
           // Find first valid batch (stock > 0, unexpired)
           const validBatch = res.find((b: any) => b.stock > 0 && new Date(b.expiryDate) > new Date());
@@ -313,12 +346,11 @@ function BillingContent() {
           setMessage({ text: 'Barcode not found in inventory!', type: 'error' });
           setTimeout(() => setMessage(null), 3000);
         }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+      } catch (err: any) {
+        setMessage({ text: "Failed to scan barcode", type: "error" });
     }
+    setLoading(false);
+    setTimeout(() => setMessage(null), 3000);
   };
 
   const addToCart = (med: Medicine) => {
@@ -362,7 +394,7 @@ function BillingContent() {
         expiryDate: med.expiryDate,
       },
     ]);
-    setSearch("");
+    setClearTrigger(prev => prev + 1);
   };
 
   const loadRegularMedicines = async () => {
@@ -564,7 +596,7 @@ function BillingContent() {
 
       setCart([]);
       localStorage.removeItem('medishop_cart');
-      setSearch("");
+      setClearTrigger(prev => prev + 1);
       setDiscountPercent("");
       setPatientName("");
       setPatientPhone("");
@@ -618,17 +650,11 @@ function BillingContent() {
               <Search size={18} className="text-[#11327c]" strokeWidth={2.5} />
               Add Medicines
             </h2>
-            <div className="relative">
-              <input
-                className="w-full bg-white border border-gray-300 shadow-sm pl-12 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-gray-800 placeholder:text-gray-400 font-medium shadow-sm"
-                placeholder="Scan Barcode or Search by name, brand, batch..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={handleBarcodeScan}
-                autoFocus
-              />
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" strokeWidth={2} />
-            </div>
+            <BillingSearchInput 
+              onSearch={setDebouncedSearch}
+              onBarcodeScan={handleBarcodeScan}
+              clearTrigger={clearTrigger}
+            />
 
             {/* Results Dropdown */}
             <AnimatePresence>
