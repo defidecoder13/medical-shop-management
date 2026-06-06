@@ -1149,20 +1149,15 @@ export default function InventoryPage() {
                     <div className="flex items-center justify-center gap-2">
                       <button 
                         onClick={(e) => { e.stopPropagation(); handleRestock(med); }}
-                        className="w-7 h-7 flex items-center justify-center border border-indigo-200 text-indigo-600 rounded hover:text-white hover:bg-indigo-600 transition-all"
+                        className="flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 text-indigo-700 bg-indigo-50 rounded-lg hover:text-white hover:bg-indigo-600 transition-all text-xs font-bold shadow-sm"
                         title="Restock (Add New Batch)"
                       >
                         <PackagePlus size={14} strokeWidth={2.5} />
-                      </button>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleEdit(med); }}
-                        className="w-7 h-7 flex items-center justify-center border border-gray-200 text-gray-500 rounded hover:text-[#11327c] hover:bg-gray-50 transition-all"
-                      >
-                        <Edit3 size={14} />
+                        Restock
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); med._id && handleDelete(med._id); }}
-                        className="w-7 h-7 flex items-center justify-center text-gray-500 hover:text-rose-600 hover:bg-rose-50 rounded transition-all"
+                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all ml-1"
                         title="Delete Medicine"
                       >
                         <Trash2 size={16} />
