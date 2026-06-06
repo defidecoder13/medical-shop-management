@@ -5,6 +5,50 @@ import MedicineBatch from "@/src/models/MedicineBatch";
 
 export const dynamic = "force-dynamic";
 
+const parseBackendExpiryDate = (expiryInput: any): Date | null => {
+  if (!expiryInput) return null;
+  
+  // 1. Handle Excel Serial Numbers (e.g., 45231 or "45231")
+  const numericVal = Number(expiryInput);
+  if (!isNaN(numericVal) && numericVal > 20000 && numericVal < 100000) {
+    return new Date(Math.round((numericVal - 25569) * 86400 * 1000));
+  }
+
+  const expiryStr = String(expiryInput).trim();
+  
+  // 2. Handle alphanumeric formats like "Sep-27" or "Sep 2027"
+  const alphaMatch = expiryStr.match(/^([a-zA-Z]{3})[-/\s](\d{2,4})$/);
+  if (alphaMatch) {
+    const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    const monthStr = alphaMatch[1].toLowerCase();
+    const monthIndex = monthNames.indexOf(monthStr);
+    if (monthIndex !== -1) {
+      const month = monthIndex + 1;
+      let year = parseInt(alphaMatch[2], 10);
+      if (year < 100) year += 2000;
+      return new Date(year, month, 0); // Last day of month
+    }
+  }
+
+  // 3. Normalize delimiters and match MM/YY or MM/YYYY
+  const cleanStr = expiryStr.replace(/[-.]/g, "/");
+  const match = cleanStr.match(/^(\d{1,2})\/(\d{2,4})$/);
+  if (match) {
+    const month = parseInt(match[1], 10);
+    let year = parseInt(match[2], 10);
+    if (month >= 1 && month <= 12) {
+      if (year < 100) year += 2000;
+      return new Date(year, month, 0);
+    }
+  }
+  
+  // 4. ISO or YYYY-MM-DD
+  const fallbackDate = new Date(expiryStr);
+  if (!isNaN(fallbackDate.getTime())) return fallbackDate;
+  
+  return null;
+};
+
 export async function POST(req: Request) {
     try {
         await connectDB();
@@ -43,6 +87,12 @@ export async function POST(req: Request) {
 
             if (!name || !batchNumber || !expiryDate || Number.isNaN(stock) || Number.isNaN(tabletsPerStrip)) {
                 errors.push(`Row ${i + 1} (${name || 'Unknown'}): Missing critical fields.`);
+                continue;
+            }
+
+            const parsedDate = parseBackendExpiryDate(expiryDate);
+            if (!parsedDate || parsedDate.getFullYear() === 1970) {
+                errors.push(`Row ${i + 1} (${name}): Invalid expiry date format (${expiryDate}).`);
                 continue;
             }
 
@@ -97,7 +147,7 @@ export async function POST(req: Request) {
 
                 // Update optional fields if provided
                 if (rackNumber) existingBatch.rackNumber = rackNumber;
-                if (expiryDate) existingBatch.expiryDate = new Date(expiryDate);
+                if (parsedDate) existingBatch.expiryDate = parsedDate;
                 if (discountPercent !== undefined) existingBatch.discountPercent = discountPercent;
                 if (supplierName && supplierName !== "Direct Purchase") existingBatch.supplierName = supplierName;
                 if (purchaseInvoiceNumber) existingBatch.purchaseInvoiceNumber = purchaseInvoiceNumber;
@@ -110,7 +160,7 @@ export async function POST(req: Request) {
                 await MedicineBatch.create({
                     medicineId: medicine._id,
                     batchNumber,
-                    expiryDate: new Date(expiryDate),
+                    expiryDate: parsedDate,
                     stock,
                     totalTabletsInStock,
                     buyingPricePerStrip: Number.isNaN(buyingPricePerStrip) ? 0 : buyingPricePerStrip,
