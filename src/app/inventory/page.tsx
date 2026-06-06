@@ -32,48 +32,59 @@ import { apiClient } from "@/src/lib/apiClient";
 import { format } from "date-fns";
 import * as xlsx from "xlsx";
 
-const parseExpiryDate = (expiryStr: string): string => {
-  if (!expiryStr) return "";
+const parseExpiryDate = (expiryInput: string | number): string => {
+  if (!expiryInput) return "";
   
-  // Normalize delimiters to slash
-  const cleanStr = expiryStr.trim().replace(/[-.]/g, "/");
+  // 1. Handle Excel Serial Numbers (e.g., 45231)
+  if (typeof expiryInput === 'number') {
+    // Excel dates are days since Jan 1, 1900. 25569 is the offset to Unix epoch (Jan 1, 1970).
+    const date = new Date(Math.round((expiryInput - 25569) * 86400 * 1000));
+    return date.toISOString().slice(0, 10);
+  }
+
+  const expiryStr = String(expiryInput).trim();
   
-  // Match MM/YY or MM/YYYY
+  // 2. Handle alphanumeric formats like "Sep-27" or "Sep 2027"
+  const alphaMatch = expiryStr.match(/^([a-zA-Z]{3})[-/\s](\d{2,4})$/);
+  if (alphaMatch) {
+    const monthNames = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    const monthStr = alphaMatch[1].toLowerCase();
+    const monthIndex = monthNames.indexOf(monthStr);
+    if (monthIndex !== -1) {
+      const month = monthIndex + 1;
+      let year = parseInt(alphaMatch[2], 10);
+      if (year < 100) year += 2000;
+      
+      const lastDay = new Date(year, month, 0);
+      const yyyy = lastDay.getFullYear();
+      const mm = String(lastDay.getMonth() + 1).padStart(2, '0');
+      const dd = String(lastDay.getDate()).padStart(2, '0');
+      return `${yyyy}-${mm}-${dd}`;
+    }
+  }
+
+  // 3. Normalize delimiters and match MM/YY or MM/YYYY
+  const cleanStr = expiryStr.replace(/[-.]/g, "/");
   const match = cleanStr.match(/^(\d{1,2})\/(\d{2,4})$/);
   if (match) {
     const month = parseInt(match[1], 10);
     let year = parseInt(match[2], 10);
     
-    if (month < 1 || month > 12) {
-      throw new Error("Invalid month (must be between 01 and 12)");
-    }
+    if (month < 1 || month > 12) return expiryStr; // Skip throw, return raw
+    if (year < 100) year += 2000;
     
-    // Adjust 2-digit years
-    if (year < 100) {
-      year += 2000;
-    }
-    
-    // Find the last day of the month
     const lastDay = new Date(year, month, 0);
-    
     const yyyy = lastDay.getFullYear();
     const mm = String(lastDay.getMonth() + 1).padStart(2, '0');
     const dd = String(lastDay.getDate()).padStart(2, '0');
-    
     return `${yyyy}-${mm}-${dd}`;
   }
   
-  // If it's already YYYY-MM-DD
-  if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStr)) {
-    return cleanStr;
-  }
+  // 4. ISO or YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStr)) return cleanStr;
+  if (/^\d{4}-\d{2}-\d{2}T/.test(cleanStr)) return cleanStr.slice(0, 10);
   
-  // If it's a full ISO timestamp
-  if (/^\d{4}-\d{2}-\d{2}T/.test(cleanStr)) {
-    return cleanStr.slice(0, 10);
-  }
-  
-  throw new Error("Invalid expiry date format. Use MM/YY or MM/YYYY (e.g. 12/28)");
+  return expiryStr;
 };
 
 const formatToMMYY = (dateStr: string): string => {
@@ -352,7 +363,7 @@ export default function InventoryPage() {
           name: row["Name"] || "",
           brand: row["Brand"] || "",
           batchNumber: row["Batch Number"] || "",
-          expiryDate: row["Expiry Date"] || "",
+          expiryDate: parseExpiryDate(row["Expiry Date"] || row["Expiry"] || ""),
           stock: Number(row["Qty"]) || 0,
           tabletsPerStrip: Number(row["Pack"]) || 0,
           buyingPrice: Number(row["Cost Price"]) || 0,
