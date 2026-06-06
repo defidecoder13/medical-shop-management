@@ -35,10 +35,12 @@ import * as xlsx from "xlsx";
 const parseExpiryDate = (expiryInput: string | number): string => {
   if (!expiryInput) return "";
   
-  // 1. Handle Excel Serial Numbers (e.g., 45231)
-  if (typeof expiryInput === 'number') {
+  // 1. Handle Excel Serial Numbers (e.g., 45231 or "45231")
+  const numericVal = Number(expiryInput);
+  // An excel serial number > 20000 represents dates after year 1954, avoiding collisions with MM/YY strings
+  if (!isNaN(numericVal) && numericVal > 20000 && numericVal < 100000) {
     // Excel dates are days since Jan 1, 1900. 25569 is the offset to Unix epoch (Jan 1, 1970).
-    const date = new Date(Math.round((expiryInput - 25569) * 86400 * 1000));
+    const date = new Date(Math.round((numericVal - 25569) * 86400 * 1000));
     return date.toISOString().slice(0, 10);
   }
 
