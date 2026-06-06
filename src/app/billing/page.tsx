@@ -641,9 +641,65 @@ function BillingContent() {
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        {/* Left Column: Search & Cart */}
+        {/* Left Column: Customer Details, Search & Cart */}
         <div className="lg:col-span-8 space-y-6">
           
+          {/* Patient Details Card (Moved to top) */}
+          <div className="bg-white p-7 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)]">
+            <h3 className="text-[15px] font-extrabold text-[#11327c] mb-5 flex items-center gap-2">
+              <Users size={18} strokeWidth={2.5} className="text-[#11327c]" />
+              Customer Details
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Name</label>
+                <input
+                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
+                  placeholder="Full Name"
+                  value={patientName}
+                  onChange={(e) => setPatientName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Doctor Name</label>
+                <input
+                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
+                  placeholder="Dr. Name"
+                  value={doctorName}
+                  onChange={(e) => setDoctorName(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
+                <input
+                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
+                  placeholder="10-digit number"
+                  value={patientPhone}
+                  onChange={(e) => setPatientPhone(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Address</label>
+                <input
+                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
+                  placeholder="Patient Address"
+                  value={patientAddress}
+                  onChange={(e) => setPatientAddress(e.target.value)}
+                />
+              </div>
+            </div>
+            {regularMedicines.length > 0 && (
+                 <button 
+                   onClick={loadRegularMedicines}
+                   disabled={loading}
+                   className="w-full mt-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm"
+                 >
+                    <Package size={16} strokeWidth={2.5} />
+                    Active Prescriptions ({regularMedicines.length})
+                 </button>
+              )}
+          </div>
+
           {/* Search Box */}
           <div className="bg-white p-7 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] relative group">
             <h2 className="text-[15px] font-extrabold text-[#11327c] mb-4 flex items-center gap-2">
@@ -952,62 +1008,7 @@ function BillingContent() {
 
         {/* Right Column: Checkout Summary */}
         <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
-          {/* Patient Details Card */}
-          <div className="bg-white p-7 rounded-2xl border border-gray-100 shadow-[0_4px_20_rgba(0,0,0,0.06)]">
-            <h3 className="text-[15px] font-extrabold text-[#11327c] mb-5 flex items-center gap-2">
-              <Users size={18} strokeWidth={2.5} className="text-[#11327c]" />
-              Customer Details
-            </h3>
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Name</label>
-                <input
-                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
-                  placeholder="Full Name"
-                  value={patientName}
-                  onChange={(e) => setPatientName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Doctor Name</label>
-                <input
-                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
-                  placeholder="Dr. Name"
-                  value={doctorName}
-                  onChange={(e) => setDoctorName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
-                <input
-                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
-                  placeholder="10-digit number"
-                  value={patientPhone}
-                  onChange={(e) => setPatientPhone(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Address</label>
-                <input
-                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
-                  placeholder="Patient Address"
-                  value={patientAddress}
-                  onChange={(e) => setPatientAddress(e.target.value)}
-                />
-              </div>
-              
-              {regularMedicines.length > 0 && (
-                 <button 
-                   onClick={loadRegularMedicines}
-                   disabled={loading}
-                   className="w-full mt-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm"
-                 >
-                    <Package size={16} strokeWidth={2.5} />
-                    Active Prescriptions ({regularMedicines.length})
-                 </button>
-              )}
-            </div>
-          </div>
+
 
           {/* Bill Summary Card */}
           <div className="bg-[#052b82] p-7 rounded-[20px] shadow-[0_20px_50px_-15px_rgba(5,43,130,0.4)] text-white relative flex flex-col justify-between">
