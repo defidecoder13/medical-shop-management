@@ -721,7 +721,7 @@ function BillingContent() {
                   exit={{ opacity: 0, y: 5, scale: 0.98 }}
                   className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-100 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] z-20 max-h-80 overflow-y-auto p-2"
                 >
-                  {medicines.map((med, index) => (
+                  {medicines.slice(0, 50).map((med, index) => (
                     <motion.button
                       key={med._id}
                       initial={{ opacity: 0, x: -10 }}

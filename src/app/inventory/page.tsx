@@ -597,6 +597,14 @@ export default function InventoryPage() {
           : String(bValue).localeCompare(String(aValue));
     });
 
+  const ITEMS_PER_PAGE = 50;
+  const totalFrontendPages = Math.max(1, Math.ceil(filteredMeds.length / ITEMS_PER_PAGE));
+  const paginatedMeds = filteredMeds.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [deferredSearch, filterCategory, filterCompany, filterStatus]);
+
   const renderExpiry = (expiryDate: string) => {
     if (!expiryDate) return { date: "-", text: "", color: "text-gray-500" };
     const exp = new Date(expiryDate);
@@ -1071,7 +1079,7 @@ export default function InventoryPage() {
             </thead>
             <tbody className="divide-y divide-gray-50">
               <AnimatePresence>
-              {filteredMeds.map((med, index) => (
+              {paginatedMeds.map((med, index) => (
                 <motion.tr 
                   key={med._id} 
                   initial={{ opacity: 0, x: -10 }}
@@ -1183,8 +1191,26 @@ export default function InventoryPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
+        <div className="p-4 bg-[#f8fafc]/50 border-t border-gray-100 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
           <p>Total Catalog Size: <span className="text-[#11327c] ml-1">{filteredMeds.length} Items</span></p>
+          
+          <div className="flex items-center gap-2">
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white text-gray-600 transition-colors"
+            >
+              Prev
+            </button>
+            <span className="px-2 text-[#11327c]">Page {page} of {totalFrontendPages}</span>
+            <button 
+              onClick={() => setPage(p => Math.min(totalFrontendPages, p + 1))}
+              disabled={page === totalFrontendPages}
+              className="px-3 py-1.5 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white text-gray-600 transition-colors"
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
