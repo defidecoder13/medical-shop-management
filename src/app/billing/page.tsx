@@ -1011,14 +1011,14 @@ function BillingContent() {
 
 
           {/* Bill Summary Card */}
-          <div className="bg-[#052b82] p-7 rounded-[20px] shadow-[0_20px_50px_-15px_rgba(5,43,130,0.4)] text-white relative flex flex-col justify-between">
+          <div className="bg-[#052b82] p-5 rounded-2xl shadow-[0_20px_50px_-15px_rgba(5,43,130,0.4)] text-white relative flex flex-col justify-between">
             <div>
-              <h3 className="text-[16px] font-black tracking-wide mb-6 flex items-center gap-2">
-                <Receipt size={20} strokeWidth={2.5} />
+              <h3 className="text-[15px] font-black tracking-wide mb-4 flex items-center gap-2">
+                <Receipt size={18} strokeWidth={2.5} />
                 Invoice Summary
               </h3>
               
-              <div className="space-y-4">
+              <div className="space-y-3">
                 <div className="flex justify-between text-[13px] font-bold opacity-90">
                   <span>Sub Total</span>
                   <span>₹{subTotal.toFixed(2)}</span>
@@ -1036,7 +1036,7 @@ function BillingContent() {
                   </div>
                 )}
                 
-                <div className="h-px w-full border-b border-dashed border-white/20 my-4" />
+                <div className="h-px w-full border-b border-dashed border-white/20 my-3" />
 
                 {/* GST Section */}
                 <div className="flex justify-between items-center pb-2">
@@ -1065,16 +1065,16 @@ function BillingContent() {
                   </div>
                 )}
 
-                <div className="h-px w-full border-b border-dashed border-white/20 mb-4 mt-2" />
+                <div className="h-px w-full border-b border-dashed border-white/20 mb-3 mt-1" />
 
                 {/* Payment Mode Selector */}
                 <div className="flex flex-col gap-3">
                   <span className="text-[11px] font-black uppercase tracking-[0.15em] opacity-80">Payment Method</span>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-3 gap-2">
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("Cash")}
-                      className={`py-3 rounded-2xl text-[12px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                      className={`py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                         paymentMethod === "Cash"
                           ? "bg-white text-[#052b82] shadow-md"
                           : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
@@ -1086,7 +1086,7 @@ function BillingContent() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("UPI")}
-                      className={`py-3 rounded-2xl text-[12px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                      className={`py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                         paymentMethod === "UPI"
                           ? "bg-white text-[#052b82] shadow-md"
                           : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
@@ -1098,7 +1098,7 @@ function BillingContent() {
                     <button
                       type="button"
                       onClick={() => setPaymentMethod("Card")}
-                      className={`py-3 rounded-2xl text-[12px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                      className={`py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
                         paymentMethod === "Card"
                           ? "bg-white text-[#052b82] shadow-md"
                           : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
@@ -1112,22 +1112,19 @@ function BillingContent() {
               </div>
             </div>
 
-            <div className="mt-8">
-              <div className="h-px w-full border-b border-dashed border-white/20 mb-6" />
-              
-              <div className="flex justify-between items-center mb-6">
-                <span className="text-[14px] font-black uppercase tracking-widest opacity-90">Grand Total</span>
-                <span className="text-[36px] font-black leading-none tracking-tight">₹{grandTotal.toFixed(2)}</span>
+            <div className="mt-4 pt-4 border-t border-white/10">
+              <div className="flex justify-between items-end mb-4">
+                <span className="text-[12px] font-black tracking-widest opacity-80 uppercase">Grand Total</span>
+                <span className="text-3xl font-black tracking-tighter">₹{grandTotal.toFixed(2)}</span>
               </div>
-
               <button
                 disabled={loading || cart.length === 0}
                 onClick={submitBill}
-                className="w-full bg-[#10b981] text-white py-4 rounded-[14px] font-black text-[14px] shadow-[0_8px_20px_-6px_rgba(16,185,129,0.5)] hover:bg-[#059669] hover:-translate-y-0.5 transition-all active:scale-[0.98] disabled:opacity-50 disabled:hover:translate-y-0 disabled:shadow-none flex items-center justify-center gap-2"
+                className="w-full bg-[#10b981] text-white py-3 rounded-xl font-black text-[13px] hover:bg-[#059669] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? "GENERATING..." : (
                   <>
-                    <FileText size={18} strokeWidth={2.5} />
+                    <FileText size={16} strokeWidth={2.5} />
                     FINALIZE BILL
                   </>
                 )}
