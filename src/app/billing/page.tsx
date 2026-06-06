@@ -829,7 +829,7 @@ function BillingContent() {
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{isMulti ? "Strips" : "Qty"} <span className="text-[#11327c]/70 ml-0.5">(₹{item.stripSellingPrice})</span></span>
                                 <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
                                   <button onClick={() => updateItem(item.medicineId, "stripQty", Math.max(0, (item.stripQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                  <input type="number" min="0" className="w-10 text-[12px] font-bold text-center focus:outline-none bg-transparent appearance-none" value={item.stripQty === 0 ? '' : item.stripQty} onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)} />
+                                  <input type="number" min="0" className="w-10 text-[13px] font-black text-[#11327c] text-center focus:outline-none bg-transparent appearance-none px-1" value={item.stripQty === 0 ? '' : item.stripQty} onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)} />
                                   <button onClick={() => updateItem(item.medicineId, "stripQty", (item.stripQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
                                 </div>
                              </div>
@@ -842,7 +842,7 @@ function BillingContent() {
                                     <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tabs <span className="text-[#11327c]/70 ml-0.5">(₹{item.tabletSellingPrice})</span></span>
                                     <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
                                       <button onClick={() => updateItem(item.medicineId, "tabletQty", Math.max(0, (item.tabletQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                      <input type="number" min="0" className="w-10 text-[12px] font-bold text-center focus:outline-none bg-transparent appearance-none" value={item.tabletQty === 0 ? '' : item.tabletQty} onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)} />
+                                      <input type="number" min="0" className="w-10 text-[13px] font-black text-emerald-700 text-center focus:outline-none bg-transparent appearance-none px-1" value={item.tabletQty === 0 ? '' : item.tabletQty} onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)} />
                                       <button onClick={() => updateItem(item.medicineId, "tabletQty", (item.tabletQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
                                     </div>
                                  </div>
