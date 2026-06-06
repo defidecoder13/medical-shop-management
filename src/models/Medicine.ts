@@ -4,12 +4,12 @@ import mongoose from "mongoose";
 // Force Schema Reload
 const MedicineSchema = new mongoose.Schema(
   {
-    name: { type: String, required: true },
+    name: { type: String, default: "Unknown Medicine" },
     brand: String,
     barcode: { type: String }, // NEW: Barcode Scanner Support
     
     // PACKAGING
-    tabletsPerStrip: { type: Number, required: true },
+    tabletsPerStrip: { type: Number, default: 10 },
 
     // INVENTORY & AUTO-PO LIMITS
     stock: { type: Number, default: 0 },

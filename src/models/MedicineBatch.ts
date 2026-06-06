@@ -3,15 +3,15 @@ import mongoose from "mongoose";
 const MedicineBatchSchema = new mongoose.Schema(
   {
     medicineId: { type: mongoose.Schema.Types.ObjectId, ref: "Medicine", required: true },
-    batchNumber: { type: String, required: true },
-    expiryDate: { type: Date, required: true },
+    batchNumber: { type: String, default: "" },
+    expiryDate: { type: Date },
     
     // STOCK LOGIC
-    stock: { type: Number, required: true }, // STRIPS
-    totalTabletsInStock: { type: Number, required: true }, // STRIPS * tabletsPerStrip
+    stock: { type: Number, default: 0 }, // STRIPS
+    totalTabletsInStock: { type: Number, default: 0 }, // STRIPS * tabletsPerStrip
     
-    buyingPricePerStrip: { type: Number, required: true }, // COST PRICE
-    sellingPricePerStrip: { type: Number, required: true }, // MRP
+    buyingPricePerStrip: { type: Number, default: 0 }, // COST PRICE
+    sellingPricePerStrip: { type: Number, default: 0 }, // MRP
     rackNumber: { type: String }, // Rack Number
     discountPercent: { type: Number, default: 0 }, // DEFAULT DISCOUNT
     supplierName: { type: String, default: "Direct Purchase" }, // Ties batch to distributor

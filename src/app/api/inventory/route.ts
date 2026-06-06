@@ -184,7 +184,7 @@ export async function POST(req: Request) {
     const buyingPricePerStrip = Number(body.buyingPrice); 
     const sellingPricePerStrip = Number(body.sellingPrice); 
 
-    const {
+    let {
       name,
       brand,
       barcode,
@@ -199,20 +199,11 @@ export async function POST(req: Request) {
       purchaseInvoiceNumber,
       category,
     } = body;
-
-    if (
-      !name ||
-      !batchNumber ||
-      !expiryDate ||
-      Number.isNaN(stock) ||
-      Number.isNaN(tabletsPerStrip) ||
-      Number.isNaN(buyingPricePerStrip) ||
-      Number.isNaN(sellingPricePerStrip)
-    ) {
-      return NextResponse.json(
-        { error: "Invalid or missing fields" },
-        { status: 400 }
-      );
+    
+    name = name || "Unknown Medicine";
+    batchNumber = batchNumber || "";
+    if (!expiryDate || expiryDate.trim() === "") {
+        expiryDate = undefined; // Let Mongoose ignore it if empty
     }
 
     // 1. Find or Create Medicine Master
@@ -248,11 +239,16 @@ export async function POST(req: Request) {
     }
 
     // 2. Prevent Duplicate Batch for the same medicine
-    const safeBatch = String(batchNumber).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const existingBatch = await MedicineBatch.findOne({
-      medicineId: medicine._id,
-      batchNumber: { $regex: `^${safeBatch}$`, $options: "i" },
-    });
+    let batchQuery: any = { medicineId: medicine._id };
+    if (batchNumber && batchNumber !== "") {
+        batchQuery.batchNumber = batchNumber;
+    } else {
+        // If no batch number, we won't try to find an exact duplicate to merge
+        // We'll just create a new one every time, or we could group by empty batch
+        batchQuery.batchNumber = "";
+    }
+
+    const existingBatch = await MedicineBatch.findOne(batchQuery);
 
     if (existingBatch) {
       return NextResponse.json(
@@ -261,28 +257,30 @@ export async function POST(req: Request) {
       );
     }
 
-    const totalTabletsInStock = stock * medicine.tabletsPerStrip; // Use master's tabletsPerStrip
-
-    const batch = await MedicineBatch.create({
+    const newBatchData: any = {
       medicineId: medicine._id,
       batchNumber,
-      expiryDate,
-      stock,
-      totalTabletsInStock,
-      buyingPricePerStrip,
-      sellingPricePerStrip,
+      stock: Number.isNaN(stock) ? 0 : stock,
+      totalTabletsInStock: (Number.isNaN(stock) ? 0 : stock) * (Number.isNaN(tabletsPerStrip) ? 10 : tabletsPerStrip),
+      buyingPricePerStrip: Number.isNaN(buyingPricePerStrip) ? 0 : buyingPricePerStrip,
+      sellingPricePerStrip: Number.isNaN(sellingPricePerStrip) ? 0 : sellingPricePerStrip,
       rackNumber: rackNumber || "",
-      discountPercent: Number(discountPercent) || 0,
+      discountPercent: discountPercent || 0,
       supplierName: supplierName || "Direct Purchase",
       purchaseInvoiceNumber: purchaseInvoiceNumber || "",
-    });
+      pack: body.pack || "",
+    };
+    if (expiryDate !== undefined) {
+      newBatchData.expiryDate = expiryDate;
+    }
+    const newBatch = await MedicineBatch.create(newBatchData);
 
     if (redis) {
       const keys = await redis.keys("inventory:get:*");
       if (keys.length > 0) await redis.del(...keys);
     }
 
-    return NextResponse.json(batch);
+    return NextResponse.json(newBatch);
   } catch (error) {
     console.error("INVENTORY POST ERROR:", error);
     return NextResponse.json(
@@ -344,7 +342,9 @@ export async function PUT(req: Request) {
     }
     
     if (body.batchNumber !== undefined) batch.batchNumber = body.batchNumber;
-    if (body.expiryDate !== undefined) batch.expiryDate = body.expiryDate;
+    if (body.expiryDate !== undefined) {
+        batch.expiryDate = body.expiryDate === "" ? undefined : body.expiryDate;
+    }
     if (body.rackNumber !== undefined) batch.rackNumber = body.rackNumber;
 
     if (typeof body.buyingPrice === "number" && body.buyingPrice > 0) {
