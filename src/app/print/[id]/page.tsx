@@ -290,7 +290,7 @@ function PrintInvoiceContent() {
                          <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-center border-r-[1px] border-black">{expStr}</td>
                          <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-right border-r-[1px] border-black">₹{item.sellingPrice.toFixed(2)}</td>
                          <td className="py-1 px-1 text-[9px] font-medium text-black mono-font text-right border-r-[1px] border-black">{item.discountPercent && item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
-                         <td className="py-1 px-1 text-[11px] font-bold text-black mono-font text-right">₹{item.total.toFixed(2)}</td>
+                         <td className="py-1 px-1 text-[11px] font-bold text-black mono-font text-right">₹{(item.total - (item.discountAmount || 0)).toFixed(2)}</td>
                        </tr>
                      )
                    })}

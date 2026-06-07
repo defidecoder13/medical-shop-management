@@ -281,7 +281,7 @@ export default function TransactionDetailsPage() {
                                 </td>
                                 <td className="px-8 py-6 text-right">
                                    <span className="font-black text-[#11327c] text-[14px]">
-                                      ₹{item.total.toFixed(2)}
+                                      ₹{(item.total - (item.discountAmount || 0)).toFixed(2)}
                                    </span>
                                 </td>
                              </tr>
