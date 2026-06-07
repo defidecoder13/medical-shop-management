@@ -228,14 +228,19 @@ function BillingContent() {
   }, [addId, router]);
 
   useEffect(() => {
+    let ignore = false;
     if (!debouncedSearch) {
       setMedicines([]);
       return;
     }
-    const handleMeds = (res: any) => setMedicines(res);
+    const handleMeds = (res: any) => {
+      if (!ignore && res) setMedicines(res);
+    };
     apiClient.get(`/api/inventory?q=${debouncedSearch}&inStock=true`, {}, handleMeds)
       .then(handleMeds)
       .catch((err) => console.error(err));
+      
+    return () => { ignore = true; };
   }, [debouncedSearch]);
 
   // Handle Patient Autofill
@@ -728,16 +733,19 @@ function BillingContent() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => addToCart(med)}
-                      className="w-full flex justify-between items-center p-3.5 hover:bg-[#f8fafc] text-left transition-colors rounded-xl border-b border-gray-50 last:border-0 group/item"
+                      className="w-full flex items-center gap-4 p-4 hover:bg-[#f8fafc] text-left transition-colors rounded-xl border-b border-gray-50 last:border-0 group/item"
                     >
+                      <div className="w-11 h-11 rounded-xl bg-indigo-50/50 flex items-center justify-center text-indigo-400 group-hover/item:bg-indigo-600 group-hover/item:text-white transition-all shadow-sm shrink-0 border border-indigo-100/50 group-hover/item:border-indigo-600">
+                         <Pill size={20} strokeWidth={2} />
+                      </div>
                       <div className="flex-1">
-                        <div className="font-bold text-[#11327c] text-sm group-hover/item:text-[#11327c] transition-colors">{med.name}</div>
+                        <div className="font-extrabold text-[#11327c] text-[15px] group-hover/item:text-indigo-700 transition-colors tracking-tight">{med.name}</div>
                         {med.composition && (
                           <div className="text-[11px] text-gray-500 font-medium truncate max-w-sm mt-0.5">{med.composition}</div>
                         )}
-                        <div className="text-[11px] text-gray-400 font-bold flex flex-wrap gap-x-3 gap-y-1 mt-1.5 uppercase tracking-tight">
-                          <span className="bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">Rack: {med.rackNumber || 'N/A'}</span>
-                          <span className={med.stock < 10 ? 'text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded' : 'text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded'}>
+                        <div className="text-[10px] text-gray-500 font-black flex flex-wrap gap-2 mt-2 uppercase tracking-widest">
+                          {med.rackNumber && <span className="bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md text-gray-600 shadow-sm">Rack: {med.rackNumber}</span>}
+                          <span className={`px-2 py-0.5 rounded-md shadow-sm border ${med.stock < 10 ? 'text-rose-600 bg-rose-50 border-rose-100' : 'text-emerald-600 bg-emerald-50 border-emerald-100'}`}>
                             Stock: {
                               med.tabletsPerStrip > 1 
                               ? (() => {
@@ -752,12 +760,12 @@ function BillingContent() {
                               : `${Math.round(med.stock || 0)} Units`
                             }
                           </span>
-                          <span className="bg-indigo-50 px-1.5 py-0.5 rounded text-indigo-600">Batch: {med.batchNumber || 'N/A'}</span>
-                          <span className="bg-amber-50 px-1.5 py-0.5 rounded text-amber-700">MRP: ₹{(med.sellingPricePerStrip || 0).toFixed(2)}</span>
+                          <span className="bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md text-blue-600 shadow-sm">Batch: {med.batchNumber || 'N/A'}</span>
+                          <span className="bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md text-amber-700 shadow-sm">MRP: ₹{(med.sellingPricePerStrip || 0).toFixed(2)}</span>
                         </div>
                       </div>
-                      <div className="w-9 h-9 flex items-center justify-center bg-[#f0f2ff] text-[#11327c] rounded-lg group-hover/item:bg-[#11327c] group-hover/item:text-white transition-all shadow-sm">
-                        <Plus size={18} strokeWidth={3} />
+                      <div className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-400 rounded-xl group-hover/item:bg-[#10b981] group-hover/item:text-white transition-all shadow-sm shrink-0">
+                        <Plus size={20} strokeWidth={2.5} />
                       </div>
                     </motion.button>
                   ))}
