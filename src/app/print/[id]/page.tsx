@@ -87,7 +87,12 @@ function PrintInvoiceContent() {
     }
   }, [bill, settings, loading]);
 
-  if (loading) return <div className="p-10 text-center font-bold text-black font-mono">GENERATING INVOICE...</div>;
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#f3f4f6]">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mb-4"></div>
+      <div className="text-center font-bold text-black font-mono tracking-widest uppercase">GENERATING INVOICE...</div>
+    </div>
+  );
   if (error || !bill || !settings) return <div className="p-10 text-center text-red-500 font-bold uppercase">ERROR: {error || "RESOURCE_NOT_FOUND"}</div>;
 
   const ITEMS_PER_PAGE = 12; // Compressed layout allows up to 12 items on A5 Landscape
@@ -392,7 +397,12 @@ function PrintInvoiceContent() {
 
 export default function PrintInvoicePage() {
   return (
-    <Suspense fallback={<div className="p-10 text-center font-bold text-black font-mono">LOADING PRINT ENGINE...</div>}>
+    <Suspense fallback={
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f3f4f6]">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mb-4"></div>
+        <div className="text-center font-bold text-black font-mono tracking-widest uppercase">LOADING PRINT ENGINE...</div>
+      </div>
+    }>
       <PrintInvoiceContent />
     </Suspense>
   );
