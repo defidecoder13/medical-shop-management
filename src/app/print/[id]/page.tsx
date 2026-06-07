@@ -325,6 +325,8 @@ function PrintInvoiceContent() {
                    <p className="text-[10px] text-black font-bold leading-tight uppercase">
                      E. & O.E.
                    </p>
+                 </div>
+                 
                 {/* Right Side: Totals & Signatory */}
                 <div className="w-[45%] flex gap-2">
                    <div className="flex-1 border border-gray-200 px-2 py-1 flex flex-col justify-center gap-0.5">
