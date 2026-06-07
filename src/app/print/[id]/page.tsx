@@ -86,7 +86,7 @@ function PrintInvoiceContent() {
     }
   }, [bill, settings, loading]);
 
-  if (loading) return <div className="p-10 text-center font-bold text-gray-500 font-mono">GENERATING INVOICE...</div>;
+  if (loading) return <div className="p-10 text-center font-bold text-black font-mono">GENERATING INVOICE...</div>;
   if (error || !bill || !settings) return <div className="p-10 text-center text-red-500 font-bold uppercase">ERROR: {error || "RESOURCE_NOT_FOUND"}</div>;
 
   const ITEMS_PER_PAGE = 12; // Compressed layout allows up to 12 items on A5 Landscape
@@ -98,7 +98,7 @@ function PrintInvoiceContent() {
   return (
     <div className={`bg-[#f3f4f6] text-black leading-tight max-w-[210mm] mx-auto p-0`}>
       <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Courier+Prime:ital,wght@0,400;0,700;1,400;1,700&display=swap');
         
         @media print {
           @page {
@@ -125,11 +125,11 @@ function PrintInvoiceContent() {
 
         body {
           background-color: #f3f4f6;
-          font-family: 'Inter', sans-serif;
+          font-family: 'Courier Prime', monospace;
         }
 
         .mono-font {
-          font-family: 'IBM Plex Mono', monospace;
+          font-family: 'Courier Prime', monospace;
         }
 
         /* Enforce A5 landscape boundaries in browser preview too */
@@ -147,7 +147,7 @@ function PrintInvoiceContent() {
       <div className="no-print fixed top-4 right-4 z-50 flex gap-2">
         <button 
           onClick={() => router.push(`/transactions/${id}`)}
-          className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg text-xs font-bold uppercase border border-gray-200 hover:bg-gray-200 transition-colors"
+          className="bg-gray-100 text-black px-4 py-2 rounded-lg text-xs font-bold uppercase border border-gray-200 hover:bg-gray-200 transition-colors"
         >
           Close
         </button>
@@ -177,7 +177,7 @@ function PrintInvoiceContent() {
               {/* Left Details */}
               <div className="w-[45%] flex flex-col">
                 <h1 className="text-lg font-bold uppercase tracking-tight text-black leading-none mb-0.5">{settings.shopName}</h1>
-                <p className="text-[8px] font-medium text-gray-600 uppercase max-w-[200px] leading-tight mb-1">
+                <p className="text-[8px] font-medium text-black uppercase max-w-[200px] leading-tight mb-1">
                   {settings.address}
                 </p>
                 <div className="text-[8px] font-bold text-black flex flex-wrap gap-x-3 gap-y-1">
@@ -223,13 +223,13 @@ function PrintInvoiceContent() {
             {/* Horizontal Info Strip */}
             <div className="flex justify-between items-center py-1 text-[8px] mb-0.5">
                <div className="flex gap-4">
-                  {settings.dlNumber && <div className="font-bold text-gray-500 uppercase tracking-wider">D.L.No: <span className="mono-font text-black">{settings.dlNumber}</span></div>}
-                  {settings.pharmacistName && <div className="font-bold text-gray-500 uppercase tracking-wider">Pharmacist: <span className="text-black">{settings.pharmacistName}</span></div>}
+                  {settings.dlNumber && <div className="font-bold text-black uppercase tracking-wider">D.L.No: <span className="mono-font text-black">{settings.dlNumber}</span></div>}
+                  {settings.pharmacistName && <div className="font-bold text-black uppercase tracking-wider">Pharmacist: <span className="text-black">{settings.pharmacistName}</span></div>}
                </div>
                <div className="flex gap-4">
-                  <div className="font-bold text-gray-500 uppercase tracking-wider">Invoice No : <span className="mono-font text-black">{bill._id.slice(-8).toUpperCase()}</span></div>
-                  <div className="font-bold text-gray-500 uppercase tracking-wider">Date: <span className="mono-font text-black">{new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
-                  <div className="font-bold text-gray-500 uppercase tracking-wider">Time: <span className="mono-font text-black">{new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }).toLowerCase()}</span></div>
+                  <div className="font-bold text-black uppercase tracking-wider">Invoice No : <span className="mono-font text-black">{bill._id.slice(-8).toUpperCase()}</span></div>
+                  <div className="font-bold text-black uppercase tracking-wider">Date: <span className="mono-font text-black">{new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
+                  <div className="font-bold text-black uppercase tracking-wider">Time: <span className="mono-font text-black">{new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }).toLowerCase()}</span></div>
                </div>
             </div>
 
@@ -238,16 +238,16 @@ function PrintInvoiceContent() {
               <table className="w-full h-full text-left border-collapse border-[1px] border-black flex-1">
                 <thead>
                    <tr className="border-b-[1px] border-black">
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[5%] border-r-[1px] border-black text-center">QTY</th>
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[27%] border-r-[1px] border-black">PRODUCT</th>
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[6%] text-center border-r-[1px] border-black">PACK</th>
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[10%] text-center border-r-[1px] border-black">MFG</th>
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[8%] text-center border-r-[1px] border-black">HSN</th>
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[14%] text-center border-r-[1px] border-black">BATCH</th>
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[6%] text-center border-r-[1px] border-black">EXP.</th>
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[9%] text-right border-r-[1px] border-black">MRP</th>
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[5%] text-right border-r-[1px] border-black">DISC</th>
-                       <th className="py-0.5 px-1 text-[7px] font-bold text-gray-700 uppercase w-[10%] text-right">AMOUNT</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[5%] border-r-[1px] border-black text-center">QTY</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[27%] border-r-[1px] border-black">PRODUCT</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[6%] text-center border-r-[1px] border-black">PACK</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[10%] text-center border-r-[1px] border-black">MFG</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[8%] text-center border-r-[1px] border-black">HSN</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[14%] text-center border-r-[1px] border-black">BATCH</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[6%] text-center border-r-[1px] border-black">EXP.</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[9%] text-right border-r-[1px] border-black">MRP</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[5%] text-right border-r-[1px] border-black">DISC</th>
+                       <th className="py-0.5 px-1 text-[7px] font-bold text-black uppercase w-[10%] text-right">AMOUNT</th>
                    </tr>
                 </thead>
                 <tbody>
@@ -267,18 +267,18 @@ function PrintInvoiceContent() {
                      
                      return (
                        <tr key={absoluteIndex} className="border-b-[1px] border-gray-300 h-[14px]">
-                         <td className="py-0 px-1 text-[8px] font-bold text-gray-900 mono-font text-center border-r-[1px] border-black">
-                           {item.qty} <span className="text-[6px] font-bold text-gray-500 ml-0.5">{item.unitType === 'strip' ? 'S' : 'T'}</span>
+                         <td className="py-0 px-1 text-[8px] font-bold text-black mono-font text-center border-r-[1px] border-black">
+                           {item.qty} <span className="text-[6px] font-bold text-black ml-0.5">{item.unitType === 'strip' ? 'S' : 'T'}</span>
                          </td>
-                         <td className="py-0 px-1 text-[9px] font-bold text-gray-900 truncate border-r-[1px] border-black">{item.name}</td>
-                         <td className="py-0 px-1 text-[7px] font-medium text-gray-600 mono-font text-center border-r-[1px] border-black">{item.pack || "-"}</td>
-                         <td className="py-0 px-1 text-[7px] font-medium text-gray-600 text-center truncate border-r-[1px] border-black">{mfgStr}</td>
-                         <td className="py-0 px-1 text-[8px] font-medium text-gray-600 mono-font text-center border-r-[1px] border-black">{item.hsnCode || "-"}</td>
-                         <td className="py-0 px-1 text-[8px] font-bold text-gray-700 uppercase mono-font text-center border-r-[1px] border-black">{item.batchNumber}</td>
-                         <td className="py-0 px-1 text-[8px] font-medium text-gray-600 mono-font text-center border-r-[1px] border-black">{expStr}</td>
-                         <td className="py-0 px-1 text-[8px] font-medium text-gray-700 mono-font text-right border-r-[1px] border-black">₹{item.sellingPrice.toFixed(2)}</td>
-                         <td className="py-0 px-1 text-[7px] font-medium text-gray-400 mono-font text-right border-r-[1px] border-black">{item.discountPercent && item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
-                         <td className="py-0 px-1 text-[9px] font-bold text-gray-900 mono-font text-right">₹{item.total.toFixed(2)}</td>
+                         <td className="py-0 px-1 text-[9px] font-bold text-black truncate border-r-[1px] border-black">{item.name}</td>
+                         <td className="py-0 px-1 text-[7px] font-medium text-black mono-font text-center border-r-[1px] border-black">{item.pack || "-"}</td>
+                         <td className="py-0 px-1 text-[7px] font-medium text-black text-center truncate border-r-[1px] border-black">{mfgStr}</td>
+                         <td className="py-0 px-1 text-[8px] font-medium text-black mono-font text-center border-r-[1px] border-black">{item.hsnCode || "-"}</td>
+                         <td className="py-0 px-1 text-[8px] font-bold text-black uppercase mono-font text-center border-r-[1px] border-black">{item.batchNumber}</td>
+                         <td className="py-0 px-1 text-[8px] font-medium text-black mono-font text-center border-r-[1px] border-black">{expStr}</td>
+                         <td className="py-0 px-1 text-[8px] font-medium text-black mono-font text-right border-r-[1px] border-black">₹{item.sellingPrice.toFixed(2)}</td>
+                         <td className="py-0 px-1 text-[7px] font-medium text-black mono-font text-right border-r-[1px] border-black">{item.discountPercent && item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
+                         <td className="py-0 px-1 text-[9px] font-bold text-black mono-font text-right">₹{item.total.toFixed(2)}</td>
                        </tr>
                      )
                    })}
@@ -306,13 +306,13 @@ function PrintInvoiceContent() {
                 
                 {/* Left Side: Notes */}
                 <div className="w-[50%] flex flex-col justify-end">
-                   <p className="text-[9px] text-gray-800 font-bold leading-tight mb-1">
+                   <p className="text-[9px] text-black font-bold leading-tight mb-1">
                      Please bring our bill while returning medicine.
                    </p>
-                   <p className="text-[9px] text-gray-800 font-bold leading-tight mb-2">
+                   <p className="text-[9px] text-black font-bold leading-tight mb-2">
                      ওষুধ ফেরত দেওয়ার সময় অনুগ্রহ করে আমাদের বিলটি সাথে আনবেন।
                    </p>
-                   <p className="text-[8px] text-gray-500 font-bold leading-tight uppercase">
+                   <p className="text-[8px] text-black font-bold leading-tight uppercase">
                      E. & O.E.
                    </p>
                 </div>
@@ -321,18 +321,18 @@ function PrintInvoiceContent() {
                 <div className="w-[45%] flex gap-2">
                    <div className="flex-1 border border-gray-200 px-2 py-1 flex flex-col justify-center gap-0.5">
                       <div className="flex justify-between text-[8px]">
-                         <span className="text-gray-500 font-bold uppercase">Subtotal</span>
+                         <span className="text-black font-bold uppercase">Subtotal</span>
                          <span className="font-bold text-black mono-font">₹{bill.subTotal.toFixed(2)}</span>
                       </div>
                       
                       {bill.gstEnabled && bill.gstAmount > 0 && (
                         <>
                           <div className="flex justify-between text-[8px]">
-                             <span className="text-gray-500 font-medium">CGST ({bill.gstPercent / 2}%)</span>
+                             <span className="text-black font-medium">CGST ({bill.gstPercent / 2}%)</span>
                              <span className="font-bold text-black mono-font">₹{((bill.gstAmount || 0) / 2).toFixed(2)}</span>
                           </div>
                           <div className="flex justify-between text-[8px]">
-                             <span className="text-gray-500 font-medium">SGST ({bill.gstPercent / 2}%)</span>
+                             <span className="text-black font-medium">SGST ({bill.gstPercent / 2}%)</span>
                              <span className="font-bold text-black mono-font">₹{((bill.gstAmount || 0) / 2).toFixed(2)}</span>
                           </div>
                         </>
@@ -340,14 +340,14 @@ function PrintInvoiceContent() {
 
                       {bill.discountAmount > 0 && (
                         <div className="flex justify-between text-[8px]">
-                           <span className="text-gray-500 font-medium">Discount</span>
+                           <span className="text-black font-medium">Discount</span>
                            <span className="font-bold text-black mono-font">-₹{bill.discountAmount.toFixed(2)}</span>
                         </div>
                       )}
 
                       {bill.roundingAdjustment !== undefined && bill.roundingAdjustment !== 0 && (
                         <div className="flex justify-between text-[8px]">
-                           <span className="text-gray-500 font-medium">Rounding</span>
+                           <span className="text-black font-medium">Rounding</span>
                            <span className="font-bold text-black mono-font">
                              {bill.roundingAdjustment > 0 ? "+" : ""}
                              {bill.roundingAdjustment.toFixed(2)}
@@ -363,19 +363,19 @@ function PrintInvoiceContent() {
                       </div>
                       
                       <div className="mt-2 text-center">
-                         <span className="text-[7px] font-bold text-gray-600 uppercase tracking-widest leading-none">Signature</span>
+                         <span className="text-[7px] font-bold text-black uppercase tracking-widest leading-none">Signature</span>
                       </div>
                    </div>
                 </div>
               </div>
             ) : (
-              <div className="mt-auto pt-2 text-right text-[8px] font-bold text-gray-500">
+              <div className="mt-auto pt-2 text-right text-[8px] font-bold text-black">
                 Continued on Page {pageIndex + 2} ...
               </div>
             )}
             
             {/* Pagination helper - hidden on print */}
-            <div className="text-center text-[8px] mt-2 font-medium text-gray-400 no-print">
+            <div className="text-center text-[8px] mt-2 font-medium text-black no-print">
                Page {pageIndex + 1} of {chunks.length}
             </div>
 
@@ -388,7 +388,7 @@ function PrintInvoiceContent() {
 
 export default function PrintInvoicePage() {
   return (
-    <Suspense fallback={<div className="p-10 text-center font-bold text-gray-500 font-mono">LOADING PRINT ENGINE...</div>}>
+    <Suspense fallback={<div className="p-10 text-center font-bold text-black font-mono">LOADING PRINT ENGINE...</div>}>
       <PrintInvoiceContent />
     </Suspense>
   );
