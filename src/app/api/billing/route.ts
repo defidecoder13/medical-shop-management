@@ -47,9 +47,16 @@ export async function POST(req: Request) {
     let accumulatedGstAmount = 0;
     const billItems: any[] = [];
 
+    // 🔥 BULK FETCH BATCHES FOR PERFORMANCE
+    const batchIds = items.map((i: any) => i.medicineId);
+    const requestedBatches = await MedicineBatch.find({ _id: { $in: batchIds } }).populate('medicineId').session(session);
+    const batchMap = new Map(requestedBatches.map(b => [b._id.toString(), b]));
+
+    const batchBulkOps = [];
+    const medicineBulkOps = [];
+
     for (const item of items) {
-      // item.medicineId from the frontend is actually the Batch ID because of the flattened UI
-      const requestedBatch = await MedicineBatch.findById(item.medicineId).populate('medicineId');
+      const requestedBatch = batchMap.get(item.medicineId);
 
       if (!requestedBatch) {
         throw new Error(`Item/Batch not found: ${item.name}`);
@@ -77,14 +84,26 @@ export async function POST(req: Request) {
         totalTabletsInStock: requestedBatch.totalTabletsInStock,
       });
 
-      // Deduct stock strictly from requestedBatch
+      // Update in-memory stock to catch duplicates in the same loop
       requestedBatch.totalTabletsInStock -= tabletsRequested;
       requestedBatch.stock = requestedBatch.totalTabletsInStock / masterMedicine.tabletsPerStrip;
-      await requestedBatch.save({ session });
 
-      // Sync the master Medicine record
-      masterMedicine.stock -= (tabletsRequested / masterMedicine.tabletsPerStrip);
-      await masterMedicine.save({ session });
+      // Prepare bulk updates using $inc
+      const stockDeduction = tabletsRequested / masterMedicine.tabletsPerStrip;
+      
+      batchBulkOps.push({
+        updateOne: {
+          filter: { _id: requestedBatch._id },
+          update: { $inc: { stock: -stockDeduction, totalTabletsInStock: -tabletsRequested } }
+        }
+      });
+      
+      medicineBulkOps.push({
+        updateOne: {
+          filter: { _id: masterMedicine._id },
+          update: { $inc: { stock: -stockDeduction } }
+        }
+      });
 
       // Calculate cost
       const unitCostPerTablet = requestedBatch.buyingPricePerStrip / masterMedicine.tabletsPerStrip;
@@ -125,6 +144,15 @@ export async function POST(req: Request) {
         gstPercent: itemGstPercent,
         gstAmount: itemGstAmount,
       });
+    }
+
+    // 🔥 EXECUTE BULK WRITES
+    if (batchBulkOps.length > 0) {
+      await MedicineBatch.bulkWrite(batchBulkOps, { session });
+    }
+    if (medicineBulkOps.length > 0) {
+      const Medicine = (await import("@/src/models/Medicine")).default;
+      await Medicine.bulkWrite(medicineBulkOps, { session });
     }
 
     // Calculate discount (preserve decimals)

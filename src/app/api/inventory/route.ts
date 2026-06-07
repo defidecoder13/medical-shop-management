@@ -46,7 +46,7 @@ export async function GET(req: Request) {
         ],
       };
 
-      const matchingMedicines = await Medicine.find(medicineQuery).select("_id");
+      const matchingMedicines = await Medicine.find(medicineQuery).select("_id").limit(50).lean();
       const medicineIds = matchingMedicines.map(m => m._id);
 
       batchQuery = {
@@ -78,13 +78,13 @@ export async function GET(req: Request) {
 
     // If we have medicine filters, we must apply them first and get the matching medicine IDs
     if (Object.keys(medicineQuery).length > 0 && !idsParam && !q) {
-      const matchingMedicines = await Medicine.find(medicineQuery).select("_id");
+      const matchingMedicines = await Medicine.find(medicineQuery).select("_id").limit(50).lean();
       const medicineIds = matchingMedicines.map(m => m._id);
       batchQuery.medicineId = { $in: medicineIds };
     } else if (q && (category && category !== "All Categories" || company && company !== "All Companies")) {
       // If we had a q search AND filters, we need to ensure the previously found medicineIds 
       // from the q search ALSO match the category/company filters
-      const matchingMedicines = await Medicine.find(medicineQuery).select("_id");
+      const matchingMedicines = await Medicine.find(medicineQuery).select("_id").limit(50).lean();
       const medicineIds = matchingMedicines.map(m => m._id);
       
       // Update batchQuery to only include batches that match BOTH the text search AND the filters
