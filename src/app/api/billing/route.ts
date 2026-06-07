@@ -3,6 +3,7 @@ import { connectDB } from "@/src/lib/db";
 import MedicineBatch from "@/src/models/MedicineBatch";
 import Bill from "@/src/models/Bill";
 import Settings from "@/src/models/Settings";
+import Medicine from "@/src/models/Medicine";
 import mongoose from "mongoose";
 
 export async function POST(req: Request) {
@@ -151,7 +152,6 @@ export async function POST(req: Request) {
       await MedicineBatch.bulkWrite(batchBulkOps, { session });
     }
     if (medicineBulkOps.length > 0) {
-      const Medicine = (await import("@/src/models/Medicine")).default;
       await Medicine.bulkWrite(medicineBulkOps, { session });
     }
 
