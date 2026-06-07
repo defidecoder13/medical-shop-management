@@ -17,6 +17,7 @@ type BillItem = {
   sellingPrice: number;
   total: number;
   discountPercent?: number;
+  discountAmount?: number;
 };
 
 type Bill = {
