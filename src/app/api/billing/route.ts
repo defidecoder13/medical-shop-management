@@ -144,8 +144,25 @@ export async function POST(req: Request) {
     const calculatedDiscountPercent = subTotal > 0 ? Math.round((roundedDiscountAmount / subTotal) * 100 * 100) / 100 : 0;
     const calculatedGstPercent = subTotalAfterDiscount > 0 ? Math.round((roundedGstAmount / subTotalAfterDiscount) * 100 * 100) / 100 : 0;
 
+    // 💡 GENERATE INVOICE NUMBER
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    // Count bills created today
+    const todayCount = await Bill.countDocuments({ 
+      createdAt: { $gte: startOfDay, $lte: endOfDay } 
+    }).session(session);
+    
+    // Format: MS-YYMMDD-001
+    const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
+    const sequence = (todayCount + 1).toString().padStart(3, '0');
+    const invoiceNumber = `MS-${dateStr}-${sequence}`;
+
     // 💾 CREATE BILL
     const bill = await Bill.create([{
+      invoiceNumber,
       items: billItems,
       subTotal,
       discountPercent: calculatedDiscountPercent,

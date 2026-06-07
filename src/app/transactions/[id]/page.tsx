@@ -207,7 +207,7 @@ export default function TransactionDetailsPage() {
                           )}
                         </div>
                         <h1 className="text-[28px] font-black text-[#11327c] font-mono tracking-tight leading-none">
-                           #{typeof id === 'string' ? id.slice(-8).toUpperCase() : id}
+                           #{bill.invoiceNumber || (typeof id === 'string' ? id.slice(-8).toUpperCase() : id)}
                         </h1>
                      </div>
                   </div>

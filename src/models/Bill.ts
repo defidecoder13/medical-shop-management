@@ -22,8 +22,9 @@ const BillItemSchema = new Schema(
   { _id: false }
 );
 
-const BillSchema = new Schema(
+  const BillSchema = new Schema(
   {
+    invoiceNumber: { type: String },
     items: [BillItemSchema],
     subTotal: Number,
     discountPercent: Number,

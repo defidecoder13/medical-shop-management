@@ -33,6 +33,7 @@ import { apiClient } from "@/src/lib/apiClient";
 
 type Transaction = {
   _id: string;
+  invoiceNumber?: string;
   createdAt: string;
   subTotal: number;
   gstAmount: number;
@@ -189,7 +190,7 @@ export default function TransactionsPage() {
       // Sheet 1: Invoice Summary (GST Optimized)
       const invoiceData = allTransactions.map(t => ({
         'Date': format(new Date(t.createdAt), "dd-MM-yyyy HH:mm"),
-        'Invoice ID': t._id.slice(-8).toUpperCase(),
+        'Invoice ID': t.invoiceNumber || t._id.slice(-8).toUpperCase(),
         'Taxable Value': ((t.subTotal || 0) - (t.discountAmount || 0)).toFixed(2),
         'GST %': t.gstPercent ? `${t.gstPercent}%` : 'N/A',
         'GST Amount': (t.gstAmount || 0).toFixed(2),
@@ -215,7 +216,7 @@ export default function TransactionsPage() {
           
           itemizedData.push({
             'Invoice Date': format(new Date(t.createdAt), "dd-MM-yyyy"),
-            'Invoice ID': t._id.slice(-8).toUpperCase(),
+            'Invoice ID': t.invoiceNumber || t._id.slice(-8).toUpperCase(),
             'Medicine Name': item.name || 'Unknown',
             'Batch': item.batchNumber || 'N/A',
             'Unit': item.unitType || 'N/A',
@@ -426,9 +427,9 @@ export default function TransactionsPage() {
                   <td className="px-5 py-5">
                     <div className="flex items-center gap-2">
                       <span className="text-[13px] font-black text-blue-600">
-                        #{t._id.slice(-8).toUpperCase()}
+                        #{t.invoiceNumber || t._id.slice(-8).toUpperCase()}
                       </span>
-                      <button className="text-gray-300 hover:text-gray-500" onClick={() => navigator.clipboard.writeText(t._id.slice(-8).toUpperCase())}>
+                      <button className="text-gray-300 hover:text-gray-500" onClick={() => navigator.clipboard.writeText(t.invoiceNumber || t._id.slice(-8).toUpperCase())}>
                         <Copy size={12} strokeWidth={2.5} />
                       </button>
                     </div>
@@ -577,7 +578,7 @@ export default function TransactionsPage() {
                 
                 <h3 className="text-[17px] font-black text-[#e11d48] tracking-tight flex items-center gap-2 mb-6">
                   <RotateCcw size={20} className="text-[#e11d48]" strokeWidth={2.5} />
-                  Process Return for Invoice #{expandedBill._id.slice(-8).toUpperCase()}
+                  Process Return for Invoice #{expandedBill.invoiceNumber || expandedBill._id.slice(-8).toUpperCase()}
                 </h3>
                 
                 <div className="border border-gray-100 rounded-xl overflow-hidden mb-6 shadow-sm">

@@ -21,6 +21,7 @@ type BillItem = {
 
 type Bill = {
   _id: string;
+  invoiceNumber?: string;
   items: BillItem[];
   subTotal: number;
   discountPercent: number;
@@ -238,7 +239,7 @@ function PrintInvoiceContent() {
                   {settings.pharmacistName && <div className="font-bold text-black uppercase tracking-wider">Pharmacist: <span className="text-black">{settings.pharmacistName}</span></div>}
                </div>
                <div className="flex gap-4">
-                  <div className="font-bold text-black uppercase tracking-wider">Invoice No : <span className="mono-font text-black">{bill._id.slice(-8).toUpperCase()}</span></div>
+                  <div className="font-bold text-black uppercase tracking-wider">Invoice No : <span className="mono-font text-black">{bill.invoiceNumber || bill._id.slice(-8).toUpperCase()}</span></div>
                   <div className="font-bold text-black uppercase tracking-wider">Date: <span className="mono-font text-black">{new Date(bill.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></div>
                   <div className="font-bold text-black uppercase tracking-wider">Time: <span className="mono-font text-black">{new Date(bill.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }).toLowerCase()}</span></div>
                </div>
