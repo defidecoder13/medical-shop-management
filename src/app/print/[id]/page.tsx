@@ -250,16 +250,16 @@ function PrintInvoiceContent() {
               <table className="w-full h-full text-left border-collapse border-[1px] border-black flex-1">
                 <thead>
                    <tr className="border-b-[1px] border-black">
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[5%] border-r-[1px] border-black text-center">QTY</th>
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[27%] border-r-[1px] border-black">PRODUCT</th>
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[6%] text-center border-r-[1px] border-black">PACK</th>
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[10%] text-center border-r-[1px] border-black">MFG</th>
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[8%] text-center border-r-[1px] border-black">HSN</th>
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[14%] text-center border-r-[1px] border-black">BATCH</th>
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[6%] text-center border-r-[1px] border-black">EXP.</th>
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[9%] text-right border-r-[1px] border-black">MRP</th>
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[5%] text-right border-r-[1px] border-black">DISC</th>
-                       <th className="py-0.5 px-1 text-[9px] font-bold text-black uppercase w-[10%] text-right">AMOUNT</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[5%] border-r-[1px] border-black text-center">QTY</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[27%] border-r-[1px] border-black">PRODUCT</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[6%] text-center border-r-[1px] border-black">PACK</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[10%] text-center border-r-[1px] border-black">MFG</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[8%] text-center border-r-[1px] border-black">HSN</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[14%] text-center border-r-[1px] border-black">BATCH</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[6%] text-center border-r-[1px] border-black">EXP.</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[9%] text-right border-r-[1px] border-black">MRP</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[5%] text-right border-r-[1px] border-black">DISC</th>
+                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[10%] text-right">AMOUNT</th>
                    </tr>
                 </thead>
                 <tbody>
