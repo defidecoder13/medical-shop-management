@@ -39,6 +39,7 @@ export async function PUT(req: Request) {
       settings.shopName = data.shopName;
       settings.address = data.address;
       settings.phone = data.phone;
+      settings.email = data.email;
       settings.dlNumber = data.dlNumber;
       settings.pharmacistName = data.pharmacistName;
       settings.gstEnabled = data.gstEnabled;

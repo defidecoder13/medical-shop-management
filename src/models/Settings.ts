@@ -5,6 +5,7 @@ const SettingsSchema = new mongoose.Schema(
     shopName: { type: String, required: true },
     address: { type: String },
     phone: { type: String },
+    email: { type: String },
     dlNumber: { type: String },
     pharmacistName: { type: String },
 

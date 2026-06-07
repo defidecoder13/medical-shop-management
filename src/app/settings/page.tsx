@@ -29,6 +29,7 @@ type SettingsData = {
   shopName: string;
   address?: string;
   phone?: string;
+  email?: string;
   dlNumber?: string;
   pharmacistName?: string;
   gstEnabled: boolean;
@@ -160,6 +161,33 @@ export default function SettingsPage() {
                         value={settings.address || ""}
                         onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                      />
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contact Phone</label>
+                     <div className="relative group">
+                        <Store className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
+                        <input
+                           placeholder="Phone Number"
+                           className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-black text-[#11327c] placeholder:text-gray-300"
+                           value={settings.phone || ""}
+                           onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
+                        />
+                     </div>
+                  </div>
+                  <div className="space-y-2">
+                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                     <div className="relative group">
+                        <Globe className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
+                        <input
+                           placeholder="lowercase@email.com"
+                           className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-black text-[#11327c] lowercase placeholder:text-gray-300"
+                           value={settings.email || ""}
+                           onChange={(e) => setSettings({ ...settings, email: e.target.value })}
+                        />
+                     </div>
                   </div>
                </div>
 

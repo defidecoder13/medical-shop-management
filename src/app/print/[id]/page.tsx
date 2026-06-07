@@ -41,6 +41,7 @@ type Settings = {
   shopName: string;
   address?: string;
   phone?: string;
+  email?: string;
   dlNumber?: string;
   pharmacistName?: string;
   gstEnabled: boolean;
@@ -184,6 +185,11 @@ function PrintInvoiceContent() {
                   {settings.phone && <div>Ph: <span className="mono-font">{settings.phone}</span></div>}
                   {settings.gstEnabled && settings.gstNumber && <div>GSTIN: <span className="mono-font">{settings.gstNumber}</span></div>}
                 </div>
+                {settings.email && (
+                  <div className="text-[8px] font-bold text-black mt-0.5 lowercase">
+                    email: <span className="mono-font lowercase">{settings.email}</span>
+                  </div>
+                )}
               </div>
 
               {/* Center Tax Invoice Box */}
