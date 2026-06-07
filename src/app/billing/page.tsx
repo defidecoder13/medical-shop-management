@@ -733,7 +733,7 @@ function BillingContent() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => addToCart(med)}
-                      className="w-full flex items-center gap-4 p-4 hover:bg-[#f8fafc] text-left transition-colors rounded-xl border-b border-gray-50 last:border-0 group/item"
+                      className="w-full flex items-center gap-4 p-4 hover:bg-[#f8fafc] text-left transition-colors border-b border-gray-200 last:border-b-0 group/item"
                     >
                       <div className="w-11 h-11 rounded-xl bg-indigo-50/50 flex items-center justify-center text-indigo-400 group-hover/item:bg-indigo-600 group-hover/item:text-white transition-all shadow-sm shrink-0 border border-indigo-100/50 group-hover/item:border-indigo-600">
                          <Pill size={20} strokeWidth={2} />
@@ -761,6 +761,7 @@ function BillingContent() {
                             }
                           </span>
                           <span className="bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md text-blue-600 shadow-sm">Batch: {med.batchNumber || 'N/A'}</span>
+                          <span className="bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-md text-purple-700 shadow-sm">Exp: {med.expiryDate ? new Date(med.expiryDate).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }) : 'N/A'}</span>
                           <span className="bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md text-amber-700 shadow-sm">MRP: ₹{(med.sellingPricePerStrip || 0).toFixed(2)}</span>
                         </div>
                       </div>
