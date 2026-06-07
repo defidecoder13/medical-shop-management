@@ -306,11 +306,9 @@ function PrintInvoiceContent() {
                 
                 {/* Left Side: Notes */}
                 <div className="w-[50%] flex flex-col justify-end">
-                   <p className="text-[9px] text-black font-bold leading-tight mb-1">
-                     Please bring our bill while returning medicine.
-                   </p>
                    <p className="text-[9px] text-black font-bold leading-tight mb-2">
-                     ওষুধ ফেরত দেওয়ার সময় অনুগ্রহ করে আমাদের বিলটি সাথে আনবেন।
+                     Please bring our bill while returning medicine within 7 days.<br/>
+                     ৭ দিনের মধ্যে ওষুধ ফেরত দেওয়ার সময় অনুগ্রহ করে আমাদের বিলটি সাথে আনবেন।
                    </p>
                    <p className="text-[8px] text-black font-bold leading-tight uppercase">
                      E. & O.E.
