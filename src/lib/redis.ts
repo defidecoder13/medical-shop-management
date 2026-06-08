@@ -8,10 +8,11 @@ let redisClient: Redis | null = null;
 
 if (redisUrl && redisToken) {
   try {
+    // @ts-ignore - Bypass TS error for fetch override to fix Next.js aggressive caching
     redisClient = new Redis({
       url: redisUrl,
       token: redisToken,
-      fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }),
+      fetch: (url: any, options: any) => fetch(url, { ...options, cache: 'no-store' }),
     });
     console.log("Upstash Redis client initialized successfully (cache bypassed)");
   } catch (error) {
