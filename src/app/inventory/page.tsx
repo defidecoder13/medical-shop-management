@@ -528,11 +528,13 @@ export default function InventoryPage() {
     if (window.confirm("Are you sure you want to permanently delete this medicine? This action cannot be undone.")) {
       setLoading(true);
       try {
+        setMedicines(prev => prev.filter(m => m._id !== id));
         const data = await apiClient.delete(`/api/inventory/${id}`);
 
         setMessage({ text: data.offlineQueued ? "Deletion queued for sync" : "Medicine deleted permanently", type: 'success' });
-        fetchMedicines();
+        setTimeout(() => fetchMedicines(), 500);
       } catch (error: any) {
+        fetchMedicines();
         setMessage({ text: error.message || "Failed to delete", type: 'error' });
       } finally {
         setLoading(false);
