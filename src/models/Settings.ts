@@ -14,6 +14,8 @@ const SettingsSchema = new mongoose.Schema(
     defaultGstPercent: { type: Number, default: 5 },
 
     invoiceFooter: { type: String },
+
+    catalogVersion: { type: String, default: "1" },
   },
   { timestamps: true }
 );

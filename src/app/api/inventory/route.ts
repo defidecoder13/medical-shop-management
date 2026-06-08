@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { unstable_noStore as noStore } from 'next/cache';
 import { connectDB } from "@/src/lib/db";
 import Medicine from "@/src/models/Medicine";
 import MedicineBatch from "@/src/models/MedicineBatch";
+import Settings from "@/src/models/Settings";
 import { getCache, setCache, redis, deleteCache } from "@/src/lib/redis";
 
 export const dynamic = "force-dynamic";
@@ -11,6 +13,7 @@ let memoryCache: any[] | null = null;
 let memoryCacheVersion: string | null = null;
 
 export async function GET(req: Request) {
+  noStore();
   try {
     await connectDB();
 
@@ -33,10 +36,10 @@ export async function GET(req: Request) {
       let allBatches = null;
       let currentVersion = "default";
       
-      // 1. Fetch lightweight version string from Redis (~50ms) instead of 800KB catalog
-      if (redis) {
-          const v = await getCache<string>("catalog:version");
-          if (v) currentVersion = String(v); // Force to string to prevent Upstash Number/String mismatches
+      // 1. Fetch lightweight version string from Mongo (~10ms, safe from Next.js caching)
+      const settings = await Settings.findOne({}).lean();
+      if (settings?.catalogVersion) {
+          currentVersion = String(settings.catalogVersion);
       }
 
       // 2. Check local memory cache (0ms latency!)
@@ -304,6 +307,7 @@ export async function POST(req: Request) {
       const keys = await redis.keys("inventory:get:*");
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
+      await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
       await setCache("catalog:version", Date.now().toString(), 604800);
       memoryCache = null;
     }
@@ -413,6 +417,7 @@ export async function PUT(req: Request) {
       const keys = await redis.keys("inventory:get:*");
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
+      await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
       await setCache("catalog:version", Date.now().toString(), 604800);
       memoryCache = null;
     }

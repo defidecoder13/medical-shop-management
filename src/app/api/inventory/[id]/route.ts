@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
+import { unstable_noStore as noStore } from 'next/cache';
 import { connectDB } from "@/src/lib/db";
 import MedicineBatch from "@/src/models/MedicineBatch";
+import Settings from "@/src/models/Settings";
 import Medicine from "@/src/models/Medicine";
 import { redis, deleteCache } from "@/src/lib/redis";
 
@@ -48,7 +50,8 @@ export async function PUT(
         }
 
         await deleteCache("catalog:all");
-        if (redis) await redis.set("catalog:version", Date.now().toString());
+        if (redis) await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
+            await redis.set("catalog:version", Date.now().toString());
 
         return NextResponse.json(updatedBatch);
     } catch (error) {
@@ -95,6 +98,7 @@ export async function DELETE(
         if (redis) {
             const keys = await redis.keys("inventory:get:*");
             if (keys.length > 0) await redis.del(...keys);
+            await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
             await redis.set("catalog:version", Date.now().toString());
         }
 
