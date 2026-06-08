@@ -6,11 +6,12 @@ export const apiClient = {
      */
     async get(url: string, options: RequestInit = {}, onCache?: (data: any) => void) {
         const isOnline = navigator.onLine;
+        let networkFinished = false;
 
         // Instantly return cache to the callback (Stale-While-Revalidate)
         if (onCache) {
             getApiCache(url).then(cachedData => {
-                if (cachedData) onCache(cachedData);
+                if (cachedData && !networkFinished) onCache(cachedData);
             });
         }
 
@@ -24,6 +25,7 @@ export const apiClient = {
                 if (!response.ok) throw new Error("Network response was not ok");
 
                 const data = await response.json();
+                networkFinished = true;
 
                 // Cache successful GET request
                 await setApiCache(url, data);
