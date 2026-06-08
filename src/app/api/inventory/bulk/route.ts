@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import Settings from "@/src/models/Settings";
 import { connectDB } from "@/src/lib/db";
 import Medicine from "@/src/models/Medicine";
 import MedicineBatch from "@/src/models/MedicineBatch";
@@ -179,6 +180,7 @@ export async function POST(req: Request) {
             const keys = await redis.keys("inventory:get:*");
             keys.push("catalog:all"); // Legacy cleanup
             await redis.del(...keys);
+            await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
             await redis.set("catalog:version", Date.now().toString());
         }
 

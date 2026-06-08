@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import Settings from "@/src/models/Settings";
 import { connectDB } from "@/src/lib/db";
 import PurchaseInvoice from "@/src/models/PurchaseInvoice";
 import MedicineBatch from "@/src/models/MedicineBatch";
@@ -266,7 +267,8 @@ export async function POST(req: Request) {
         
         // Invalidate Redis catalog cache to instantly reflect incoming stock
         await deleteCache("catalog:all");
-        await setCache("catalog:version", Date.now().toString(), 604800);
+        await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
+            await setCache("catalog:version", Date.now().toString(), 604800);
     }
     return NextResponse.json(result, { status: 201 });
 

@@ -243,7 +243,8 @@ export async function POST(req: Request) {
     
     // Invalidate Redis catalog cache to instantly reflect the new stock everywhere
     await deleteCache("catalog:all");
-    await setCache("catalog:version", Date.now().toString(), 604800);
+    await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
+            await setCache("catalog:version", Date.now().toString(), 604800);
 
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {

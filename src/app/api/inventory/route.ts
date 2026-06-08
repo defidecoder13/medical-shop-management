@@ -303,13 +303,13 @@ export async function POST(req: Request) {
     }
     const newBatch = await MedicineBatch.create(newBatchData);
 
+    await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
+    memoryCache = null;
     if (redis) {
       const keys = await redis.keys("inventory:get:*");
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
-      await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
-      if (redis) await setCache("catalog:version", Date.now().toString(), 604800);
-      memoryCache = null;
+      await setCache("catalog:version", Date.now().toString(), 604800);
     }
 
     return NextResponse.json(newBatch);
@@ -413,13 +413,13 @@ export async function PUT(req: Request) {
       await medicine.save();
     }
 
+    await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
+    memoryCache = null;
     if (redis) {
       const keys = await redis.keys("inventory:get:*");
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
-      await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
-      if (redis) await setCache("catalog:version", Date.now().toString(), 604800);
-      memoryCache = null;
+      await setCache("catalog:version", Date.now().toString(), 604800);
     }
 
     return NextResponse.json(batch);

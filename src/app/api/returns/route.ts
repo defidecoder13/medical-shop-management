@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import Settings from "@/src/models/Settings";
 import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
 import MedicineBatch from "@/src/models/MedicineBatch";
@@ -159,6 +160,7 @@ export async function POST(req: Request) {
         } finally {
             session.endSession();
             await deleteCache("catalog:all");
+            await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
             await setCache("catalog:version", Date.now().toString(), 604800);
         }
         return NextResponse.json(result);

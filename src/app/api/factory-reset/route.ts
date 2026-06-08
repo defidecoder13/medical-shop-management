@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import Settings from "@/src/models/Settings";
 import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
 import Medicine from "@/src/models/Medicine";
@@ -31,7 +32,8 @@ export async function POST(req: Request) {
     await MedicineBatch.deleteMany({});
 
     await deleteCache("catalog:all");
-    await setCache("catalog:version", Date.now().toString(), 604800);
+    await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
+            await setCache("catalog:version", Date.now().toString(), 604800);
 
     return NextResponse.json({ 
         message: "Factory Reset Successful! All transactional, inventory, and entity data has been permanently deleted.",
