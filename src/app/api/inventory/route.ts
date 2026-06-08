@@ -68,15 +68,11 @@ export async function GET(req: Request) {
       let filteredBatches = allBatches;
 
       if (q) {
-        const queryLower = q.toLowerCase();
-        filteredBatches = filteredBatches.filter((b: any) => 
-          b.name.toLowerCase().includes(queryLower) ||
-          b.brand.toLowerCase().includes(queryLower) ||
-          b.composition.toLowerCase().includes(queryLower) ||
-          (b.barcode && b.barcode === q) ||
-          b.batchNumber.toLowerCase().includes(queryLower) ||
-          b.rackNumber.toLowerCase().includes(queryLower)
-        );
+        const queryTerms = q.toLowerCase().split(/\\s+/).filter(Boolean);
+        filteredBatches = filteredBatches.filter((b: any) => {
+          const searchString = `${b.name} ${b.brand} ${b.composition} ${b.barcode || ''} ${b.batchNumber} ${b.rackNumber}`.toLowerCase();
+          return queryTerms.every(term => searchString.includes(term));
+        });
       }
 
       if (category && category !== "All Categories") {
@@ -292,7 +288,8 @@ export async function POST(req: Request) {
 
     if (redis) {
       const keys = await redis.keys("inventory:get:*");
-      if (keys.length > 0) await redis.del(...keys);
+      keys.push("catalog:all");
+      await redis.del(...keys);
     }
 
     return NextResponse.json(newBatch);
@@ -398,7 +395,8 @@ export async function PUT(req: Request) {
 
     if (redis) {
       const keys = await redis.keys("inventory:get:*");
-      if (keys.length > 0) await redis.del(...keys);
+      keys.push("catalog:all");
+      await redis.del(...keys);
     }
 
     return NextResponse.json(batch);

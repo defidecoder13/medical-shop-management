@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Medicine from "@/src/models/Medicine";
 import MedicineBatch from "@/src/models/MedicineBatch";
+import { redis } from "@/src/lib/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -172,6 +173,12 @@ export async function POST(req: Request) {
                 });
                 addedCount++;
             }
+        }
+
+        if (redis) {
+            const keys = await redis.keys("inventory:get:*");
+            keys.push("catalog:all");
+            await redis.del(...keys);
         }
 
         return NextResponse.json({

@@ -236,7 +236,7 @@ function BillingContent() {
     const handleMeds = (res: any) => {
       if (!ignore && res) setMedicines(res);
     };
-    apiClient.get(`/api/inventory?q=${debouncedSearch}&inStock=true`, {}, handleMeds)
+    apiClient.get(`/api/inventory?q=${encodeURIComponent(debouncedSearch)}&inStock=true`, {}, handleMeds)
       .then(handleMeds)
       .catch((err) => console.error(err));
       
@@ -337,7 +337,7 @@ function BillingContent() {
     try {
         setLoading(true);
         // Fast fetch bypasses debounce - perfectly suited for barcode scanners!
-        const res = await apiClient.get(`/api/inventory?q=${scannedValue}`);
+        const res = await apiClient.get(`/api/inventory?q=${encodeURIComponent(scannedValue)}`);
         if (res && res.length > 0) {
           // Find first valid batch (stock > 0, unexpired)
           const validBatch = res.find((b: any) => b.stock > 0 && new Date(b.expiryDate) > new Date());
