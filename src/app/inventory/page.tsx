@@ -388,7 +388,7 @@ export default function InventoryPage() {
         }
 
         setMessage({ text: msg, type: 'success' });
-        fetchMedicines();
+        setTimeout(() => fetchMedicines(), 500);
       } catch (err: any) {
          setMessage({ text: err.message || "Error parsing file", type: 'error' });
       } finally {
@@ -475,12 +475,12 @@ export default function InventoryPage() {
       setIsRestock(false);
       
       // Fetch in background to sync true IDs
-      fetchMedicines();
+      setTimeout(() => fetchMedicines(), 500);
 
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       // Revert optimistic update
-      fetchMedicines();
+      setTimeout(() => fetchMedicines(), 500);
       setMessage({ text: err.message || "An error occurred", type: 'error' });
       setTimeout(() => setMessage(null), 4000);
     }
@@ -534,7 +534,7 @@ export default function InventoryPage() {
         setMessage({ text: data.offlineQueued ? "Deletion queued for sync" : "Medicine deleted permanently", type: 'success' });
         setTimeout(() => fetchMedicines(), 500);
       } catch (error: any) {
-        fetchMedicines();
+        setTimeout(() => fetchMedicines(), 500);
         setMessage({ text: error.message || "Failed to delete", type: 'error' });
       } finally {
         setLoading(false);

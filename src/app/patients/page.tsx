@@ -66,7 +66,7 @@ export default function PatientsPage() {
             await apiClient.post("/api/patients", newPatientForm);
             setIsAddingPatient(false);
             setNewPatientForm({ name: "", phone: "", doctorName: "", address: "" });
-            fetchPatients();
+            setTimeout(() => fetchPatients(), 500);
         } catch (err) {
             alert("Failed to create patient. Phone number might already exist.");
         } finally {
@@ -120,7 +120,7 @@ export default function PatientsPage() {
             setSelectedPatient(res);
             setMedSearch("");
             setMedResults([]);
-            fetchPatients();
+            setTimeout(() => fetchPatients(), 500);
         } catch (err) {
             console.error("Failed to update prescription", err);
         }
@@ -137,7 +137,7 @@ export default function PatientsPage() {
                 regularMedicines: updatedList
             });
             setSelectedPatient(res);
-            fetchPatients();
+            setTimeout(() => fetchPatients(), 500);
         } catch (err) {
             console.error("Failed to delete medicine", err);
         }

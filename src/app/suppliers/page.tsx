@@ -123,7 +123,7 @@ export default function SuppliersPage() {
         showNotification("Supplier registered successfully", "success");
       }
       setIsModalOpen(false);
-      fetchSuppliers();
+      setTimeout(() => fetchSuppliers(), 500);
     } catch (err: any) {
       showNotification(err.message || "Failed to save supplier details.", "error");
     } finally {
@@ -151,7 +151,7 @@ export default function SuppliersPage() {
       });
       showNotification("Payment recorded successfully", "success");
       setIsPaymentModalOpen(false);
-      fetchSuppliers();
+      setTimeout(() => fetchSuppliers(), 500);
     } catch (err: any) {
       showNotification(err.message || "Failed to process payment.", "error");
     } finally {
@@ -165,7 +165,7 @@ export default function SuppliersPage() {
     try {
       await apiClient.delete(`/api/suppliers?id=${id}`);
       showNotification("Supplier deleted successfully", "success");
-      fetchSuppliers();
+      setTimeout(() => fetchSuppliers(), 500);
     } catch (err: any) {
       showNotification(err.message || "Failed to delete supplier.", "error");
     }
