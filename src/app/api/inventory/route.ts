@@ -308,7 +308,7 @@ export async function POST(req: Request) {
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
       await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
-      await setCache("catalog:version", Date.now().toString(), 604800);
+      if (redis) await setCache("catalog:version", Date.now().toString(), 604800);
       memoryCache = null;
     }
 
@@ -418,7 +418,7 @@ export async function PUT(req: Request) {
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
       await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
-      await setCache("catalog:version", Date.now().toString(), 604800);
+      if (redis) await setCache("catalog:version", Date.now().toString(), 604800);
       memoryCache = null;
     }
 

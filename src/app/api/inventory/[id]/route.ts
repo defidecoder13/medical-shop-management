@@ -50,8 +50,10 @@ export async function PUT(
         }
 
         await deleteCache("catalog:all");
-        if (redis) await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
+        await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
+        if (redis) {
             await redis.set("catalog:version", Date.now().toString());
+        }
 
         return NextResponse.json(updatedBatch);
     } catch (error) {
@@ -98,9 +100,9 @@ export async function DELETE(
         if (redis) {
             const keys = await redis.keys("inventory:get:*");
             if (keys.length > 0) await redis.del(...keys);
-            await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
             await redis.set("catalog:version", Date.now().toString());
         }
+        await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
 
         return NextResponse.json(
             { message: "Batch deleted successfully", id },
