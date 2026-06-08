@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       // 1. Fetch lightweight version string from Redis (~50ms) instead of 800KB catalog
       if (redis) {
           const v = await getCache<string>("catalog:version");
-          if (v) currentVersion = v;
+          if (v) currentVersion = String(v); // Force to string to prevent Upstash Number/String mismatches
       }
 
       // 2. Check local memory cache (0ms latency!)
