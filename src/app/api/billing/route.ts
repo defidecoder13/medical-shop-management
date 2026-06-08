@@ -5,7 +5,7 @@ import Bill from "@/src/models/Bill";
 import Settings from "@/src/models/Settings";
 import Medicine from "@/src/models/Medicine";
 import mongoose from "mongoose";
-import { deleteCache } from "@/src/lib/redis";
+import { deleteCache, setCache } from "@/src/lib/redis";
 
 export async function POST(req: Request) {
   // 🔁 Keep original batch states for rollback
@@ -243,6 +243,7 @@ export async function POST(req: Request) {
     
     // Invalidate Redis catalog cache to instantly reflect the new stock everywhere
     await deleteCache("catalog:all");
+    await setCache("catalog:version", Date.now().toString(), 604800);
 
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {

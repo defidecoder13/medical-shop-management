@@ -4,7 +4,7 @@ import PurchaseInvoice from "@/src/models/PurchaseInvoice";
 import MedicineBatch from "@/src/models/MedicineBatch";
 import Medicine from "@/src/models/Medicine";
 import Supplier from "@/src/models/Supplier";
-import { deleteCache } from "@/src/lib/redis";
+import { deleteCache, setCache } from "@/src/lib/redis";
 
 import mongoose from "mongoose";
 
@@ -266,6 +266,7 @@ export async function POST(req: Request) {
         
         // Invalidate Redis catalog cache to instantly reflect incoming stock
         await deleteCache("catalog:all");
+        await setCache("catalog:version", Date.now().toString(), 604800);
     }
     return NextResponse.json(result, { status: 201 });
 
