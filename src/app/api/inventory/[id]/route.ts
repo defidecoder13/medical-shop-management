@@ -1,9 +1,8 @@
-
 import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import MedicineBatch from "@/src/models/MedicineBatch";
 import Medicine from "@/src/models/Medicine";
-import { redis } from "@/src/lib/redis";
+import { redis, deleteCache } from "@/src/lib/redis";
 
 export async function GET(
     request: Request,
@@ -25,6 +24,35 @@ export async function GET(
     } catch (error) {
         return NextResponse.json(
             { error: "Failed to fetch medicine batch" },
+            { status: 500 }
+        );
+    }
+}
+
+export async function PUT(
+    request: Request,
+    { params }: { params: Promise<{ id: string }> }
+) {
+    try {
+        const { id } = await params;
+        await connectDB();
+        const body = await request.json();
+
+        const updatedBatch = await MedicineBatch.findByIdAndUpdate(id, body, { new: true });
+
+        if (!updatedBatch) {
+            return NextResponse.json(
+                { error: "Batch not found" },
+                { status: 404 }
+            );
+        }
+
+        await deleteCache("catalog:all");
+
+        return NextResponse.json(updatedBatch);
+    } catch (error) {
+        return NextResponse.json(
+            { error: "Failed to update medicine batch" },
             { status: 500 }
         );
     }

@@ -2,10 +2,9 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import Medicine from "@/src/models/Medicine";
 import MedicineBatch from "@/src/models/MedicineBatch";
+import { getCache, setCache, redis, deleteCache } from "@/src/lib/redis";
 
 export const dynamic = "force-dynamic";
-
-import { getCache, setCache, redis } from "@/src/lib/redis";
 
 export async function GET(req: Request) {
   try {
@@ -13,15 +12,9 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
 
-    const cacheKey = `inventory:get:${searchParams.toString()}`;
-    const cachedData = await getCache<any>(cacheKey);
-    if (cachedData) {
-       return NextResponse.json(cachedData);
-    }
-
     const q = searchParams.get("q");
-    const idsParam = searchParams.get("ids"); // Comma-separated medicine IDs
-    const inStock = searchParams.get("inStock"); // Filter out 0 qty items
+    const idsParam = searchParams.get("ids");
+    const inStock = searchParams.get("inStock");
     const pageParam = searchParams.get("page");
     const page = parseInt(pageParam || "1");
     const pageSize = parseInt(searchParams.get("limit") || "20");
@@ -29,87 +22,119 @@ export async function GET(req: Request) {
     const company = searchParams.get("company");
     const status = searchParams.get("status");
 
-    let batchQuery: any = {};
-    let medicineQuery: any = {};
-
-    if (idsParam) {
-      const ids = idsParam.split(',').filter(id => id.trim() !== '');
-      batchQuery = { medicineId: { $in: ids } };
-    } else if (q) {
-      const regex = new RegExp(q, "i");
-      medicineQuery = {
-        $or: [
-          { name: regex },
-          { brand: regex },
-          { composition: regex },
-          { barcode: q }, // NEW: Check if q is exactly a barcode
-        ],
-      };
-
-      const matchingMedicines = await Medicine.find(medicineQuery).select("_id").limit(50).lean();
-      const medicineIds = matchingMedicines.map(m => m._id);
-
-      batchQuery = {
-        $or: [
-          { batchNumber: regex },
-          { rackNumber: regex },
-          { medicineId: { $in: medicineIds } },
-        ],
-      };
-    }
-
-    if (category && category !== "All Categories") {
-      medicineQuery.category = category;
-    }
-
-    if (company && company !== "All Companies") {
-      medicineQuery.brand = company;
-    }
-
-    if (status && status !== "All Status") {
-      if (status === "In Stock") batchQuery.stock = { $gt: 10 };
-      else if (status === "Low Stock") batchQuery.stock = { $gt: 0, $lte: 10 };
-      else if (status === "Out of Stock") batchQuery.stock = { $lte: 0 };
-    }
-
-    if (inStock === "true") {
-      batchQuery.stock = { $gt: 0 };
-    }
-
-    // If we have medicine filters, we must apply them first and get the matching medicine IDs
-    if (Object.keys(medicineQuery).length > 0 && !idsParam && !q) {
-      const matchingMedicines = await Medicine.find(medicineQuery).select("_id").limit(50).lean();
-      const medicineIds = matchingMedicines.map(m => m._id);
-      batchQuery.medicineId = { $in: medicineIds };
-    } else if (q && (category && category !== "All Categories" || company && company !== "All Companies")) {
-      // If we had a q search AND filters, we need to ensure the previously found medicineIds 
-      // from the q search ALSO match the category/company filters
-      const matchingMedicines = await Medicine.find(medicineQuery).select("_id").limit(50).lean();
-      const medicineIds = matchingMedicines.map(m => m._id);
-      
-      // Update batchQuery to only include batches that match BOTH the text search AND the filters
-      batchQuery = {
-        ...batchQuery,
-        medicineId: { $in: medicineIds },
-      };
-    }
-
-    let totalCount = 0;
+    // --------------------------------------------------------------------------------
+    // 🔥 ZERO-LATENCY REDIS SEARCH PIPELINE (For standard searches/catalog)
+    // --------------------------------------------------------------------------------
+    // If it's a specific IDs lookup (used in edge cases), we bypass the cache for safety
     if (!idsParam) {
-      totalCount = await MedicineBatch.countDocuments(batchQuery);
-    } else {
-      totalCount = idsParam.split(',').length; // approximation for IDs query
+      // 1. Try to get the entire active catalog from Redis memory
+      let allBatches = await getCache<any[]>("catalog:all");
+
+      // 2. If it's not in Redis, fetch from MongoDB and rebuild the cache
+      if (!allBatches) {
+        // We only cache active items (stock > 0 or whatever the baseline is, but for catalog we fetch all)
+        const rawBatches = await MedicineBatch.find({}).populate("medicineId").lean();
+        allBatches = rawBatches.map((batch: any) => {
+          const med = batch.medicineId || {};
+          return {
+            _id: batch._id,
+            medicineId: med._id,
+            name: med.name || "",
+            brand: med.brand || "",
+            batchNumber: batch.batchNumber || "",
+            expiryDate: batch.expiryDate || "",
+            stock: batch.stock || 0,
+            tabletsPerStrip: med.tabletsPerStrip || 0,
+            buyingPricePerStrip: batch.buyingPricePerStrip || 0,
+            sellingPricePerStrip: batch.sellingPricePerStrip || 0,
+            rackNumber: batch.rackNumber || "",
+            composition: med.composition || "",
+            hsnCode: med.hsnCode || "3004",
+            gstPercent: med.gstPercent || 5,
+            totalTabletsInStock: batch.totalTabletsInStock || 0,
+            discountPercent: batch.discountPercent || 0,
+            supplierName: batch.supplierName || "Direct Purchase",
+            purchaseInvoiceNumber: batch.purchaseInvoiceNumber || "",
+            category: med.category || "Tablet",
+            pack: batch.pack || med.pack || "",
+          };
+        });
+
+        // Save to Redis (cache forever, until explicitly invalidated by POST/PUT/DELETE)
+        await setCache("catalog:all", allBatches, 86400 * 7); // 7 days
+      }
+
+      // 3. Perform in-memory filtering (Instantaneous)
+      let filteredBatches = allBatches;
+
+      if (q) {
+        const queryLower = q.toLowerCase();
+        filteredBatches = filteredBatches.filter((b: any) => 
+          b.name.toLowerCase().includes(queryLower) ||
+          b.brand.toLowerCase().includes(queryLower) ||
+          b.composition.toLowerCase().includes(queryLower) ||
+          (b.barcode && b.barcode === q) ||
+          b.batchNumber.toLowerCase().includes(queryLower) ||
+          b.rackNumber.toLowerCase().includes(queryLower)
+        );
+      }
+
+      if (category && category !== "All Categories") {
+        filteredBatches = filteredBatches.filter((b: any) => b.category === category);
+      }
+
+      if (company && company !== "All Companies") {
+        filteredBatches = filteredBatches.filter((b: any) => b.brand === company);
+      }
+
+      if (status && status !== "All Status") {
+        if (status === "In Stock") filteredBatches = filteredBatches.filter((b: any) => b.stock > 10);
+        else if (status === "Low Stock") filteredBatches = filteredBatches.filter((b: any) => b.stock > 0 && b.stock <= 10);
+        else if (status === "Out of Stock") filteredBatches = filteredBatches.filter((b: any) => b.stock <= 0);
+      }
+
+      if (inStock === "true") {
+        filteredBatches = filteredBatches.filter((b: any) => b.stock > 0);
+      }
+
+      // Sort by expiry date or newly added
+      // For simplicity in memory, we sort by _id string comparison (approximate creation time)
+      filteredBatches.sort((a, b) => b._id.localeCompare(a._id));
+
+      const totalCount = filteredBatches.length;
+      const totalPages = Math.ceil(totalCount / pageSize);
+
+      // Apply pagination limit to the array slice
+      if (pageParam) {
+        const paginatedBatches = filteredBatches.slice((page - 1) * pageSize, page * pageSize);
+        return NextResponse.json({
+          data: paginatedBatches,
+          pagination: {
+            totalCount,
+            totalPages,
+            currentPage: page,
+            limit: pageSize
+          }
+        });
+      } else if (q) {
+         // If it's a search without pagination (like billing autocomplete), limit to 50
+         return NextResponse.json(filteredBatches.slice(0, 50));
+      } else {
+         return NextResponse.json(filteredBatches);
+      }
     }
-    
+
+    // --------------------------------------------------------------------------------
+    // 🔥 FALLBACK FOR IDS LOOKUP (Because it targets exact batches, hit DB directly)
+    // --------------------------------------------------------------------------------
+    const ids = idsParam.split(',').filter((id: string) => id.trim() !== '');
+    const batchQuery = { medicineId: { $in: ids } };
+    const totalCount = ids.length;
     const totalPages = Math.ceil(totalCount / pageSize);
 
     const query = MedicineBatch.find(batchQuery)
       .populate("medicineId")
       .sort({ createdAt: -1 });
-
-    if (!idsParam) {
-       query.skip((page - 1) * pageSize).limit(pageSize);
-    }
 
     const batches = await query.lean();
 
@@ -150,14 +175,12 @@ export async function GET(req: Request) {
           limit: pageSize
         }
       };
-      await setCache(cacheKey, resData, 300); // Cache for 5 mins
       return NextResponse.json(resData);
     } else {
-      await setCache(cacheKey, safeBatches, 300);
       return NextResponse.json(safeBatches);
     }
   } catch (error) {
-    console.error("INVENTORY GET ERROR:", error);
+    console.error("INVENTORY ERROR:", error);
     return NextResponse.json(
       { error: "Failed to fetch inventory" },
       { status: 500 }
@@ -165,14 +188,6 @@ export async function GET(req: Request) {
   }
 }
 
-/**
- * POST /api/inventory
- * Create medicine
- * RULES:
- * - stock = strips
- * - tabletsPerStrip = fixed
- * - totalTabletsInStock = stock × tabletsPerStrip
- */
 export async function POST(req: Request) {
   try {
     await connectDB();
