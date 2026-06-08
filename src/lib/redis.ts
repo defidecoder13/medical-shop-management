@@ -11,8 +11,9 @@ if (redisUrl && redisToken) {
     redisClient = new Redis({
       url: redisUrl,
       token: redisToken,
+      fetch: (url, options) => fetch(url, { ...options, cache: 'no-store' }),
     });
-    console.log("Upstash Redis client initialized successfully");
+    console.log("Upstash Redis client initialized successfully (cache bypassed)");
   } catch (error) {
     console.warn("Failed to initialize Upstash Redis:", error);
   }
