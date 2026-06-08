@@ -7,8 +7,6 @@ import { getCache, setCache, redis, deleteCache } from "@/src/lib/redis";
 export const dynamic = "force-dynamic";
 
 // Global in-memory cache for ultra-fast Zero-Latency Search
-let memoryCache: any[] | null = null;
-let memoryCacheVersion: string | null = null;
 
 export async function GET(req: Request) {
   try {
@@ -30,24 +28,9 @@ export async function GET(req: Request) {
     // 🔥 ZERO-LATENCY IN-MEMORY PIPELINE (Syncs via Redis Version)
     // --------------------------------------------------------------------------------
     if (!idsParam) {
-      let allBatches = null;
-      let currentVersion = "default";
-      
-      // 1. Fetch lightweight version string from Redis (~50ms) instead of 800KB catalog
-      if (redis) {
-          const v = await getCache<string>("catalog:version");
-          if (v) currentVersion = v;
-      }
-
-      // 2. Check local memory cache (0ms latency!)
-      if (memoryCache && memoryCacheVersion === currentVersion) {
-          allBatches = memoryCache;
-      }
-
-      // 3. If memory cache miss or stale, fetch from Mongo directly (500ms)
-      if (!allBatches) {
-        const rawBatches = await MedicineBatch.find({}).populate("medicineId").lean();
-        allBatches = rawBatches.map((batch: any) => {
+      // Fetch from Mongo directly (Most reliable, no stale UI bugs)
+      const rawBatches = await MedicineBatch.find({}).populate("medicineId").lean();
+      let allBatches = rawBatches.map((batch: any) => {
           const med = batch.medicineId || {};
           return {
             _id: String(batch._id), // Pre-cast to string for localeCompare safety
@@ -72,11 +55,6 @@ export async function GET(req: Request) {
             pack: batch.pack || med.pack || "",
           };
         });
-        
-        // Save to ultra-fast local memory
-        memoryCache = allBatches;
-        memoryCacheVersion = currentVersion;
-      }
 
       // 3. Perform in-memory filtering (Instantaneous)
       let filteredBatches = allBatches;
@@ -305,7 +283,6 @@ export async function POST(req: Request) {
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
       await setCache("catalog:version", Date.now().toString(), 604800);
-      memoryCache = null;
     }
 
     return NextResponse.json(newBatch);
@@ -414,7 +391,6 @@ export async function PUT(req: Request) {
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
       await setCache("catalog:version", Date.now().toString(), 604800);
-      memoryCache = null;
     }
 
     return NextResponse.json(batch);
