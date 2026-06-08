@@ -7,6 +7,7 @@ import Patient from "@/src/models/Patient";
 import PurchaseInvoice from "@/src/models/PurchaseInvoice";
 import SupplierReturn from "@/src/models/SupplierReturn";
 import Supplier from "@/src/models/Supplier";
+import { deleteCache, setCache } from "@/src/lib/redis";
 
 
 export const dynamic = "force-dynamic";
@@ -29,7 +30,8 @@ export async function POST(req: Request) {
     await Medicine.deleteMany({});
     await MedicineBatch.deleteMany({});
 
-
+    await deleteCache("catalog:all");
+    await setCache("catalog:version", Date.now().toString(), 604800);
 
     return NextResponse.json({ 
         message: "Factory Reset Successful! All transactional, inventory, and entity data has been permanently deleted.",

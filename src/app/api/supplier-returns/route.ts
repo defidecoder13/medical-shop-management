@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/src/lib/db";
 import SupplierReturn from "@/src/models/SupplierReturn";
 import MedicineBatch from "@/src/models/MedicineBatch";
+import { deleteCache, setCache } from "@/src/lib/redis";
 
 export const runtime = "nodejs";
 
@@ -134,6 +135,8 @@ export async function POST(req: Request) {
             totalRefundAmount: roundedTotal
         });
 
+        await deleteCache("catalog:all");
+        await setCache("catalog:version", Date.now().toString(), 604800);
 
         return NextResponse.json({ success: true, supplierReturn });
     } catch (error) {

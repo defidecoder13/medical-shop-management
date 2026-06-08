@@ -3,6 +3,7 @@ import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
 import MedicineBatch from "@/src/models/MedicineBatch";
 import mongoose from "mongoose";
+import { deleteCache, setCache } from "@/src/lib/redis";
 
 export const runtime = "nodejs";
 
@@ -157,6 +158,8 @@ export async function POST(req: Request) {
         }); // end withTransaction
         } finally {
             session.endSession();
+            await deleteCache("catalog:all");
+            await setCache("catalog:version", Date.now().toString(), 604800);
         }
         return NextResponse.json(result);
     } catch (error: any) {
