@@ -48,7 +48,7 @@ export async function PUT(
         }
 
         await deleteCache("catalog:all");
-        await redis.set("catalog:version", Date.now().toString());
+        if (redis) await redis.set("catalog:version", Date.now().toString());
 
         return NextResponse.json(updatedBatch);
     } catch (error) {
