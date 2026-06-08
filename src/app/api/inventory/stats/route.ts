@@ -24,11 +24,6 @@ export async function GET() {
     const next30Days = new Date();
     next30Days.setDate(today.getDate() + 30);
 
-    // Track total stock per medicine to determine "Out of Stock" correctly
-    // (A medicine is out of stock ONLY if ALL its batches sum to 0)
-    const medicineStockMap: Record<string, number> = {};
-    const medicineMinStockMap: Record<string, number> = {};
-
     for (const batch of batches) {
       const medId = batch.medicineId?._id?.toString();
       if (!medId) continue;
@@ -39,6 +34,13 @@ export async function GET() {
       // Total Stock Value
       totalStockValue += (stock * buyingPrice);
 
+      // Batch Status Counts (matches inventory table filters)
+      if (stock <= 0) {
+        outOfStockCount++;
+      } else if (stock <= 10) {
+        lowStockCount++;
+      }
+
       // Expiring Soon
       if (batch.expiryDate) {
         const expDate = new Date(batch.expiryDate);
@@ -47,40 +49,6 @@ export async function GET() {
           expiringSoonCount++;
         }
       }
-
-      // Aggregate stock for master medicine
-      if (medicineStockMap[medId] === undefined) {
-        medicineStockMap[medId] = 0;
-        medicineMinStockMap[medId] = batch.medicineId?.minStockLevel || 5;
-      }
-      medicineStockMap[medId] += stock;
-    }
-
-    // Process aggregated medicine stocks for Low Stock and Out of Stock
-    for (const [medId, totalStock] of Object.entries(medicineStockMap)) {
-      if (totalStock <= 0) {
-        outOfStockCount++;
-      } else if (totalStock <= medicineMinStockMap[medId]) {
-        lowStockCount++;
-      }
-    }
-
-    // In case there are Master Medicines with NO batches, they are also Out of Stock.
-    // Let's get the master medicines that aren't in the medicineStockMap or have 0
-    const allMedicines = await Medicine.find({}, '_id stock minStockLevel').lean();
-    outOfStockCount = 0;
-    lowStockCount = 0;
-
-    for (const med of allMedicines) {
-        const medId = med._id.toString();
-        const totalStock = medicineStockMap[medId] || 0;
-        const minStockLevel = med.minStockLevel || 5;
-
-        if (totalStock <= 0) {
-            outOfStockCount++;
-        } else if (totalStock <= minStockLevel) {
-            lowStockCount++;
-        }
     }
 
     return NextResponse.json({
