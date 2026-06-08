@@ -48,6 +48,7 @@ export async function PUT(
         }
 
         await deleteCache("catalog:all");
+        await redis.set("catalog:version", Date.now().toString());
 
         return NextResponse.json(updatedBatch);
     } catch (error) {
@@ -94,6 +95,7 @@ export async function DELETE(
         if (redis) {
             const keys = await redis.keys("inventory:get:*");
             if (keys.length > 0) await redis.del(...keys);
+            await redis.set("catalog:version", Date.now().toString());
         }
 
         return NextResponse.json(

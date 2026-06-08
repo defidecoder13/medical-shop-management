@@ -1152,7 +1152,7 @@ export default function InventoryPage() {
                       }
                     </div>
                     <div className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">
-                      {med.pack || "Strip"}
+                      {med.pack || "Strip"} {Number(med.tabletsPerStrip) > 1 ? `(${med.tabletsPerStrip} Tabs/Strip)` : ""}
                     </div>
                   </td>
                   <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800">
