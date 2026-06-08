@@ -95,7 +95,7 @@ export async function GET(req: Request) {
 
       // Sort by expiry date or newly added
       // For simplicity in memory, we sort by _id string comparison (approximate creation time)
-      filteredBatches.sort((a, b) => b._id.localeCompare(a._id));
+      filteredBatches.sort((a, b) => String(b._id).localeCompare(String(a._id)));
 
       const totalCount = filteredBatches.length;
       const totalPages = Math.ceil(totalCount / pageSize);
