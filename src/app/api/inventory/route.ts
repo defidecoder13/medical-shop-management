@@ -305,6 +305,7 @@ export async function POST(req: Request) {
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
       await setCache("catalog:version", Date.now().toString(), 604800);
+      memoryCache = null;
     }
 
     return NextResponse.json(newBatch);
@@ -413,6 +414,7 @@ export async function PUT(req: Request) {
       keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
       await setCache("catalog:version", Date.now().toString(), 604800);
+      memoryCache = null;
     }
 
     return NextResponse.json(batch);
