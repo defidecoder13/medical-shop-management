@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const MONGODB_URI = "mongodb+srv://papu001:bingotingo@cluster0.tzgh1r4.mongodb.net/medishop?appName=Cluster0";
+const MONGODB_URI = "process.env.MONGODB_URI // cluster0.tzgh1r4.mongodb.net/medishop?appName=Cluster0";
 
 const MedicineBatchSchema = new mongoose.Schema({
   medicineId: { type: mongoose.Schema.Types.ObjectId, ref: "Medicine", required: true },

@@ -6,6 +6,10 @@ import { getCache, setCache, redis, deleteCache } from "@/src/lib/redis";
 
 export const dynamic = "force-dynamic";
 
+// Global in-memory cache for ultra-fast Zero-Latency Search
+let memoryCache: any[] | null = null;
+let memoryCacheVersion: string | null = null;
+
 export async function GET(req: Request) {
   try {
     await connectDB();
@@ -23,22 +27,31 @@ export async function GET(req: Request) {
     const status = searchParams.get("status");
 
     // --------------------------------------------------------------------------------
-    // 🔥 ZERO-LATENCY REDIS SEARCH PIPELINE (For standard searches/catalog)
+    // 🔥 ZERO-LATENCY IN-MEMORY PIPELINE (Syncs via Redis Version)
     // --------------------------------------------------------------------------------
-    // If it's a specific IDs lookup (used in edge cases), we bypass the cache for safety
     if (!idsParam) {
-      // 1. Try to get the entire active catalog from Redis memory
-      let allBatches = await getCache<any[]>("catalog:all");
+      let allBatches = null;
+      let currentVersion = "default";
+      
+      // 1. Fetch lightweight version string from Redis (~50ms) instead of 800KB catalog
+      if (redis) {
+          const v = await getCache<string>("catalog:version");
+          if (v) currentVersion = v;
+      }
 
-      // 2. If it's not in Redis, fetch from MongoDB and rebuild the cache
+      // 2. Check local memory cache (0ms latency!)
+      if (memoryCache && memoryCacheVersion === currentVersion) {
+          allBatches = memoryCache;
+      }
+
+      // 3. If memory cache miss or stale, fetch from Mongo directly (500ms)
       if (!allBatches) {
-        // We only cache active items (stock > 0 or whatever the baseline is, but for catalog we fetch all)
         const rawBatches = await MedicineBatch.find({}).populate("medicineId").lean();
         allBatches = rawBatches.map((batch: any) => {
           const med = batch.medicineId || {};
           return {
-            _id: batch._id,
-            medicineId: med._id,
+            _id: String(batch._id), // Pre-cast to string for localeCompare safety
+            medicineId: String(med._id || ""),
             name: med.name || "",
             brand: med.brand || "",
             batchNumber: batch.batchNumber || "",
@@ -59,9 +72,10 @@ export async function GET(req: Request) {
             pack: batch.pack || med.pack || "",
           };
         });
-
-        // Save to Redis (cache forever, until explicitly invalidated by POST/PUT/DELETE)
-        await setCache("catalog:all", allBatches, 86400 * 7); // 7 days
+        
+        // Save to ultra-fast local memory
+        memoryCache = allBatches;
+        memoryCacheVersion = currentVersion;
       }
 
       // 3. Perform in-memory filtering (Instantaneous)
@@ -288,8 +302,9 @@ export async function POST(req: Request) {
 
     if (redis) {
       const keys = await redis.keys("inventory:get:*");
-      keys.push("catalog:all");
+      keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
+      await setCache("catalog:version", Date.now().toString(), 604800);
     }
 
     return NextResponse.json(newBatch);
@@ -395,8 +410,9 @@ export async function PUT(req: Request) {
 
     if (redis) {
       const keys = await redis.keys("inventory:get:*");
-      keys.push("catalog:all");
+      keys.push("catalog:all"); // Legacy cleanup
       await redis.del(...keys);
+      await setCache("catalog:version", Date.now().toString(), 604800);
     }
 
     return NextResponse.json(batch);

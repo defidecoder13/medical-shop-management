@@ -177,8 +177,9 @@ export async function POST(req: Request) {
 
         if (redis) {
             const keys = await redis.keys("inventory:get:*");
-            keys.push("catalog:all");
+            keys.push("catalog:all"); // Legacy cleanup
             await redis.del(...keys);
+            await redis.set("catalog:version", Date.now().toString());
         }
 
         return NextResponse.json({
