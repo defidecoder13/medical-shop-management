@@ -1,4 +1,4 @@
-import { getApiCache, setApiCache, addToSyncQueue } from "./localDb";
+import { getApiCache, setApiCache, addToSyncQueue, clearAllApiCaches } from "./localDb";
 
 export const apiClient = {
     /**
@@ -6,6 +6,8 @@ export const apiClient = {
      */
     async get(url: string, options: RequestInit = {}, onCache?: (data: any) => void) {
         const isOnline = navigator.onLine;
+
+
         let networkFinished = false;
 
         // Instantly return cache to the callback (Stale-While-Revalidate)
@@ -77,6 +79,9 @@ export const apiClient = {
         options: RequestInit = {}
     ) {
         const isOnline = navigator.onLine;
+
+        // Invalidate ALL offline GET caches on any mutation so stale data isn't loaded
+        await clearAllApiCaches();
 
         if (isOnline) {
             try {

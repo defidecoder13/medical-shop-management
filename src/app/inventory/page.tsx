@@ -388,7 +388,7 @@ export default function InventoryPage() {
         }
 
         setMessage({ text: msg, type: 'success' });
-        setTimeout(() => fetchMedicines(), 500);
+        fetchMedicines();
       } catch (err: any) {
          setMessage({ text: err.message || "Error parsing file", type: 'error' });
       } finally {
@@ -475,12 +475,12 @@ export default function InventoryPage() {
       setIsRestock(false);
       
       // Fetch in background to sync true IDs
-      setTimeout(() => fetchMedicines(), 500);
+      fetchMedicines();
 
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
       // Revert optimistic update
-      setTimeout(() => fetchMedicines(), 500);
+      fetchMedicines();
       setMessage({ text: err.message || "An error occurred", type: 'error' });
       setTimeout(() => setMessage(null), 4000);
     }
@@ -526,18 +526,16 @@ export default function InventoryPage() {
 
   const handleDelete = async (id: string) => {
     if (window.confirm("Are you sure you want to permanently delete this medicine? This action cannot be undone.")) {
-      setLoading(true);
       try {
         setMedicines(prev => prev.filter(m => m._id !== id));
         const data = await apiClient.delete(`/api/inventory/${id}`);
 
         setMessage({ text: data.offlineQueued ? "Deletion queued for sync" : "Medicine deleted permanently", type: 'success' });
-        setTimeout(() => fetchMedicines(), 500);
+        fetchMedicines();
       } catch (error: any) {
-        setTimeout(() => fetchMedicines(), 500);
+        fetchMedicines();
         setMessage({ text: error.message || "Failed to delete", type: 'error' });
       } finally {
-        setLoading(false);
         setTimeout(() => setMessage(null), 3000);
       }
     }

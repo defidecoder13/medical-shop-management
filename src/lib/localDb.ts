@@ -66,7 +66,17 @@ export async function getApiCache(url: string) {
 /**
  * Clear specific API cache (Useful when navigating away or forcing a refresh)
  */
-export async function clearApiCache(url: string) {
+/**
+ * Clear all API caches (Useful after a mutation to prevent stale data)
+ */
+export async function clearAllApiCaches() {
+    if (!dbPromise) return;
+    const db = await dbPromise;
+    await db.clear("apiCache");
+}
+
+/**
+ * Clear specific API cache(url: string) {
     if (!dbPromise) return;
     const db = await dbPromise;
     await db.delete("apiCache", url);
