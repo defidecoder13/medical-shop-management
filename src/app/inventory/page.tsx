@@ -152,6 +152,7 @@ export default function InventoryPage() {
   const [filterCategory, setFilterCategory] = useState("All Categories");
   const [filterCompany, setFilterCompany] = useState("All Companies");
   const [filterStatus, setFilterStatus] = useState("All Status");
+  const [hideZeroStock, setHideZeroStock] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [showForm, setShowForm] = useState(false);
@@ -282,6 +283,7 @@ export default function InventoryPage() {
       if (filterCategory !== "All Categories") params.append("category", filterCategory);
       if (filterCompany !== "All Companies") params.append("company", filterCompany);
       if (filterStatus !== "All Status") params.append("status", filterStatus);
+      if (hideZeroStock) params.append("inStock", "true");
 
       const setMedsFromPayload = (res: any) => {
         const payload = res?.data ? res.data : (Array.isArray(res) ? res : []);
@@ -401,11 +403,11 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchMedicines();
-  }, [page, filterCategory, filterCompany, filterStatus]);
+  }, [page, filterCategory, filterCompany, filterStatus, hideZeroStock]);
 
   useEffect(() => {
     setPage(1);
-  }, [filterCategory, filterCompany, filterStatus]);
+  }, [filterCategory, filterCompany, filterStatus, hideZeroStock]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -616,7 +618,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [deferredSearch, filterCategory, filterCompany, filterStatus]);
+  }, [deferredSearch, filterCategory, filterCompany, filterStatus, hideZeroStock]);
 
   const renderExpiry = (expiryDate: string) => {
     if (!expiryDate) return { date: "-", text: "", color: "text-gray-500" };
@@ -1044,6 +1046,10 @@ export default function InventoryPage() {
            <option>Low Stock</option>
            <option>Out of Stock</option>
         </select>
+        <label className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 cursor-pointer shrink-0 hover:bg-gray-50 transition-colors">
+           <input type="checkbox" checked={hideZeroStock} onChange={e => setHideZeroStock(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-[#11327c] focus:ring-[#11327c]" />
+           Hide Dead Stock
+        </label>
         <div className="relative flex-1 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
           <input 
