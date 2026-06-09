@@ -5,7 +5,8 @@ import Bill from "@/src/models/Bill";
 import Settings from "@/src/models/Settings";
 import Medicine from "@/src/models/Medicine";
 import mongoose from "mongoose";
-import { deleteCache, setCache } from "@/src/lib/redis";
+import { deleteCache, setCache, redis } from "@/src/lib/redis";
+import { after } from "next/server";
 
 export async function POST(req: Request) {
   // 🔁 Keep original batch states for rollback
@@ -17,12 +18,7 @@ export async function POST(req: Request) {
 
   try {
     await connectDB();
-    const session = await mongoose.startSession();
-    
     let result: any;
-    
-    try {
-      await session.withTransaction(async () => {
 
     const {
       items = [],
@@ -51,11 +47,11 @@ export async function POST(req: Request) {
 
     // 🔥 BULK FETCH BATCHES FOR PERFORMANCE
     const batchIds = items.map((i: any) => i.medicineId);
-    const requestedBatches = await MedicineBatch.find({ _id: { $in: batchIds } }).populate('medicineId').session(session);
+    const requestedBatches = await MedicineBatch.find({ _id: { $in: batchIds } }).populate('medicineId');
     const batchMap = new Map(requestedBatches.map(b => [b._id.toString(), b]));
 
-    const batchBulkOps = [];
-    const medicineBulkOps = [];
+    const batchBulkOps: any[] = [];
+    const medicineBulkOps: any[] = [];
 
     for (const item of items) {
       const requestedBatch = batchMap.get(item.medicineId);
@@ -148,13 +144,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // 🔥 EXECUTE BULK WRITES
-    if (batchBulkOps.length > 0) {
-      await MedicineBatch.bulkWrite(batchBulkOps, { session });
-    }
-    if (medicineBulkOps.length > 0) {
-      await Medicine.bulkWrite(medicineBulkOps, { session });
-    }
+    
 
     // Calculate discount (preserve decimals)
     const discountAmount = accumulatedDiscountAmount;
@@ -173,20 +163,25 @@ export async function POST(req: Request) {
     const calculatedDiscountPercent = subTotal > 0 ? Math.round((roundedDiscountAmount / subTotal) * 100 * 100) / 100 : 0;
     const calculatedGstPercent = subTotalAfterDiscount > 0 ? Math.round((roundedGstAmount / subTotalAfterDiscount) * 100 * 100) / 100 : 0;
 
-    // 💡 GENERATE INVOICE NUMBER
-    const startOfDay = new Date();
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date();
-    endOfDay.setHours(23, 59, 59, 999);
-    
-    // Count bills created today
-    const todayCount = await Bill.countDocuments({ 
-      createdAt: { $gte: startOfDay, $lte: endOfDay } 
-    }).session(session);
-    
-    // Format: MS-YYMMDD-001
+        // 💡 GENERATE INVOICE NUMBER
     const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
-    const sequence = (todayCount + 1).toString().padStart(3, '0');
+    let sequenceNumber = 1;
+
+    if (redis) {
+      sequenceNumber = await redis.incr(`invoice_seq:${dateStr}`);
+    } else {
+      const startOfDay = new Date();
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date();
+      endOfDay.setHours(23, 59, 59, 999);
+      
+      const todayCount = await Bill.countDocuments({ 
+        createdAt: { $gte: startOfDay, $lte: endOfDay } 
+      });
+      sequenceNumber = todayCount + 1;
+    }
+    
+    const sequence = sequenceNumber.toString().padStart(3, '0');
     const invoiceNumber = `MS-${dateStr}-${sequence}`;
 
     // 💾 CREATE BILL
@@ -207,22 +202,36 @@ export async function POST(req: Request) {
       patientAddress,
       doctorName,
       paymentMethod,
-    }], { session }).then(res => res[0]);
+    }]).then(res => res[0]);
 
 
-    // 🧑‍⚕️ PATIENT CRM: Update or Create Patient Record
+    result = bill;
+
+    after(async () => {
+      try {
+        await connectDB();
+        
+        // 🔥 EXECUTE BULK WRITES
+    if (batchBulkOps.length > 0) {
+      await MedicineBatch.bulkWrite(batchBulkOps);
+    }
+    if (medicineBulkOps.length > 0) {
+      await Medicine.bulkWrite(medicineBulkOps);
+    }
+
+        // 🧑‍⚕️ PATIENT CRM: Update or Create Patient Record
     if (patientPhone) {
       // Lazy load to prevent cyclic dependencies if any
       const Patient = (await import("@/src/models/Patient")).default;
       
-      let patient = await Patient.findOne({ phone: patientPhone }).session(session);
+      let patient = await Patient.findOne({ phone: patientPhone });
       if (patient) {
         // Update total spent and latest doctor
         patient.totalSpent += finalGrandTotal;
         if (patientName) patient.name = patientName;
         if (patientAddress) patient.address = patientAddress;
         if (doctorName) patient.doctorName = doctorName;
-        await patient.save({ session });
+        await patient.save();
       } else {
         // Create brand new profile
         await Patient.create([{
@@ -231,20 +240,24 @@ export async function POST(req: Request) {
           address: patientAddress || "",
           doctorName: doctorName || "",
           totalSpent: finalGrandTotal
-        }], { session });
+        }]);
       }
     }
 
-    result = bill;
-    }); // end withTransaction
-    } finally {
-      session.endSession();
-    }
     
-    // Invalidate Redis catalog cache to instantly reflect the new stock everywhere
+
+        // Invalidate Redis catalog cache to instantly reflect the new stock everywhere
     await deleteCache("catalog:all");
     await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
             await setCache("catalog:version", Date.now().toString(), 604800);
+      } catch (err) {
+        console.error("BACKGROUND BILLING ERROR:", err);
+      }
+    });
+
+    
+    
+    
 
     return NextResponse.json(result, { status: 201 });
   } catch (error: any) {
