@@ -111,8 +111,12 @@ export async function GET(req: Request) {
       }
 
       // Sort by expiry date or newly added
-      // For simplicity in memory, we sort by _id string comparison (approximate creation time)
-      filteredBatches.sort((a, b) => String(b._id).localeCompare(String(a._id)));
+      // Sort by updatedAt descending so edited/newly added items are at the top
+      filteredBatches.sort((a, b) => {
+        const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
+        const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        return timeB - timeA;
+      });
 
       const totalCount = filteredBatches.length;
       const totalPages = Math.ceil(totalCount / pageSize);

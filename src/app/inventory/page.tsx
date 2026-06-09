@@ -757,6 +757,7 @@ export default function InventoryPage() {
             <div className="flex flex-col gap-2 relative">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Medicine Name</label>
               <input 
+                autoFocus
                 placeholder="e.g. Paracetamol 500mg" 
                 value={form.name}
                 onChange={e => setForm({...form, name: e.target.value})}
@@ -1002,7 +1003,7 @@ export default function InventoryPage() {
               <button 
                 onClick={handleSubmit}
                 disabled={loading}
-                className="w-2/3 bg-[#11327c] text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-[#1e4db7] transition-all disabled:opacity-50 shadow-lg shadow-[#11327c]/20"
+                className="w-2/3 bg-[#11327c] text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-[#1e4db7] transition-all disabled:opacity-50 shadow-lg shadow-[#11327c]/20 focus:outline-none focus:ring-4 focus:ring-[#11327c]/40 focus:ring-offset-2"
               >
                 {loading ? "SAVING..." : "SAVE MEDICINE"}
               </button>
