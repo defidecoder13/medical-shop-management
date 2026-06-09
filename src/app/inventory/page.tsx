@@ -765,16 +765,6 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Brand</label>
-              <input 
-                placeholder="e.g. Micro Labs" 
-                value={form.brand}
-                onChange={e => setForm({...form, brand: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Category</label>
               <select
                 value={form.category || "Tablet"}
@@ -799,6 +789,99 @@ export default function InventoryPage() {
                 <option value="Device">Device / Condoms</option>
                 <option value="Other">Other / Pieces</option>
               </select>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.stock}</label>
+              <input 
+                type="number" 
+                placeholder="0" 
+                value={form.stock}
+                onChange={e => setForm({...form, stock: e.target.value === "" ? "" : Number(e.target.value)})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+              />
+            </div>
+
+            {isMultiUnit && (
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.subUnit}</label>
+                <input 
+                  type="number" 
+                  placeholder="0" 
+                  value={form.tabletsPerStrip}
+                  onChange={e => setForm({...form, tabletsPerStrip: e.target.value === "" ? "" : Number(e.target.value)})}
+                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                />
+              </div>
+            )}
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Batch Number</label>
+              <input 
+                ref={batchNumberInputRef}
+                placeholder="e.g. BATCH123" 
+                value={form.batchNumber}
+                onChange={e => setForm({...form, batchNumber: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Expiry Date</label>
+              <input 
+                type="text"
+                placeholder="MM/YY (e.g. 12/28)"
+                value={form.expiryDate}
+                onChange={e => {
+                  let val = e.target.value.replace(/\D/g, '');
+                  if (val.length > 2) {
+                    val = val.substring(0, 2) + '/' + val.substring(2, 4);
+                  }
+                  setForm({...form, expiryDate: val});
+                }}
+                maxLength={5}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.mrp}</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
+                <input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={form.sellingPrice}
+                  onChange={e => setForm({...form, sellingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
+                  className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.cost}</label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
+                <input 
+                  type="number" 
+                  placeholder="0.00" 
+                  value={form.buyingPrice}
+                  onChange={e => setForm({...form, buyingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
+                  className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                />
+              </div>
+            </div>
+
+            <div className="lg:col-span-4 h-px bg-gray-100 my-2"></div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Brand</label>
+              <input 
+                placeholder="e.g. Micro Labs" 
+                value={form.brand}
+                onChange={e => setForm({...form, brand: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+              />
             </div>
 
             <div className="flex flex-col gap-2">
@@ -828,17 +911,6 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Batch Number</label>
-              <input 
-                ref={batchNumberInputRef}
-                placeholder="e.g. BATCH123" 
-                value={form.batchNumber}
-                onChange={e => setForm({...form, batchNumber: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Rack / Row</label>
               <input 
                 placeholder="e.g. A1" 
@@ -847,68 +919,6 @@ export default function InventoryPage() {
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
-
-            <div className="flex flex-col gap-2 lg:col-span-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Composition</label>
-              <input 
-                placeholder="e.g. Paracetamol 500mg" 
-                value={form.composition}
-                onChange={e => setForm({...form, composition: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">HSN Code</label>
-              <input 
-                placeholder="3004" 
-                value={form.hsnCode}
-                onChange={e => setForm({...form, hsnCode: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Expiry Date</label>
-              <input 
-                type="text"
-                placeholder="MM/YY (e.g. 12/28)"
-                value={form.expiryDate}
-                onChange={e => {
-                  let val = e.target.value.replace(/\D/g, '');
-                  if (val.length > 2) {
-                    val = val.substring(0, 2) + '/' + val.substring(2, 4);
-                  }
-                  setForm({...form, expiryDate: val});
-                }}
-                maxLength={5}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.stock}</label>
-              <input 
-                type="number" 
-                placeholder="0" 
-                value={form.stock}
-                onChange={e => setForm({...form, stock: e.target.value === "" ? "" : Number(e.target.value)})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-              />
-            </div>
-
-            {isMultiUnit && (
-              <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.subUnit}</label>
-                <input 
-                  type="number" 
-                  placeholder="0" 
-                  value={form.tabletsPerStrip}
-                  onChange={e => setForm({...form, tabletsPerStrip: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-                />
-              </div>
-            )}
 
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Pack Label</label>
@@ -919,34 +929,6 @@ export default function InventoryPage() {
                 onChange={e => setForm({...form, pack: e.target.value})}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.cost}</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
-                <input 
-                  type="number" 
-                  placeholder="0.00" 
-                  value={form.buyingPrice}
-                  onChange={e => setForm({...form, buyingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-                />
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.mrp}</label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
-                <input 
-                  type="number" 
-                  placeholder="0.00" 
-                  value={form.sellingPrice}
-                  onChange={e => setForm({...form, sellingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-                />
-              </div>
             </div>
 
             <div className="flex flex-col gap-2">
@@ -982,6 +964,26 @@ export default function InventoryPage() {
                 placeholder="e.g. INV-101" 
                 value={form.purchaseInvoiceNumber || ""}
                 onChange={e => setForm({...form, purchaseInvoiceNumber: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">HSN Code</label>
+              <input 
+                placeholder="3004" 
+                value={form.hsnCode}
+                onChange={e => setForm({...form, hsnCode: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 lg:col-span-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Composition</label>
+              <input 
+                placeholder="e.g. Paracetamol 500mg" 
+                value={form.composition}
+                onChange={e => setForm({...form, composition: e.target.value})}
                 className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
               />
             </div>
