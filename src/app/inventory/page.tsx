@@ -587,7 +587,8 @@ export default function InventoryPage() {
        return m.name.toLowerCase().includes(q) || 
               (m.brand && m.brand.toLowerCase().includes(q)) || 
               (m.batchNumber && m.batchNumber.toLowerCase().includes(q)) ||
-              (m.barcode && m.barcode.toLowerCase().includes(q));
+              (m.barcode && m.barcode.toLowerCase().includes(q)) ||
+              (m.composition && m.composition.toLowerCase().includes(q));
     })
     .sort((a, b) => {
        if (sortConfig.key === 'none') return 0;
@@ -1057,7 +1058,7 @@ export default function InventoryPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
           <input 
             type="text" 
-            placeholder="Search medicine by name, barcode..."
+            placeholder="Search medicine by name, composition, barcode..."
             className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 transition-all text-gray-800 placeholder:text-gray-400"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
