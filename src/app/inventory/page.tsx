@@ -1083,13 +1083,11 @@ export default function InventoryPage() {
           <table className="w-full text-left border-collapse">
             <thead className="sticky top-0 bg-white border-b border-gray-100 z-10">
               <tr>
-                <th className="px-5 py-4 w-10">
-                   <div className="w-4 h-4 rounded border border-gray-300"></div>
-                </th>
+
                 <th className="px-2 py-4 text-[12px] font-bold text-gray-800">#</th>
                 <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Medicine Details</th>
                 <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Category</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Company</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Composition</th>
                 <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Batch No.</th>
                 <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Expiry Date</th>
                 <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-right">MRP (₹)</th>
@@ -1112,9 +1110,7 @@ export default function InventoryPage() {
                   onClick={() => handleEdit(med)}
                   className="hover:bg-[#f8fafc]/80 transition-colors group border-b border-gray-50 cursor-pointer"
                 >
-                  <td className="px-5 py-4">
-                     <div className="w-4 h-4 rounded border border-gray-300"></div>
-                  </td>
+
                   <td className="px-2 py-4 text-[13px] font-bold text-gray-800">{index + 1}</td>
                   <td className="px-4 py-4">
                      <div>
@@ -1129,8 +1125,8 @@ export default function InventoryPage() {
                       {med.category || "Tablet"}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800">
-                    {med.brand || "-"}
+                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800 max-w-[180px] truncate" title={med.composition || "-"}>
+                    {med.composition || "-"}
                   </td>
                   <td className="px-4 py-4 text-[13px] font-medium text-gray-800">
                     {med.batchNumber || "-"}
