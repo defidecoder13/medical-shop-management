@@ -24,13 +24,17 @@ export default function RackAssignmentPage() {
     try {
       setLoading(true);
       // Fetch all medicines. We don't need pagination for this specific search tool, but we'll limit to a large number if needed.
-      // Assuming /api/inventory?limit=10000 returns all or enough.
-      const res = await apiClient.get('/api/inventory?limit=10000', {}, (cachedData) => {
-        if (cachedData?.data) setMedicines(cachedData.data);
-      });
-      if (res?.data) {
-        setMedicines(res.data);
-      }
+      const handlePayload = (payload: any) => {
+        if (!payload) return;
+        if (payload.data && Array.isArray(payload.data)) {
+          setMedicines(payload.data);
+        } else if (Array.isArray(payload)) {
+          setMedicines(payload);
+        }
+      };
+
+      const res = await apiClient.get('/api/inventory?page=1&limit=5000', {}, handlePayload);
+      handlePayload(res);
     } catch (error) {
       console.error("Failed to load medicines", error);
       setMessage({ text: "Failed to load medicines.", type: "error" });
