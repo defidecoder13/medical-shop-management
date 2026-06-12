@@ -1116,7 +1116,7 @@ export default function InventoryPage() {
                      <div>
                        <div className="font-bold text-[#2563eb] text-[13px] mb-0.5">{med.name}</div>
                        <div className="text-[11px] text-gray-500 font-medium">
-                         {med.barcode || "8901234567890"}
+                         {med.rackNumber ? `Rack: ${med.rackNumber}` : ""}
                        </div>
                      </div>
                   </td>
