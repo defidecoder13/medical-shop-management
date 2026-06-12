@@ -31,6 +31,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
 import { format } from "date-fns";
 import * as xlsx from "xlsx";
+import SubstituteFinder from "@/src/components/SubstituteFinder";
 
 const parseExpiryDate = (expiryInput: string | number): string => {
   if (!expiryInput) return "";
@@ -157,6 +158,7 @@ export default function InventoryPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState<Medicine>(emptyMedicine);
+  const [showSubstituteFinder, setShowSubstituteFinder] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isRestock, setIsRestock] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -1066,6 +1068,13 @@ export default function InventoryPage() {
         </div>
 
         <button 
+           onClick={() => setShowSubstituteFinder(true)}
+           className="flex items-center gap-2 bg-[#e0e7ff] text-[#11327c] px-5 py-2.5 rounded-xl text-[13px] font-bold shadow-sm hover:bg-[#c7d2fe] transition-all shrink-0 border border-[#c7d2fe]"
+        >
+           <Search size={18} strokeWidth={2.5} /> Find Substitute
+        </button>
+
+        <button 
            onClick={() => {
               setForm(emptyMedicine);
               setEditingId(null);
@@ -1232,6 +1241,12 @@ export default function InventoryPage() {
           </div>
         </div>
       </div>
+
+      <SubstituteFinder 
+        isOpen={showSubstituteFinder} 
+        onClose={() => setShowSubstituteFinder(false)} 
+        medicines={medicines} 
+      />
     </div>
   );
 }
