@@ -102,6 +102,7 @@ const formatToMMYY = (dateStr: string): string => {
 
 type Medicine = {
   _id?: string;
+  medicineId?: string;
   name: string;
   brand?: string;
   batchNumber: string;
@@ -501,6 +502,7 @@ export default function InventoryPage() {
   const handleRestock = (med: Medicine) => {
     setForm({
       ...emptyMedicine,
+      medicineId: med.medicineId,
       name: med.name || "",
       brand: med.brand || "",
       composition: med.composition || "",

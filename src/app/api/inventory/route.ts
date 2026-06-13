@@ -239,10 +239,17 @@ export async function POST(req: Request) {
     }
 
     // 1. Find or Create Medicine Master
-    const safeName = String(name).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    let medicine = await Medicine.findOne({
-      name: { $regex: `^${safeName}$`, $options: "i" }
-    });
+    let medicine = null;
+    if (body.medicineId) {
+      medicine = await Medicine.findById(body.medicineId);
+    }
+    
+    if (!medicine) {
+      const safeName = String(name).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      medicine = await Medicine.findOne({
+        name: { $regex: `^${safeName}$`, $options: "i" }
+      });
+    }
 
     if (!medicine) {
       medicine = await Medicine.create({
