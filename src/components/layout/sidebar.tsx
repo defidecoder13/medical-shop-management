@@ -43,7 +43,6 @@ const navigationGroups = [
     group: "INVENTORY",
     routes: [
       { label: "Stock Items", icon: Package, href: "/inventory" },
-      { label: "Rack Assignment", icon: Layers, href: "/rack-assignment" },
       { label: "Expiry Tracker", icon: CalendarClock, href: "/expiry" },
     ]
   },

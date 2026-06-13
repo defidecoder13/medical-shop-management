@@ -280,32 +280,45 @@ export async function POST(req: Request) {
         batchQuery.batchNumber = "";
     }
 
+    let newBatch;
     const existingBatch = await MedicineBatch.findOne(batchQuery);
 
     if (existingBatch) {
-      return NextResponse.json(
-        { error: "This batch already exists for this medicine" },
-        { status: 400 }
-      );
+      // MERGE / UPDATE EXISTING BATCH INSTEAD OF THROWING ERROR
+      if (!Number.isNaN(stock) && stock > 0) {
+        existingBatch.stock += stock;
+        existingBatch.totalTabletsInStock = existingBatch.stock * (Number.isNaN(tabletsPerStrip) ? 10 : tabletsPerStrip);
+      }
+      if (!Number.isNaN(buyingPricePerStrip) && buyingPricePerStrip > 0) existingBatch.buyingPricePerStrip = buyingPricePerStrip;
+      if (!Number.isNaN(sellingPricePerStrip) && sellingPricePerStrip > 0) existingBatch.sellingPricePerStrip = sellingPricePerStrip;
+      if (rackNumber) existingBatch.rackNumber = rackNumber;
+      if (discountPercent !== undefined) existingBatch.discountPercent = discountPercent;
+      if (supplierName && supplierName !== "Direct Purchase") existingBatch.supplierName = supplierName;
+      if (purchaseInvoiceNumber) existingBatch.purchaseInvoiceNumber = purchaseInvoiceNumber;
+      if (body.pack) existingBatch.pack = body.pack;
+      if (expiryDate !== undefined) existingBatch.expiryDate = expiryDate;
+      
+      await existingBatch.save();
+      newBatch = existingBatch;
+    } else {
+      const newBatchData: any = {
+        medicineId: medicine._id,
+        batchNumber,
+        stock: Number.isNaN(stock) ? 0 : stock,
+        totalTabletsInStock: (Number.isNaN(stock) ? 0 : stock) * (Number.isNaN(tabletsPerStrip) ? 10 : tabletsPerStrip),
+        buyingPricePerStrip: Number.isNaN(buyingPricePerStrip) ? 0 : buyingPricePerStrip,
+        sellingPricePerStrip: Number.isNaN(sellingPricePerStrip) ? 0 : sellingPricePerStrip,
+        rackNumber: rackNumber || "",
+        discountPercent: discountPercent || 0,
+        supplierName: supplierName || "Direct Purchase",
+        purchaseInvoiceNumber: purchaseInvoiceNumber || "",
+        pack: body.pack || "",
+      };
+      if (expiryDate !== undefined) {
+        newBatchData.expiryDate = expiryDate;
+      }
+      newBatch = await MedicineBatch.create(newBatchData);
     }
-
-    const newBatchData: any = {
-      medicineId: medicine._id,
-      batchNumber,
-      stock: Number.isNaN(stock) ? 0 : stock,
-      totalTabletsInStock: (Number.isNaN(stock) ? 0 : stock) * (Number.isNaN(tabletsPerStrip) ? 10 : tabletsPerStrip),
-      buyingPricePerStrip: Number.isNaN(buyingPricePerStrip) ? 0 : buyingPricePerStrip,
-      sellingPricePerStrip: Number.isNaN(sellingPricePerStrip) ? 0 : sellingPricePerStrip,
-      rackNumber: rackNumber || "",
-      discountPercent: discountPercent || 0,
-      supplierName: supplierName || "Direct Purchase",
-      purchaseInvoiceNumber: purchaseInvoiceNumber || "",
-      pack: body.pack || "",
-    };
-    if (expiryDate !== undefined) {
-      newBatchData.expiryDate = expiryDate;
-    }
-    const newBatch = await MedicineBatch.create(newBatchData);
 
     await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
     memoryCache = null;
