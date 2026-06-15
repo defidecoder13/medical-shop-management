@@ -54,11 +54,13 @@ export default function MedicineListPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const filteredMedicines = medicines.filter(m => 
-    m.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    m.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    m.batchNumber.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredMedicines = medicines.filter(m => {
+    if (!searchQuery) return true;
+    const queryTerms = searchQuery.toLowerCase().split(/\s+/).map(t => t.replace(/[^a-z0-9]/g, "")).filter(Boolean);
+    const rawSearchString = `${m.name} ${m.brand} ${m.batchNumber}`;
+    const cleanSearchString = rawSearchString.toLowerCase().replace(/[^a-z0-9]/g, "");
+    return queryTerms.every(term => cleanSearchString.includes(term));
+  });
 
   const exportToExcel = () => {
     if (medicines.length === 0) return;

@@ -85,10 +85,15 @@ export async function GET(req: Request) {
       let filteredBatches = allBatches;
 
       if (q) {
-        const queryTerms = q.toLowerCase().split(/\\s+/).filter(Boolean);
+        // Strip non-alphanumerics from each query term to handle missing spaces/hyphens
+        const queryTerms = q.toLowerCase().split(/\s+/).map(t => t.replace(/[^a-z0-9]/g, "")).filter(Boolean);
+        
         filteredBatches = filteredBatches.filter((b: any) => {
-          const searchString = `${b.name} ${b.brand} ${b.composition} ${b.barcode || ''} ${b.batchNumber} ${b.rackNumber}`.toLowerCase();
-          return queryTerms.every(term => searchString.includes(term));
+          // Normalize the entire item string to remove spaces and special characters
+          const rawSearchString = `${b.name} ${b.brand} ${b.composition} ${b.barcode || ''} ${b.batchNumber} ${b.rackNumber}`;
+          const cleanSearchString = rawSearchString.toLowerCase().replace(/[^a-z0-9]/g, "");
+          
+          return queryTerms.every(term => cleanSearchString.includes(term));
         });
       }
 

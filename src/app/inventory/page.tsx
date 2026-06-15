@@ -585,12 +585,12 @@ export default function InventoryPage() {
   const filteredMeds = medicines
     .filter(m => {
        if (!deferredSearch) return true;
-       const q = deferredSearch.toLowerCase();
-       return m.name.toLowerCase().includes(q) || 
-              (m.brand && m.brand.toLowerCase().includes(q)) || 
-              (m.batchNumber && m.batchNumber.toLowerCase().includes(q)) ||
-              (m.barcode && m.barcode.toLowerCase().includes(q)) ||
-              (m.composition && m.composition.toLowerCase().includes(q));
+       const queryTerms = deferredSearch.toLowerCase().split(/\s+/).map(t => t.replace(/[^a-z0-9]/g, "")).filter(Boolean);
+       
+       const rawSearchString = `${m.name} ${m.brand} ${m.composition} ${m.barcode || ''} ${m.batchNumber} ${m.rackNumber}`;
+       const cleanSearchString = rawSearchString.toLowerCase().replace(/[^a-z0-9]/g, "");
+       
+       return queryTerms.every(term => cleanSearchString.includes(term));
     })
     .sort((a, b) => {
        if (sortConfig.key === 'none') return 0;
