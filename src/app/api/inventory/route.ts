@@ -110,11 +110,10 @@ export async function GET(req: Request) {
         filteredBatches = filteredBatches.filter((b: any) => b.stock > 0);
       }
 
-      // Sort by expiry date or newly added
-      // Sort by updatedAt descending so edited/newly added items are at the top
+      // Sort by createdAt descending so newly added items are at the top, but edited items stay in place
       filteredBatches.sort((a, b) => {
-        const timeA = new Date(a.updatedAt || a.createdAt || 0).getTime();
-        const timeB = new Date(b.updatedAt || b.createdAt || 0).getTime();
+        const timeA = new Date(a.createdAt || 0).getTime();
+        const timeB = new Date(b.createdAt || 0).getTime();
         return timeB - timeA;
       });
 
