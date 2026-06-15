@@ -160,6 +160,7 @@ export default function InventoryPage() {
   const [form, setForm] = useState<Medicine>(emptyMedicine);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isRestock, setIsRestock] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error'} | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -450,18 +451,7 @@ export default function InventoryPage() {
       discountPercent: Number(form.discountPercent) || 0
     };
 
-    // Optimistic UI Update
-    setForm(emptyMedicine);
-    setShowForm(false);
-    
-    setMedicines(prev => {
-        if (editingId) {
-           return prev.map(m => m._id === editingId ? { ...m, ...payload, _id: editingId } : m);
-        } else {
-           return [{ ...payload, _id: `temp-${Date.now()}` }, ...prev];
-        }
-    });
-
+    setIsSaving(true);
     try {
       let data;
       if (editingId) {
@@ -474,6 +464,10 @@ export default function InventoryPage() {
         text: editingId ? "Medicine updated successfully" : "Medicine added successfully", 
         type: 'success' 
       });
+      
+      // Update UI only on successful database response
+      setForm(emptyMedicine);
+      setShowForm(false);
       setEditingId(null);
       setIsRestock(false);
       
@@ -482,10 +476,10 @@ export default function InventoryPage() {
 
       setTimeout(() => setMessage(null), 3000);
     } catch (err: any) {
-      // Revert optimistic update
-      fetchMedicines();
       setMessage({ text: err.message || "An error occurred", type: 'error' });
       setTimeout(() => setMessage(null), 4000);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -1005,10 +999,10 @@ export default function InventoryPage() {
               </button>
               <button 
                 onClick={handleSubmit}
-                disabled={loading}
+                disabled={isSaving}
                 className="w-2/3 bg-[#11327c] text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-[#1e4db7] transition-all disabled:opacity-50 shadow-lg shadow-[#11327c]/20 focus:outline-none focus:ring-4 focus:ring-[#11327c]/40 focus:ring-offset-2"
               >
-                {loading ? "SAVING..." : "SAVE MEDICINE"}
+                {isSaving ? "SAVING..." : "SAVE MEDICINE"}
               </button>
             </div>
           </div>
