@@ -1,4 +1,4 @@
-import { getApiCache, setApiCache, addToSyncQueue, clearAllApiCaches } from "./localDb";
+import { getApiCache, setApiCache, addToSyncQueue, clearAllApiCaches, invalidateApiCaches } from "./localDb";
 
 export const apiClient = {
     /**
@@ -80,8 +80,31 @@ export const apiClient = {
     ) {
         const isOnline = navigator.onLine;
 
-        // Invalidate ALL offline GET caches on any mutation so stale data isn't loaded
-        await clearAllApiCaches();
+        // Targeted granular offline cache invalidation
+        const invalidationMap: Record<string, string[]> = {
+            "/api/inventory": ["/api/inventory", "/api/global-medicines", "/api/dashboard-analytics", "/api/low-stock", "/api/expiry-summary"],
+            "/api/billing": ["/api/transactions", "/api/inventory", "/api/global-medicines", "/api/dashboard-analytics"],
+            "/api/patients": ["/api/patients"],
+            "/api/suppliers": ["/api/suppliers"],
+            "/api/purchases": ["/api/purchases", "/api/inventory", "/api/global-medicines", "/api/dashboard-analytics"],
+            "/api/settings": ["/api/settings"],
+            "/api/returns": ["/api/returns", "/api/inventory", "/api/global-medicines", "/api/dashboard-analytics"],
+            "/api/supplier-returns": ["/api/supplier-returns", "/api/inventory", "/api/global-medicines", "/api/dashboard-analytics"]
+        };
+
+        let matchedPrefixes: string[] = [];
+        for (const [routeKey, prefixes] of Object.entries(invalidationMap)) {
+            if (url.startsWith(routeKey)) {
+                matchedPrefixes = matchedPrefixes.concat(prefixes);
+            }
+        }
+        
+        if (matchedPrefixes.length > 0) {
+            await invalidateApiCaches(matchedPrefixes);
+        } else {
+            // Fallback: invalidate exact route
+            await invalidateApiCaches([url]);
+        }
 
         if (isOnline) {
             try {

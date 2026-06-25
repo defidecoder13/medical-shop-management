@@ -64,10 +64,7 @@ export async function getApiCache(url: string) {
 }
 
 /**
- * Clear specific API cache (Useful when navigating away or forcing a refresh)
- */
-/**
- * Clear all API caches (Useful after a mutation to prevent stale data)
+ * Clear all API caches (Useful after a factory reset or major restore)
  */
 export async function clearAllApiCaches() {
     if (!dbPromise) return;
@@ -76,10 +73,30 @@ export async function clearAllApiCaches() {
 }
 
 /**
- * Clear specific API cache(url: string) {
+ * Clear specific API cache by exact URL
+ */
+export async function clearApiCache(url: string) {
     if (!dbPromise) return;
     const db = await dbPromise;
     await db.delete("apiCache", url);
+}
+
+/**
+ * Invalidate API caches matching URL prefixes
+ */
+export async function invalidateApiCaches(prefixes: string[]) {
+    if (!dbPromise) return;
+    const db = await dbPromise;
+    const keys = await db.getAllKeys("apiCache");
+    const tx = db.transaction("apiCache", "readwrite");
+    const store = tx.objectStore("apiCache");
+    
+    for (const key of keys) {
+        if (prefixes.some(prefix => key.startsWith(prefix))) {
+            await store.delete(key);
+        }
+    }
+    await tx.done;
 }
 
 /**
