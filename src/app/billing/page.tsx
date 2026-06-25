@@ -838,7 +838,7 @@ function BillingContent() {
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{isMulti ? "Strips" : "Qty"} <span className="text-[#11327c]/70 ml-0.5">(₹{item.stripSellingPrice})</span></span>
                                 <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
                                   <button onClick={() => updateItem(item.medicineId, "stripQty", Math.max(0, (item.stripQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                  <input type="number" min="0" className="w-10 text-[13px] font-black text-[#11327c] text-center focus:outline-none bg-transparent appearance-none px-1" value={item.stripQty === 0 ? '' : item.stripQty} onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)} />
+                                  <input type="text" inputMode="numeric" className="w-10 text-[13px] font-black text-[#11327c] text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.stripQty === 0 ? '' : item.stripQty} onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)} />
                                   <button onClick={() => updateItem(item.medicineId, "stripQty", (item.stripQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
                                 </div>
                              </div>
@@ -851,7 +851,7 @@ function BillingContent() {
                                     <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tabs <span className="text-[#11327c]/70 ml-0.5">(₹{item.tabletSellingPrice})</span></span>
                                     <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
                                       <button onClick={() => updateItem(item.medicineId, "tabletQty", Math.max(0, (item.tabletQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                      <input type="number" min="0" className="w-10 text-[13px] font-black text-emerald-700 text-center focus:outline-none bg-transparent appearance-none px-1" value={item.tabletQty === 0 ? '' : item.tabletQty} onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)} />
+                                      <input type="text" inputMode="numeric" className="w-10 text-[13px] font-black text-emerald-700 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.tabletQty === 0 ? '' : item.tabletQty} onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)} />
                                       <button onClick={() => updateItem(item.medicineId, "tabletQty", (item.tabletQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
                                     </div>
                                  </div>
@@ -861,9 +861,13 @@ function BillingContent() {
 
                          {/* RIGHT: Price & Delete */}
                          <div className="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end md:justify-between">
-                            <div className="flex flex-col items-end">
+                            <div className="flex flex-col items-center">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Disc %</span>
-                                <input type="number" min="0" max="100" className="w-12 h-7 bg-white border border-gray-200 rounded-md px-1 text-[12px] font-bold focus:ring-2 focus:ring-orange-500/10 outline-none text-center shadow-sm text-orange-600" value={item.discountPercent === 0 ? '' : item.discountPercent} onChange={(e) => updateItem(item.medicineId, "discountPercent", e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value))))} />
+                                <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
+                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.max(0, (item.discountPercent || 0) - 1))} className="w-7 h-full flex items-center justify-center text-orange-600 hover:bg-orange-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
+                                  <input type="text" inputMode="numeric" className="w-10 text-[12px] font-black text-orange-600 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.discountPercent === 0 ? '' : item.discountPercent} onChange={(e) => updateItem(item.medicineId, "discountPercent", e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value) || 0)))} />
+                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.min(100, (item.discountPercent || 0) + 1))} className="w-7 h-full flex items-center justify-center text-orange-600 hover:bg-orange-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
+                                </div>
                             </div>
 
                             <div className="w-px h-8 bg-gray-100 hidden md:block mx-1"></div>
