@@ -966,17 +966,7 @@ export default function InventoryPage() {
               />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">HSN Code</label>
-              <input 
-                placeholder="3004" 
-                value={form.hsnCode}
-                onChange={e => setForm({...form, hsnCode: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
-              />
-            </div>
-
-            <div className="flex flex-col gap-2 lg:col-span-2">
+            <div className="flex flex-col gap-2 lg:col-span-3">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Composition</label>
               <input 
                 placeholder="e.g. Paracetamol 500mg" 

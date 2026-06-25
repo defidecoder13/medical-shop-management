@@ -250,55 +250,52 @@ function PrintInvoiceContent() {
             <div className="flex-1 flex flex-col relative">
               <table className="w-full h-full text-left border-collapse border-[1px] border-black flex-1">
                 <thead>
-                   <tr className="border-b-[1px] border-black">
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[5%] border-r-[1px] border-black text-center">QTY</th>
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[27%] border-r-[1px] border-black">PRODUCT</th>
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[6%] text-center border-r-[1px] border-black">PACK</th>
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[10%] text-center border-r-[1px] border-black">MFG</th>
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[8%] text-center border-r-[1px] border-black">HSN</th>
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[14%] text-center border-r-[1px] border-black">BATCH</th>
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[6%] text-center border-r-[1px] border-black">EXP.</th>
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[9%] text-right border-r-[1px] border-black">MRP</th>
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[5%] text-right border-r-[1px] border-black">DISC</th>
-                       <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[10%] text-right">AMOUNT</th>
-                   </tr>
-                </thead>
-                <tbody>
-                   {chunkItems.map((item, localIndex) => {
-                     const absoluteIndex = pageIndex * ITEMS_PER_PAGE + localIndex;
-                     
-                     let expStr = "-";
-                     if (item.expiryDate) {
-                        const d = new Date(item.expiryDate);
-                        expStr = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(-2)}`;
-                     }
+                    <tr className="border-b-[1px] border-black">
+                        <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[5%] border-r-[1px] border-black text-center">QTY</th>
+                        <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[35%] border-r-[1px] border-black">PRODUCT</th>
+                        <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[6%] text-center border-r-[1px] border-black">PACK</th>
+                        <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[10%] text-center border-r-[1px] border-black">MFG</th>
+                        <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[14%] text-center border-r-[1px] border-black">BATCH</th>
+                        <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[6%] text-center border-r-[1px] border-black">EXP.</th>
+                        <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[9%] text-right border-r-[1px] border-black">MRP</th>
+                        <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[5%] text-right border-r-[1px] border-black">DISC</th>
+                        <th className="py-1 px-1 text-[12px] font-black text-black uppercase w-[10%] text-right">AMOUNT</th>
+                    </tr>
+                 </thead>
+                 <tbody>
+                    {chunkItems.map((item, localIndex) => {
+                      const absoluteIndex = pageIndex * ITEMS_PER_PAGE + localIndex;
+                      
+                      let expStr = "-";
+                      if (item.expiryDate) {
+                         const d = new Date(item.expiryDate);
+                         expStr = `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(-2)}`;
+                      }
 
-                     let mfgStr = "-";
-                     if (item.brand) {
-                        mfgStr = item.brand.split(" ")[0].toUpperCase().substring(0, 8);
-                     }
-                     
-                     return (
-                       <tr key={absoluteIndex} className="border-b-[1px] border-gray-300">
-                         <td className="py-1 px-1 text-[10px] font-bold text-black mono-font text-center border-r-[1px] border-black">
-                           {item.qty} <span className="text-[8px] font-bold text-black ml-0.5">{item.unitType === 'strip' ? 'S' : 'T'}</span>
-                         </td>
-                         <td className="py-1 px-1 text-[11px] font-bold text-black truncate border-r-[1px] border-black">{item.name}</td>
-                         <td className="py-1 px-1 text-[9px] font-medium text-black mono-font text-center border-r-[1px] border-black">{item.pack || "-"}</td>
-                         <td className="py-1 px-1 text-[9px] font-medium text-black text-center truncate border-r-[1px] border-black">{mfgStr}</td>
-                         <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-center border-r-[1px] border-black">{item.hsnCode || "-"}</td>
-                         <td className="py-1 px-1 text-[10px] font-bold text-black uppercase mono-font text-center border-r-[1px] border-black">{item.batchNumber}</td>
-                         <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-center border-r-[1px] border-black">{expStr}</td>
-                         <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-right border-r-[1px] border-black">₹{item.sellingPrice.toFixed(2)}</td>
-                         <td className="py-1 px-1 text-[9px] font-medium text-black mono-font text-right border-r-[1px] border-black">{item.discountPercent && item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
-                         <td className="py-1 px-1 text-[11px] font-bold text-black mono-font text-right">₹{(item.total - (item.discountAmount || 0)).toFixed(2)}</td>
-                       </tr>
-                     )
-                   })}
-                   
-                   {/* Empty filler row to extend vertical borders to the bottom */}
+                      let mfgStr = "-";
+                      if (item.brand) {
+                         mfgStr = item.brand.split(" ")[0].toUpperCase().substring(0, 8);
+                      }
+                      
+                      return (
+                        <tr key={absoluteIndex} className="border-b-[1px] border-gray-300">
+                          <td className="py-1 px-1 text-[10px] font-bold text-black mono-font text-center border-r-[1px] border-black">
+                            {item.qty} <span className="text-[8px] font-bold text-black ml-0.5">{item.unitType === 'strip' ? 'S' : 'T'}</span>
+                          </td>
+                          <td className="py-1 px-1 text-[11px] font-bold text-black truncate border-r-[1px] border-black">{item.name}</td>
+                          <td className="py-1 px-1 text-[9px] font-medium text-black mono-font text-center border-r-[1px] border-black">{item.pack || "-"}</td>
+                          <td className="py-1 px-1 text-[9px] font-medium text-black text-center truncate border-r-[1px] border-black">{mfgStr}</td>
+                          <td className="py-1 px-1 text-[10px] font-bold text-black uppercase mono-font text-center border-r-[1px] border-black">{item.batchNumber}</td>
+                          <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-center border-r-[1px] border-black">{expStr}</td>
+                          <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-right border-r-[1px] border-black">₹{item.sellingPrice.toFixed(2)}</td>
+                          <td className="py-1 px-1 text-[9px] font-medium text-black mono-font text-right border-r-[1px] border-black">{item.discountPercent && item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
+                          <td className="py-1 px-1 text-[11px] font-bold text-black mono-font text-right">₹{(item.total - (item.discountAmount || 0)).toFixed(2)}</td>
+                        </tr>
+                      )
+                    })}
+                    
+                    {/* Empty filler row to extend vertical borders to the bottom */}
                      <tr className="border-0 h-full">
-                       <td className="border-r-[1px] border-black"></td>
                        <td className="border-r-[1px] border-black"></td>
                        <td className="border-r-[1px] border-black"></td>
                        <td className="border-r-[1px] border-black"></td>
