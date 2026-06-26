@@ -59,7 +59,7 @@ type CartItem = {
   mrp: number; // Added for reference
   stock: number;
   rackNumber: string;
-  discountPercent?: number | "";
+  discountPercent?: number | string;
   tabletsPerStrip: number;
   gstPercent: number;
   expiryDate?: string;
@@ -304,7 +304,7 @@ function BillingContent() {
         ? item.tabletSellingPrice * item.tabletQty 
         : 0;
       const itemSubTotal = stripTotal + tabletTotal;
-      const itemDiscountPercent = typeof item.discountPercent === 'number' ? item.discountPercent : 0;
+      const itemDiscountPercent = Number(item.discountPercent) || 0;
       const itemDiscount = itemSubTotal * (itemDiscountPercent / 100);
       const itemTaxableValue = itemSubTotal - itemDiscount;
 
@@ -505,7 +505,7 @@ function BillingContent() {
               unitType: 'strip',
               qty: c.stripQty,
               sellingPrice: c.stripSellingPrice,
-              discountPercent: c.discountPercent || 0,
+              discountPercent: Number(c.discountPercent) || 0,
               pack: `${c.tabletsPerStrip || 1}'S`,
             });
           }
@@ -517,7 +517,7 @@ function BillingContent() {
               unitType: 'tablet',
               qty: c.tabletQty,
               sellingPrice: c.tabletSellingPrice,
-              discountPercent: c.discountPercent || 0,
+              discountPercent: Number(c.discountPercent) || 0,
               pack: `${c.tabletsPerStrip || 1}'S`,
             });
           }
@@ -541,7 +541,7 @@ function BillingContent() {
       if (data.offlineQueued && data._id) {
          // Reconstruct the transaction locally for offline printing
           const processedItems = payload.items.map(item => {
-             const itemDiscountPercent = item.discountPercent || 0;
+             const itemDiscountPercent = Number(item.discountPercent) || 0;
              const itemTotal = item.qty * item.sellingPrice;
              return {
                 ...item,
@@ -864,9 +864,19 @@ function BillingContent() {
                             <div className="flex flex-col items-center">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Disc %</span>
                                 <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
-                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.max(0, (item.discountPercent || 0) - 1))} className="w-7 h-full flex items-center justify-center text-orange-600 hover:bg-orange-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                  <input type="text" inputMode="numeric" className="w-10 text-[12px] font-black text-orange-600 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.discountPercent === 0 ? '' : item.discountPercent} onChange={(e) => updateItem(item.medicineId, "discountPercent", e.target.value === '' ? '' : Math.min(100, Math.max(0, Number(e.target.value) || 0)))} />
-                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.min(100, (item.discountPercent || 0) + 1))} className="w-7 h-full flex items-center justify-center text-orange-600 hover:bg-orange-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
+                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.max(0, Number((Number(item.discountPercent || 0) - 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-orange-600 hover:bg-orange-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
+                                  <input type="text" inputMode="decimal" className="w-12 text-[12px] font-black text-orange-600 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.discountPercent === 0 ? '' : item.discountPercent} onChange={(e) => {
+                                      const val = e.target.value;
+                                      if (val === '') {
+                                          updateItem(item.medicineId, "discountPercent", '');
+                                      } else if (/^\d*\.?\d*$/.test(val)) {
+                                          const num = Number(val);
+                                          if (!isNaN(num) && num <= 100) {
+                                              updateItem(item.medicineId, "discountPercent", val);
+                                          }
+                                      }
+                                  }} />
+                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.min(100, Number((Number(item.discountPercent || 0) + 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-orange-600 hover:bg-orange-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
                                 </div>
                             </div>
 
@@ -875,7 +885,7 @@ function BillingContent() {
                             <div className="flex flex-col items-end w-20">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</span>
                                 <span className="text-[14px] font-black text-[#11327c]">
-                                   ₹{(((item.stripQty || 0) * (item.stripSellingPrice || 0) + (item.tabletQty || 0) * (item.tabletSellingPrice || 0)) * (1 - (item.discountPercent || 0) / 100)).toFixed(2)}
+                                   ₹{(((item.stripQty || 0) * (Number(item.stripSellingPrice) || 0) + (item.tabletQty || 0) * (Number(item.tabletSellingPrice) || 0)) * (1 - (Number(item.discountPercent) || 0) / 100)).toFixed(2)}
                                 </span>
                             </div>
 
