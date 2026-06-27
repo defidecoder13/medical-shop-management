@@ -181,9 +181,9 @@ function PrintInvoiceContent() {
           >
             
             {/* Header Section */}
-            <div className="flex justify-between items-start mb-2">
+            <div className="flex justify-between items-start mb-2 gap-2">
               {/* Left Details */}
-              <div className="w-[45%] flex flex-col">
+              <div className="w-[40%] flex flex-col">
                 <h1 className="text-2xl font-bold uppercase tracking-tight text-black leading-none mb-0.5">{settings.shopName}</h1>
                 <p className="text-[10px] font-medium text-black uppercase max-w-[250px] leading-tight mb-1">
                   {settings.address}
@@ -200,35 +200,35 @@ function PrintInvoiceContent() {
               </div>
 
               {/* Center Tax Invoice Box */}
-              <div className="w-[20%] flex justify-center items-center">
-                <div className="border-[1.5px] border-black px-2 py-0.5">
-                   <h2 className="text-[12px] font-bold uppercase tracking-widest text-black">
+              <div className="w-[15%] flex justify-center items-center pt-1">
+                <div className="border-[1.5px] border-black px-2 py-0.5 shrink-0">
+                   <h2 className="text-[11px] font-bold uppercase tracking-widest text-black text-center leading-tight">
                      {settings.gstEnabled ? "TAX INVOICE" : "RETAIL INVOICE"}
                    </h2>
                 </div>
               </div>
 
               {/* Right Details */}
-              <div className="w-[45%] flex items-start border-[1px] border-black rounded-md p-2 gap-2 text-[10px] mr-2">
-                 <div className="pt-0.5">
+              <div className="w-[45%] flex items-start border-[1px] border-black rounded-md p-2 gap-2 text-[10px]">
+                 <div className="pt-0.5 shrink-0">
                     <User size={14} className="text-black stroke-[2]" />
                  </div>
-                 <div className="grid grid-cols-[auto_auto_auto] gap-x-1.5 gap-y-0.5 w-full text-left">
-                    <span className="font-semibold text-black">PATIENT NAME</span>
-                    <span className="font-semibold text-black">:</span>
-                    <span className="font-bold text-black text-left truncate max-w-[140px]">{bill.patientName || "-"}</span>
+                 <div className="grid grid-cols-[auto_auto_1fr] gap-x-1.5 gap-y-0.5 w-full text-left">
+                    <span className="font-semibold text-black shrink-0">PATIENT NAME</span>
+                    <span className="font-semibold text-black shrink-0">:</span>
+                    <span className="font-bold text-black text-left break-words whitespace-normal leading-tight">{bill.patientName || "-"}</span>
 
-                    <span className="font-semibold text-black">PHONE NO</span>
-                    <span className="font-semibold text-black">:</span>
+                    <span className="font-semibold text-black shrink-0">PHONE NO</span>
+                    <span className="font-semibold text-black shrink-0">:</span>
                     <span className="font-bold mono-font text-black text-left">{bill.patientPhone || "-"}</span>
 
-                    <span className="font-semibold text-black">ADDRESS</span>
-                    <span className="font-semibold text-black">:</span>
-                    <span className="font-bold text-black text-left truncate max-w-[140px]">{bill.patientAddress || "-"}</span>
+                    <span className="font-semibold text-black shrink-0">ADDRESS</span>
+                    <span className="font-semibold text-black shrink-0">:</span>
+                    <span className="font-bold text-black text-left break-words whitespace-normal leading-tight">{bill.patientAddress || "-"}</span>
 
-                    <span className="font-semibold text-black">DOCTOR'S NAME</span>
-                    <span className="font-semibold text-black">:</span>
-                    <span className="font-bold text-black text-left truncate max-w-[140px]">{bill.doctorName ? `DR. ${bill.doctorName.toUpperCase()}` : "-"}</span>
+                    <span className="font-semibold text-black shrink-0">DOCTOR'S NAME</span>
+                    <span className="font-semibold text-black shrink-0">:</span>
+                    <span className="font-bold text-black text-left break-words whitespace-normal leading-tight">{bill.doctorName ? `DR. ${bill.doctorName.toUpperCase()}` : "-"}</span>
                  </div>
               </div>
             </div>
