@@ -374,9 +374,9 @@ function PrintInvoiceContent() {
                    </div>
 
                    <div className="w-[110px] flex flex-col justify-between">
-                      <div className="bg-black text-white p-2 flex flex-col items-center justify-center">
-                         <span className="text-[9px] font-bold uppercase tracking-widest opacity-90 mb-0.5">Grand Total</span>
-                         <span className="text-[14px] font-bold mono-font leading-none">₹{Math.round(bill.grandTotal).toFixed(2)}</span>
+                      <div className="border-2 border-black p-2 flex flex-col items-center justify-center rounded-sm">
+                         <span className="text-[9px] font-black uppercase tracking-widest text-black mb-0.5">Grand Total</span>
+                         <span className="text-[15px] font-black mono-font leading-none text-black">₹{Math.round(bill.grandTotal).toFixed(2)}</span>
                       </div>
                       
                       <div className="mt-2 text-center">
