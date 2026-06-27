@@ -276,6 +276,15 @@ function PrintInvoiceContent() {
                       if (item.brand) {
                          mfgStr = item.brand.split(" ")[0].toUpperCase().substring(0, 8);
                       }
+
+                      // Calculate full Package/Strip MRP for loose tablet sales
+                      let displayMrp = item.sellingPrice;
+                      if (item.unitType === 'tablet' && item.pack) {
+                         const packMatch = item.pack.match(/^(\d+)/);
+                         if (packMatch && Number(packMatch[1]) > 0) {
+                            displayMrp = item.sellingPrice * Number(packMatch[1]);
+                         }
+                      }
                       
                       return (
                         <tr key={absoluteIndex} className="border-b-[1px] border-gray-300">
@@ -287,7 +296,7 @@ function PrintInvoiceContent() {
                           <td className="py-1 px-1 text-[9px] font-medium text-black text-center truncate border-r-[1px] border-black">{mfgStr}</td>
                           <td className="py-1 px-1 text-[10px] font-bold text-black uppercase mono-font text-center border-r-[1px] border-black">{item.batchNumber}</td>
                           <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-center border-r-[1px] border-black">{expStr}</td>
-                          <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-right border-r-[1px] border-black">₹{item.sellingPrice.toFixed(2)}</td>
+                          <td className="py-1 px-1 text-[10px] font-medium text-black mono-font text-right border-r-[1px] border-black">₹{displayMrp.toFixed(2)}</td>
                           <td className="py-1 px-1 text-[9px] font-medium text-black mono-font text-right border-r-[1px] border-black">{item.discountPercent && item.discountPercent > 0 ? `${item.discountPercent}%` : '-'}</td>
                           <td className="py-1 px-1 text-[11px] font-bold text-black mono-font text-right">₹{(item.total - (item.discountAmount || 0)).toFixed(2)}</td>
                         </tr>
