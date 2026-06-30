@@ -228,7 +228,7 @@ function PrintInvoiceContent() {
 
                     <span className="font-semibold text-black shrink-0">DOCTOR'S NAME</span>
                     <span className="font-semibold text-black shrink-0">:</span>
-                    <span className="font-bold text-black text-left break-words whitespace-normal leading-tight">{bill.doctorName ? `DR. ${bill.doctorName.toUpperCase()}` : "-"}</span>
+                    <span className="font-bold text-black text-left break-words whitespace-normal leading-tight">{bill.doctorName ? bill.doctorName.toUpperCase() : "-"}</span>
                  </div>
               </div>
             </div>
