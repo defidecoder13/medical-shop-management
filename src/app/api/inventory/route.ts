@@ -246,6 +246,10 @@ export async function POST(req: Request) {
     let medicine = null;
     if (body.medicineId) {
       medicine = await Medicine.findById(body.medicineId);
+      if (medicine && name && String(name).trim().toLowerCase() !== String(medicine.name || "").trim().toLowerCase()) {
+        // If the user modified the medicine name while restocking or adding, do not attach to the old medicineId
+        medicine = null;
+      }
     }
     
     if (!medicine) {
@@ -381,23 +385,69 @@ export async function PUT(req: Request) {
       );
     }
 
-    const medicine = batch.medicineId;
+    let medicine = batch.medicineId;
 
-    // Allow changing tabletsPerStrip if provided, because auto-import might have guessed it wrong
+    // BATCH PRIORITY LOGIC:
+    // If multiple batches share this master medicine record, modifying the master record directly
+    // would erroneously rename/alter all other batches pointing to it.
+    const batchesSharingMaster = await MedicineBatch.countDocuments({ medicineId: medicine._id });
+    const newName = body.name !== undefined ? String(body.name).trim() : medicine.name;
+    const nameChanged = newName.toLowerCase() !== (medicine.name || "").trim().toLowerCase();
+
+    let targetMedicine = medicine;
     let masterChanged = false;
-    let currentTabletsPerStrip = medicine.tabletsPerStrip;
-    if (typeof body.tabletsPerStrip === "number" && body.tabletsPerStrip > 0 && body.tabletsPerStrip !== medicine.tabletsPerStrip) {
-      medicine.tabletsPerStrip = body.tabletsPerStrip;
-      currentTabletsPerStrip = body.tabletsPerStrip;
-      masterChanged = true;
+
+    if (nameChanged) {
+      const safeName = newName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const existingMaster = await Medicine.findOne({
+        name: { $regex: `^${safeName}$`, $options: "i" }
+      });
+
+      if (existingMaster) {
+        targetMedicine = existingMaster;
+      } else if (batchesSharingMaster > 1) {
+        // Create an independent master record for this batch so other batches keep their old name
+        targetMedicine = await Medicine.create({
+          name: newName,
+          brand: body.brand !== undefined ? body.brand : medicine.brand,
+          barcode: body.barcode !== undefined ? body.barcode : medicine.barcode,
+          tabletsPerStrip: typeof body.tabletsPerStrip === "number" && body.tabletsPerStrip > 0 ? body.tabletsPerStrip : medicine.tabletsPerStrip,
+          composition: body.composition !== undefined ? body.composition : medicine.composition,
+          hsnCode: body.hsnCode !== undefined ? body.hsnCode : medicine.hsnCode,
+          gstPercent: typeof body.gstPercent === "number" ? body.gstPercent : medicine.gstPercent,
+          category: body.category !== undefined ? body.category : medicine.category,
+          pack: body.pack !== undefined ? body.pack : medicine.pack,
+        });
+      } else {
+        targetMedicine.name = newName;
+        masterChanged = true;
+      }
+
+      if (targetMedicine._id.toString() !== medicine._id.toString()) {
+        batch.medicineId = targetMedicine._id;
+        if (batchesSharingMaster === 1) {
+          await Medicine.findByIdAndDelete(medicine._id);
+        }
+      }
+    }
+
+    let currentTabletsPerStrip = targetMedicine.tabletsPerStrip;
+    if (typeof body.tabletsPerStrip === "number" && body.tabletsPerStrip > 0 && body.tabletsPerStrip !== targetMedicine.tabletsPerStrip) {
+      if (batchesSharingMaster > 1 && targetMedicine._id.toString() === medicine._id.toString()) {
+        // Do not alter shared master tabletsPerStrip if shared with other batches
+        currentTabletsPerStrip = body.tabletsPerStrip;
+      } else {
+        targetMedicine.tabletsPerStrip = body.tabletsPerStrip;
+        currentTabletsPerStrip = body.tabletsPerStrip;
+        masterChanged = true;
+      }
     }
 
     // UPDATE BATCH FIELDS
     if (typeof body.stock === "number" && body.stock >= 0) {
       batch.stock = body.stock;
       batch.totalTabletsInStock = body.stock * currentTabletsPerStrip;
-    } else if (masterChanged) {
-      // If stock didn't change but tabletsPerStrip did, we must still recalculate totalTabletsInStock
+    } else if (masterChanged || targetMedicine._id.toString() !== medicine._id.toString()) {
       batch.totalTabletsInStock = batch.stock * currentTabletsPerStrip;
     }
     
@@ -426,19 +476,29 @@ export async function PUT(req: Request) {
       batch.pack = body.pack || "";
     }
 
-    // UPDATE MASTER MEDICINE FIELDS
-    if (body.name !== undefined && body.name !== medicine.name) { medicine.name = body.name; masterChanged = true; }
-    if (body.brand !== undefined && body.brand !== medicine.brand) { medicine.brand = body.brand; masterChanged = true; }
-    if (body.barcode !== undefined && body.barcode !== medicine.barcode) { medicine.barcode = body.barcode; masterChanged = true; }
-    if (body.composition !== undefined && body.composition !== medicine.composition) { medicine.composition = body.composition; masterChanged = true; }
-    if (body.hsnCode !== undefined && body.hsnCode !== medicine.hsnCode) { medicine.hsnCode = body.hsnCode; masterChanged = true; }
-    if (typeof body.gstPercent === "number" && body.gstPercent !== medicine.gstPercent) { medicine.gstPercent = body.gstPercent; masterChanged = true; }
-    if (body.category !== undefined && body.category !== medicine.category) { medicine.category = body.category; masterChanged = true; }
-    if (body.pack !== undefined && body.pack !== medicine.pack) { medicine.pack = body.pack; masterChanged = true; }
+    // UPDATE MASTER MEDICINE FIELDS IF NOT SHARED OR TARGET CHANGED
+    if (targetMedicine._id.toString() === medicine._id.toString() && batchesSharingMaster <= 1) {
+      if (body.brand !== undefined && body.brand !== targetMedicine.brand) { targetMedicine.brand = body.brand; masterChanged = true; }
+      if (body.barcode !== undefined && body.barcode !== targetMedicine.barcode) { targetMedicine.barcode = body.barcode; masterChanged = true; }
+      if (body.composition !== undefined && body.composition !== targetMedicine.composition) { targetMedicine.composition = body.composition; masterChanged = true; }
+      if (body.hsnCode !== undefined && body.hsnCode !== targetMedicine.hsnCode) { targetMedicine.hsnCode = body.hsnCode; masterChanged = true; }
+      if (typeof body.gstPercent === "number" && body.gstPercent !== targetMedicine.gstPercent) { targetMedicine.gstPercent = body.gstPercent; masterChanged = true; }
+      if (body.category !== undefined && body.category !== targetMedicine.category) { targetMedicine.category = body.category; masterChanged = true; }
+      if (body.pack !== undefined && body.pack !== targetMedicine.pack) { targetMedicine.pack = body.pack; masterChanged = true; }
+    } else if (targetMedicine._id.toString() !== medicine._id.toString()) {
+      if (body.brand !== undefined) targetMedicine.brand = body.brand;
+      if (body.barcode !== undefined) targetMedicine.barcode = body.barcode;
+      if (body.composition !== undefined) targetMedicine.composition = body.composition;
+      if (body.hsnCode !== undefined) targetMedicine.hsnCode = body.hsnCode;
+      if (typeof body.gstPercent === "number") targetMedicine.gstPercent = body.gstPercent;
+      if (body.category !== undefined) targetMedicine.category = body.category;
+      if (body.pack !== undefined) targetMedicine.pack = body.pack;
+      masterChanged = true;
+    }
 
     await batch.save();
     if (masterChanged) {
-      await medicine.save();
+      await targetMedicine.save();
     }
 
     await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
