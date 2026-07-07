@@ -249,9 +249,11 @@ function BillingContent() {
       setRegularMedicines([]);
       return;
     }
+    let ignore = false;
     const fetchPatient = async () => {
       try {
         const handlePatient = (patients: any) => {
+          if (ignore) return;
           if (patients && patients.length > 0) {
              const p = patients[0];
              if (p.phone === debouncedPhone) {
@@ -272,6 +274,7 @@ function BillingContent() {
       }
     };
     fetchPatient();
+    return () => { ignore = true; };
   }, [debouncedPhone]);
 
   useEffect(() => {
@@ -605,7 +608,9 @@ function BillingContent() {
       setDiscountPercent("");
       setPatientName("");
       setPatientPhone("");
+      setPatientAddress("");
       setDoctorName("");
+      setRegularMedicines([]);
       setPaymentMethod("Cash");
       setRoundingAdjustment(0);
       
