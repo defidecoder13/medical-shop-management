@@ -50,7 +50,6 @@ const navigationGroups = [
     group: "DISTRIBUTORS",
     routes: [
       { label: "Suppliers List", icon: Building2, href: "/suppliers" },
-      { label: "Purchase History", icon: Receipt, href: "/purchases/history" },
       { label: "Auto Purchase Import", icon: FileSpreadsheet, href: "/purchases/import" },
       { label: "Supplier Returns", icon: Truck, href: "/supplier-returns" },
     ]

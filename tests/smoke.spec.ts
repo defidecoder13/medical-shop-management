@@ -31,12 +31,6 @@ test('Smart Shortage Engine renders successfully', async ({ page }) => {
   await expect(page.locator('h1').first()).toBeVisible({ timeout: 15000 });
 });
 
-test('Purchases History renders successfully', async ({ page }) => {
-  const response = await page.goto('http://localhost:3000/purchases/history');
-  expect(response?.status()).toBe(200);
-  await expect(page.locator('h1').first()).toBeVisible({ timeout: 15000 });
-});
-
 test('Supplier Returns renders successfully', async ({ page }) => {
   const response = await page.goto('http://localhost:3000/supplier-returns');
   expect(response?.status()).toBe(200);

@@ -191,7 +191,7 @@ export default function ImportPurchasePage() {
 
         const res = await apiClient.post("/api/purchases", payload);
         
-        router.push("/purchases/history");
+        router.push("/inventory");
     } catch (err: any) {
         setError(err.message);
     } finally {
