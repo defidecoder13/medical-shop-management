@@ -27,7 +27,6 @@ import { useRouter } from "next/navigation";
 
 import { StatsCard } from "@/src/components/dashboard/stats-card";
 import { SalesChart } from "@/src/components/dashboard/sales-chart";
-import { RecentTransactions } from "@/src/components/dashboard/recent-transactions";
 
 export default function Home() {
   const router = useRouter();
@@ -136,53 +135,9 @@ export default function Home() {
         />
       </div>
 
-      {/* Row 2: Sales Chart & Today's Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 order-1 lg:order-2">
-        {/* Sales Chart */}
-        <div className="lg:col-span-2">
-          <SalesChart data={data.salesChart} range={chartRange} onRangeChange={setChartRange} />
-        </div>
-
-        {/* Today's Summary */}
-        <div className="lg:col-span-1">
-          <div className="bg-white p-7 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] h-full flex flex-col">
-            <h3 className="text-[17px] font-extrabold text-[#11327c] mb-6 flex items-center gap-2">
-              <Calendar className="w-5 h-5 text-[#11327c]" strokeWidth={2.5} />
-              Today's Summary
-            </h3>
-            
-            <div className="space-y-4 flex-1 flex flex-col justify-between">
-              <div className="flex justify-between items-center pb-3 border-b border-gray-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-blue-50 flex items-center justify-center text-[#11327c]"><IndianRupee size={16} strokeWidth={2.5} /></div>
-                  <span className="text-gray-500 text-[13px] font-semibold">Total Sales</span>
-                </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">₹{salesVal >= 0 ? salesVal.toFixed(2) : "0.00"}</span>
-              </div>
-              <div className="flex justify-between items-center pb-3 border-b border-gray-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-green-50 flex items-center justify-center text-green-600"><ReceiptText size={16} strokeWidth={2.5} /></div>
-                  <span className="text-gray-500 text-[13px] font-semibold">Total Orders</span>
-                </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">{data.stats.orders ?? 0}</span>
-              </div>
-              <div className="flex justify-between items-center pb-3 border-b border-gray-50">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500"><Users size={16} strokeWidth={2.5} /></div>
-                  <span className="text-gray-500 text-[13px] font-semibold">Unique Customers</span>
-                </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">{data.stats.customers ?? 0}</span>
-              </div>
-              <div className="flex justify-between items-center pb-1">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-amber-50 flex items-center justify-center text-amber-500"><Activity size={16} strokeWidth={2.5} /></div>
-                  <span className="text-gray-500 text-[13px] font-semibold">Avg. Order Value</span>
-                </div>
-                <span className="text-gray-900 font-extrabold text-[16px]">₹{data.stats.orders ? (salesVal / data.stats.orders).toFixed(2) : "0.00"}</span>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* Row 2: Sales Chart */}
+      <div className="order-1 lg:order-2">
+        <SalesChart data={data.salesChart} range={chartRange} onRangeChange={setChartRange} />
       </div>
 
       {/* Row 3: Quick Actions */}
@@ -192,31 +147,24 @@ export default function Home() {
             <Zap className="w-5 h-5 text-[#11327c] fill-[#11327c]" strokeWidth={1} />
             Quick Actions
           </h3>
-            <div className="grid grid-cols-2 gap-4">
-              <Link href="/billing" className="bg-[#11327c] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(17,50,124,0.3)] h-[110px]">
-                <FileText size={28} strokeWidth={2} />
-                <span className="text-[13px] font-bold">New Bill</span>
-              </Link>
-              <Link href="/inventory" className="bg-[#16a34a] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(22,163,74,0.3)] h-[110px]">
-                <Plus size={28} strokeWidth={3} />
-                <span className="text-[13px] font-bold">Add Medicine</span>
-              </Link>
-              <Link href="/transactions" className="bg-[#f97316] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(249,115,22,0.3)] h-[110px]">
-                <ReceiptText size={28} strokeWidth={2} />
-                <span className="text-[13px] font-bold">Transactions History</span>
-              </Link>
-              <Link href="/low-stock" className="bg-[#6366f1] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(99,102,241,0.3)] h-[110px]">
-                <AlertOctagon size={28} strokeWidth={2} />
-                <span className="text-[13px] font-bold">Low Stock</span>
-              </Link>
-            </div>
+          <div className="grid grid-cols-2 gap-4">
+            <Link href="/billing" className="bg-[#11327c] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(17,50,124,0.3)] h-[110px]">
+              <FileText size={28} strokeWidth={2} />
+              <span className="text-[13px] font-bold">New Bill</span>
+            </Link>
+            <Link href="/inventory" className="bg-[#16a34a] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(22,163,74,0.3)] h-[110px]">
+              <Plus size={28} strokeWidth={3} />
+              <span className="text-[13px] font-bold">Add Medicine</span>
+            </Link>
+            <Link href="/transactions" className="bg-[#f97316] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(249,115,22,0.3)] h-[110px]">
+              <ReceiptText size={28} strokeWidth={2} />
+              <span className="text-[13px] font-bold">Transactions History</span>
+            </Link>
+            <Link href="/low-stock" className="bg-[#6366f1] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(99,102,241,0.3)] h-[110px]">
+              <AlertOctagon size={28} strokeWidth={2} />
+              <span className="text-[13px] font-bold">Low Stock</span>
+            </Link>
           </div>
-        </div>
-
-      {/* Row 4: Transactions */}
-      <div className="hidden md:grid grid-cols-1 gap-6 order-4">
-        <div className="w-full">
-          <RecentTransactions data={data.recentTransactions} />
         </div>
       </div>
     </div>
