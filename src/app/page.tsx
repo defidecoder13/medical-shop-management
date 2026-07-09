@@ -148,21 +148,21 @@ export default function Home() {
             Quick Actions
           </h3>
           <div className="grid grid-cols-2 gap-4">
-            <Link href="/billing" className="bg-[#11327c] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(17,50,124,0.3)] h-[110px]">
-              <FileText size={28} strokeWidth={2} />
-              <span className="text-[13px] font-bold">New Bill</span>
+            <Link href="/billing" className="bg-blue-50 hover:bg-blue-100/70 border border-blue-200/60 text-[#11327c] p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-[#11327c] shadow-sm"><FileText size={22} strokeWidth={2.5} /></div>
+              <span className="text-[13px] font-extrabold tracking-wide">New Bill</span>
             </Link>
-            <Link href="/inventory" className="bg-[#16a34a] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(22,163,74,0.3)] h-[110px]">
-              <Plus size={28} strokeWidth={3} />
-              <span className="text-[13px] font-bold">Add Medicine</span>
+            <Link href="/inventory" className="bg-emerald-50 hover:bg-emerald-100/70 border border-emerald-200/60 text-emerald-800 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm"><Plus size={22} strokeWidth={3} /></div>
+              <span className="text-[13px] font-extrabold tracking-wide">Add Medicine</span>
             </Link>
-            <Link href="/transactions" className="bg-[#f97316] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(249,115,22,0.3)] h-[110px]">
-              <ReceiptText size={28} strokeWidth={2} />
-              <span className="text-[13px] font-bold">Transactions History</span>
+            <Link href="/transactions" className="bg-orange-50 hover:bg-orange-100/70 border border-orange-200/60 text-orange-800 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm"><ReceiptText size={22} strokeWidth={2.5} /></div>
+              <span className="text-[13px] font-extrabold tracking-wide">Transactions History</span>
             </Link>
-            <Link href="/low-stock" className="bg-[#6366f1] text-white p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-transform shadow-[0_8px_15px_-5px_rgba(99,102,241,0.3)] h-[110px]">
-              <AlertOctagon size={28} strokeWidth={2} />
-              <span className="text-[13px] font-bold">Low Stock</span>
+            <Link href="/low-stock" className="bg-indigo-50 hover:bg-indigo-100/70 border border-indigo-200/60 text-indigo-800 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm"><AlertOctagon size={22} strokeWidth={2.5} /></div>
+              <span className="text-[13px] font-extrabold tracking-wide">Low Stock</span>
             </Link>
           </div>
         </div>

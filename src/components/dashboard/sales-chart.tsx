@@ -30,7 +30,7 @@ export function SalesChart({ data, range, onRangeChange }: SalesChartProps) {
           <option value="30d">Last 30 Days</option>
         </select>
       </div>
-      <div className="flex-1 min-h-[300px]">
+      <div className="w-full h-[320px]">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
             <defs>
