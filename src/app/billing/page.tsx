@@ -966,50 +966,6 @@ function BillingContent() {
                   </div>
                 )}
 
-                <div className="h-px w-full border-b border-dashed border-white/20 mb-3 mt-1" />
-
-                {/* Payment Mode Selector */}
-                <div className="flex flex-col gap-3">
-                  <span className="text-[11px] font-black uppercase tracking-[0.15em] opacity-80">Payment Method</span>
-                  <div className="grid grid-cols-3 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("Cash")}
-                      className={`py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
-                        paymentMethod === "Cash"
-                          ? "bg-white text-[#052b82] shadow-md"
-                          : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
-                      }`}
-                    >
-                      <Banknote size={16} strokeWidth={paymentMethod === "Cash" ? 3 : 2} />
-                      Cash
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("UPI")}
-                      className={`py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
-                        paymentMethod === "UPI"
-                          ? "bg-white text-[#052b82] shadow-md"
-                          : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
-                      }`}
-                    >
-                      <Send size={16} strokeWidth={paymentMethod === "UPI" ? 3 : 2} className={paymentMethod === "UPI" ? "" : "-rotate-45"} />
-                      UPI
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setPaymentMethod("Card")}
-                      className={`py-2 rounded-xl text-[11px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
-                        paymentMethod === "Card"
-                          ? "bg-white text-[#052b82] shadow-md"
-                          : "bg-white/10 text-white border border-white/10 hover:bg-white/20"
-                      }`}
-                    >
-                      <CreditCard size={16} strokeWidth={paymentMethod === "Card" ? 3 : 2} />
-                      Card
-                    </button>
-                  </div>
-                </div>
               </div>
             </div>
 
