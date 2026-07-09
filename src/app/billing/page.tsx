@@ -183,27 +183,31 @@ function BillingContent() {
           const med = await apiClient.get(`/api/inventory/${addId}`);
           if (med) {
             // Check usage using the ref to avoid stale closures or state logic issues
+            const medObj: any = med;
+            const medName = med.name || (typeof medObj.medicineId === 'object' && medObj.medicineId?.name) || "Unknown Medicine";
+            const tabletsPerStrip = med.tabletsPerStrip || (typeof medObj.medicineId === 'object' && medObj.medicineId?.tabletsPerStrip) || 1;
+            const gstPercent = med.gstPercent || (typeof medObj.medicineId === 'object' && medObj.medicineId?.gstPercent) || 0;
+
             const currentCart = cartRef.current;
             const exists = currentCart.find(c => c.medicineId === med._id);
 
             if (exists) {
-              setMessage({ text: `${med.name} is already in the cart`, type: 'error' });
+              setMessage({ text: `${medName} is already in the cart`, type: 'error' });
               setTimeout(() => setMessage(null), 3000);
               return;
             }
             
             const sellingPrice = med.sellingPricePerStrip || med.sellingPrice || 0;
-            const tabletsPerStrip = med.tabletsPerStrip || 1;
             const tabletPrice = sellingPrice > 0 ? Number((sellingPrice / tabletsPerStrip).toFixed(2)) : 0;
             
-            setMessage({ text: `${med.name} added to cart`, type: 'success' });
+            setMessage({ text: `${medName} added to cart`, type: 'success' });
             setTimeout(() => setMessage(null), 3000);
             
             setCart(prevCart => [
               ...prevCart,
               {
                 medicineId: med._id,
-                name: med.name,
+                name: medName,
                 batchNumber: med.batchNumber,
                 stripQty: 0,
                 tabletQty: 0,
@@ -214,7 +218,7 @@ function BillingContent() {
                 rackNumber: med.rackNumber || "",
                 discountPercent: med.discountPercent || 0,
                 tabletsPerStrip: tabletsPerStrip,
-                gstPercent: med.gstPercent || 0,
+                gstPercent: gstPercent,
                 expiryDate: med.expiryDate,
               },
             ]);
@@ -380,6 +384,8 @@ function BillingContent() {
     const sellingPrice = med.sellingPricePerStrip || 0;
     const tabletsPerStrip = med.tabletsPerStrip || 1; // Prevent division by zero
     
+    const medObj: any = med;
+    const medName = med.name || (typeof medObj.medicineId === 'object' && medObj.medicineId?.name) || "Unknown Medicine";
     const tabletPrice = sellingPrice > 0 
       ? Number((sellingPrice / tabletsPerStrip).toFixed(2)) 
       : 0;
@@ -388,7 +394,7 @@ function BillingContent() {
       ...cart,
       {
         medicineId: med._id,
-        name: med.name,
+        name: medName,
         batchNumber: med.batchNumber,
         stripQty: 0,
         tabletQty: 0,

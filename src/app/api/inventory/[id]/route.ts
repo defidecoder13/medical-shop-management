@@ -13,7 +13,7 @@ export async function GET(
     try {
         const { id } = await params;
         await connectDB();
-        const batch = await MedicineBatch.findById(id).populate('medicineId');
+        const batch: any = await MedicineBatch.findById(id).populate('medicineId').lean();
 
         if (!batch) {
             return NextResponse.json(
@@ -22,7 +22,22 @@ export async function GET(
             );
         }
 
-        return NextResponse.json(batch);
+        const medObj = batch.medicineId || {};
+        const formatted = {
+            ...batch,
+            _id: String(batch._id),
+            medicineId: String(medObj._id || batch.medicineId || ""),
+            name: medObj.name || batch.name || "",
+            brand: medObj.brand || batch.brand || "",
+            tabletsPerStrip: medObj.tabletsPerStrip || batch.tabletsPerStrip || 1,
+            composition: medObj.composition || batch.composition || "",
+            hsnCode: medObj.hsnCode || batch.hsnCode || "3004",
+            gstPercent: medObj.gstPercent || batch.gstPercent || 5,
+            category: medObj.category || batch.category || "Tablet",
+            pack: batch.pack || medObj.pack || "",
+        };
+
+        return NextResponse.json(formatted);
     } catch (error) {
         return NextResponse.json(
             { error: "Failed to fetch medicine batch" },
@@ -40,7 +55,7 @@ export async function PUT(
         await connectDB();
         const body = await request.json();
 
-        const updatedBatch = await MedicineBatch.findByIdAndUpdate(id, body, { new: true });
+        const updatedBatch: any = await MedicineBatch.findByIdAndUpdate(id, body, { new: true }).populate('medicineId').lean();
 
         if (!updatedBatch) {
             return NextResponse.json(
@@ -55,7 +70,22 @@ export async function PUT(
             await redis.set("catalog:version", Date.now().toString());
         }
 
-        return NextResponse.json(updatedBatch);
+        const medObj = updatedBatch.medicineId || {};
+        const formatted = {
+            ...updatedBatch,
+            _id: String(updatedBatch._id),
+            medicineId: String(medObj._id || updatedBatch.medicineId || ""),
+            name: medObj.name || updatedBatch.name || "",
+            brand: medObj.brand || updatedBatch.brand || "",
+            tabletsPerStrip: medObj.tabletsPerStrip || updatedBatch.tabletsPerStrip || 1,
+            composition: medObj.composition || updatedBatch.composition || "",
+            hsnCode: medObj.hsnCode || updatedBatch.hsnCode || "3004",
+            gstPercent: medObj.gstPercent || updatedBatch.gstPercent || 5,
+            category: medObj.category || updatedBatch.category || "Tablet",
+            pack: updatedBatch.pack || medObj.pack || "",
+        };
+
+        return NextResponse.json(formatted);
     } catch (error) {
         return NextResponse.json(
             { error: "Failed to update medicine batch" },
