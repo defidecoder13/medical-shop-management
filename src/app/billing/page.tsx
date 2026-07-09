@@ -199,14 +199,17 @@ function BillingContent() {
             setMessage({ text: `${med.name} added to cart`, type: 'success' });
             setTimeout(() => setMessage(null), 3000);
             
+            const initialStripQty = med.stock >= 1 || med.stock <= 0 ? 1 : 0;
+            const initialTabletQty = initialStripQty === 0 && med.stock > 0 ? 1 : 0;
+
             setCart(prevCart => [
               ...prevCart,
               {
                 medicineId: med._id,
                 name: med.name,
                 batchNumber: med.batchNumber,
-                stripQty: 0,
-                tabletQty: 0,
+                stripQty: initialStripQty,
+                tabletQty: initialTabletQty,
                 stripSellingPrice: sellingPrice,
                 tabletSellingPrice: tabletPrice,
                 mrp: sellingPrice,
@@ -215,6 +218,7 @@ function BillingContent() {
                 discountPercent: med.discountPercent || 0,
                 tabletsPerStrip: tabletsPerStrip,
                 gstPercent: med.gstPercent || 0,
+                expiryDate: med.expiryDate,
               },
             ]);
             setClearTrigger(prev => prev + 1);
@@ -383,14 +387,17 @@ function BillingContent() {
       ? Number((sellingPrice / tabletsPerStrip).toFixed(2)) 
       : 0;
 
+    const initialStripQty = med.stock >= 1 || med.stock <= 0 ? 1 : 0;
+    const initialTabletQty = initialStripQty === 0 && med.stock > 0 ? 1 : 0;
+
     setCart([
       ...cart,
       {
         medicineId: med._id,
         name: med.name,
         batchNumber: med.batchNumber,
-        stripQty: 0,
-        tabletQty: 0,
+        stripQty: initialStripQty,
+        tabletQty: initialTabletQty,
         stripSellingPrice: sellingPrice,
         tabletSellingPrice: tabletPrice,
         mrp: sellingPrice,

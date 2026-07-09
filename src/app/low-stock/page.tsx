@@ -223,10 +223,10 @@ export default function LowStockPage() {
                       </td>
                       <td className="px-8 py-6 text-right">
                          <Link 
-                           href="/inventory"
-                           className="inline-flex items-center gap-2 px-4 py-2 bg-gray-50 text-[#11327c] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-[#11327c] hover:text-white transition-all shadow-sm active:scale-95"
+                           href={`/billing?add=${med._id}`}
+                           className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 text-indigo-700 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-95"
                          >
-                           Restock
+                           + Bill
                            <ArrowRight className="w-3.5 h-3.5" strokeWidth={3} />
                          </Link>
                       </td>
