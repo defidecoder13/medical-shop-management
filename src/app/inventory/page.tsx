@@ -1002,11 +1002,11 @@ export default function InventoryPage() {
       </AnimatePresence>
 
       {/* Filters Bar */}
-      <div className="flex flex-col md:flex-row gap-4 w-full mb-6 mt-8 items-center">
+      <div className="flex flex-wrap items-center gap-3 w-full mb-6 mt-8">
         <select 
           value={filterCategory}
           onChange={e => setFilterCategory(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 min-w-[150px] focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+          className="px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 w-full sm:w-[140px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
         >
            <option>All Categories</option>
            <option>Tablet</option>
@@ -1019,7 +1019,7 @@ export default function InventoryPage() {
         <select 
           value={filterCompany}
           onChange={e => setFilterCompany(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 min-w-[150px] focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+          className="px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 w-full sm:w-[150px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
         >
            <option>All Companies</option>
            {Array.from(new Set(medicines.map(m => m.brand).filter(Boolean))).map(brand => (
@@ -1029,18 +1029,18 @@ export default function InventoryPage() {
         <select 
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
-          className="px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 min-w-[150px] focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+          className="px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 w-full sm:w-[130px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
         >
            <option>All Status</option>
            <option>In Stock</option>
            <option>Low Stock</option>
            <option>Out of Stock</option>
         </select>
-        <label className="flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 cursor-pointer shrink-0 hover:bg-gray-50 transition-colors">
+        <label className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 cursor-pointer shrink-0 hover:bg-gray-50 transition-colors">
            <input type="checkbox" checked={hideZeroStock} onChange={e => setHideZeroStock(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-[#11327c] focus:ring-[#11327c]" />
            Hide Dead Stock
         </label>
-        <div className="relative flex-1 group">
+        <div className="relative flex-1 min-w-[280px] sm:min-w-[340px] group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
           <input 
             type="text" 
