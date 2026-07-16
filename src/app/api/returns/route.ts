@@ -3,6 +3,7 @@ import Settings from "@/src/models/Settings";
 import { connectDB } from "@/src/lib/db";
 import Bill from "@/src/models/Bill";
 import MedicineBatch from "@/src/models/MedicineBatch";
+import Medicine from "@/src/models/Medicine";
 import mongoose from "mongoose";
 import { deleteCache, setCache } from "@/src/lib/redis";
 
@@ -89,7 +90,7 @@ export async function POST(req: Request) {
             // originalItem.batchNumber might be a comma-separated list due to FEFO (e.g. "B1, B2")
             // We'll just return the physical stock to the first batch in the list for simplicity.
             const primaryBatchNum = originalItem.batchNumber?.split(',')[0].trim() || '';
-            const medicine = await mongoose.models.Medicine.findOne({ name: originalItem.name }).session(session);
+            const medicine = await Medicine.findOne({ name: originalItem.name }).session(session);
             
             if (medicine) {
                 const batch = await MedicineBatch.findOne({ 
