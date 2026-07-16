@@ -42,12 +42,24 @@ export async function POST(req: Request) {
             const returnQtyNum = Number(returnReq.returnQty);
             if (isNaN(returnQtyNum) || returnQtyNum <= 0) continue;
 
-            const originalItem = originalBill.items.find((item: any) => item.batchNumber === returnReq.batchNumber && item.name === returnReq.name);
+            const originalItem = typeof returnReq.itemIndex === 'number' && originalBill.items[returnReq.itemIndex]
+                ? originalBill.items[returnReq.itemIndex]
+                : originalBill.items.find((item: any) => 
+                    item.batchNumber === returnReq.batchNumber && 
+                    item.name === returnReq.name &&
+                    (returnReq.unitType ? item.unitType === returnReq.unitType : true) &&
+                    ((item.qty || 0) - (item.returnedQty || 0) >= returnQtyNum)
+                  ) || originalBill.items.find((item: any) => 
+                    item.batchNumber === returnReq.batchNumber && 
+                    item.name === returnReq.name &&
+                    (returnReq.unitType ? item.unitType === returnReq.unitType : true)
+                  );
+
             if (!originalItem) continue;
 
             const maxReturnable = (originalItem.qty || 0) - (originalItem.returnedQty || 0);
             if (returnQtyNum > maxReturnable) {
-                throw new Error(`Cannot return ${returnQtyNum} of ${originalItem.name}. Maximum is ${maxReturnable}`);
+                throw new Error(`Cannot return ${returnQtyNum} of ${originalItem.name} (${originalItem.unitType || 'strip'}). Maximum is ${maxReturnable}`);
             }
 
             // Math matches original billing structure exactly

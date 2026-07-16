@@ -143,11 +143,13 @@ export default function TransactionsPage() {
       .filter(([_, qty]) => qty > 0)
       .map(([idxStr, qty]) => {
          const originalItem = bill.items[Number(idxStr)];
-         return {
-            batchNumber: originalItem.batchNumber,
-            name: originalItem.name,
-            returnQty: qty
-         };
+          return {
+             batchNumber: originalItem.batchNumber,
+             name: originalItem.name,
+             returnQty: qty,
+             unitType: originalItem.unitType,
+             itemIndex: Number(idxStr)
+          };
       });
 
     if (itemsToReturn.length === 0) {

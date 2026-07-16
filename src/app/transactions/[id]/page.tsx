@@ -46,16 +46,17 @@ export default function TransactionDetailsPage() {
 
   const openReturnModal = () => {
      const initialReturnState = bill.items
-        .filter((item: any) => item.qty - (item.returnedQty || 0) > 0)
-        .map((item: any) => ({
+        .map((item: any, idx: number) => ({
            id: Math.random().toString(), // local unique key
+           itemIndex: idx,
            name: item.name,
            batchNumber: item.batchNumber,
            maxQty: item.qty - (item.returnedQty || 0),
            returnQty: 0,
            unitType: item.unitType,
            unitTotal: item.total / item.qty
-        }));
+        }))
+        .filter((item: any) => item.maxQty > 0);
      setReturnItems(initialReturnState);
      setReturnError("");
      setShowReturnModal(true);
@@ -77,7 +78,9 @@ export default function TransactionDetailsPage() {
            returnedItems: itemsToReturn.map(item => ({
               name: item.name,
               batchNumber: item.batchNumber,
-              returnQty: Number(item.returnQty)
+              returnQty: Number(item.returnQty),
+              unitType: item.unitType,
+              itemIndex: item.itemIndex
            }))
         };
 
