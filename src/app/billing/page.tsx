@@ -98,7 +98,7 @@ function BillingSearchInput({ onSearch, onBarcodeScan, clearTrigger }: any) {
   return (
     <div className="relative">
       <input
-        className="w-full bg-white border border-gray-300 shadow-sm pl-12 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-gray-800 placeholder:text-gray-400 font-medium shadow-sm"
+        className="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 shadow-sm pl-12 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-gray-800 dark:text-gray-100 placeholder:text-gray-400 font-medium"
         placeholder="Scan Barcode or Search by name, brand, batch..."
         value={localSearch}
         onChange={(e) => setLocalSearch(e.target.value)}
@@ -662,16 +662,16 @@ function BillingContent() {
         <div className="lg:col-span-8 space-y-6">
           
           {/* Patient Details Card (Moved to top) */}
-          <div className="bg-white p-7 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)]">
-            <h3 className="text-[15px] font-extrabold text-[#11327c] mb-5 flex items-center gap-2">
-              <Users size={18} strokeWidth={2.5} className="text-[#11327c]" />
+          <div className="bg-white dark:bg-slate-900 p-7 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] transition-colors">
+            <h3 className="text-[15px] font-extrabold text-[#11327c] dark:text-blue-400 mb-5 flex items-center gap-2">
+              <Users size={18} strokeWidth={2.5} className="text-[#11327c] dark:text-blue-400" />
               Customer Details
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Name</label>
                 <input
-                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
+                  className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900 dark:text-gray-100"
                   placeholder="Full Name"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
@@ -680,7 +680,7 @@ function BillingContent() {
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Doctor Name</label>
                 <input
-                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
+                  className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900 dark:text-gray-100"
                   placeholder="Dr. Name"
                   value={doctorName}
                   onChange={(e) => setDoctorName(e.target.value)}
@@ -689,7 +689,7 @@ function BillingContent() {
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
                 <input
-                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
+                  className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900 dark:text-gray-100"
                   placeholder="10-digit number"
                   value={patientPhone}
                   onChange={(e) => setPatientPhone(e.target.value)}
@@ -698,7 +698,7 @@ function BillingContent() {
               <div className="space-y-1.5">
                 <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Address</label>
                 <input
-                  className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900"
+                  className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900 dark:text-gray-100"
                   placeholder="Patient Address"
                   value={patientAddress}
                   onChange={(e) => setPatientAddress(e.target.value)}
@@ -718,9 +718,9 @@ function BillingContent() {
           </div>
 
           {/* Search Box */}
-          <div className="bg-white p-7 rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] relative group">
-            <h2 className="text-[15px] font-extrabold text-[#11327c] mb-4 flex items-center gap-2">
-              <Search size={18} className="text-[#11327c]" strokeWidth={2.5} />
+          <div className="bg-white dark:bg-slate-900 p-7 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] relative group transition-colors">
+            <h2 className="text-[15px] font-extrabold text-[#11327c] dark:text-blue-400 mb-4 flex items-center gap-2">
+              <Search size={18} className="text-[#11327c] dark:text-blue-400" strokeWidth={2.5} />
               Add Medicines
             </h2>
             <BillingSearchInput 
@@ -736,7 +736,7 @@ function BillingContent() {
                   initial={{ opacity: 0, y: 5, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 5, scale: 0.98 }}
-                  className="absolute top-full left-0 right-0 mt-3 bg-white border border-gray-100 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] z-20 max-h-80 overflow-y-auto p-2"
+                  className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] z-20 max-h-80 overflow-y-auto p-2"
                 >
                   {medicines.slice(0, 50).map((med, index) => (
                     <motion.button
@@ -745,15 +745,15 @@ function BillingContent() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => addToCart(med)}
-                      className="w-full flex items-center gap-4 p-4 hover:bg-[#f8fafc] text-left transition-colors border-b border-gray-200 last:border-b-0 group/item"
+                      className="w-full flex items-center gap-4 p-4 hover:bg-[#f8fafc] dark:hover:bg-slate-800 text-left transition-colors border-b border-gray-200 dark:border-slate-800 last:border-b-0 group/item"
                     >
-                      <div className="w-11 h-11 rounded-xl bg-indigo-50/50 flex items-center justify-center text-indigo-400 group-hover/item:bg-indigo-600 group-hover/item:text-white transition-all shadow-sm shrink-0 border border-indigo-100/50 group-hover/item:border-indigo-600">
+                      <div className="w-11 h-11 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-400 dark:text-indigo-300 group-hover/item:bg-indigo-600 group-hover/item:text-white transition-all shadow-sm shrink-0 border border-indigo-100/50 dark:border-indigo-800/40 group-hover/item:border-indigo-600">
                          <Pill size={20} strokeWidth={2} />
                       </div>
                       <div className="flex-1">
-                        <div className="font-extrabold text-[#11327c] text-[15px] group-hover/item:text-indigo-700 transition-colors tracking-tight">{med.name}</div>
+                        <div className="font-extrabold text-[#11327c] dark:text-blue-300 text-[15px] group-hover/item:text-indigo-700 dark:group-hover/item:text-indigo-400 transition-colors tracking-tight">{med.name}</div>
                         {med.composition && (
-                          <div className="text-[11px] text-gray-500 font-medium truncate max-w-sm mt-0.5">{med.composition}</div>
+                          <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate max-w-sm mt-0.5">{med.composition}</div>
                         )}
                         <div className="text-[10px] text-gray-500 font-black flex flex-wrap gap-2 mt-2 uppercase tracking-widest">
                           {med.rackNumber && <span className="bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md text-gray-600 shadow-sm">Rack: {med.rackNumber}</span>}
@@ -788,12 +788,12 @@ function BillingContent() {
           </div>
 
           {/* Cart Table View */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden">
-            <div className="p-6 border-b border-gray-50 bg-[#f8fafc]/50 flex items-center justify-between">
-              <h3 className="text-[15px] font-extrabold text-[#11327c] flex items-center gap-2">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden transition-colors">
+            <div className="p-6 border-b border-gray-50 dark:border-slate-800 bg-[#f8fafc]/50 dark:bg-slate-800/50 flex items-center justify-between">
+              <h3 className="text-[15px] font-extrabold text-[#11327c] dark:text-blue-400 flex items-center gap-2">
                 <ShoppingCart size={18} strokeWidth={2.5} />
                 Selected Medicines
-                <span className="ml-2 bg-[#11327c]/10 text-[#11327c] text-[11px] font-black px-2 py-0.5 rounded-full">{cart.length} items</span>
+                <span className="ml-2 bg-[#11327c]/10 dark:bg-blue-900/40 text-[#11327c] dark:text-blue-300 text-[11px] font-black px-2 py-0.5 rounded-full">{cart.length} items</span>
               </h3>
               {cart.length > 0 && (
                 <button 
@@ -824,11 +824,11 @@ function BillingContent() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="group relative p-3.5 rounded-xl border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all shadow-sm flex flex-col md:flex-row items-center gap-3"
+                        className="group relative p-3.5 rounded-xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-[#11327c]/20 dark:hover:border-blue-500/30 transition-all shadow-sm flex flex-col md:flex-row items-center gap-3"
                       >
                          {/* LEFT: Info */}
                          <div className="flex-1 min-w-0 flex flex-col justify-center w-full">
-                            <div className="font-black text-[#11327c] text-[14px] truncate flex items-center gap-2 mb-1">
+                            <div className="font-black text-[#11327c] dark:text-blue-300 text-[14px] truncate flex items-center gap-2 mb-1">
                               {item.name}
                               {item.stock < 10 && <span className="px-1.5 py-0.5 rounded text-rose-500 bg-rose-50 border border-rose-100 text-[9px] font-black uppercase tracking-wider">Low Stock</span>}
                             </div>
@@ -844,27 +844,27 @@ function BillingContent() {
                          </div>
 
                          {/* MIDDLE: Inputs */}
-                         <div className="flex items-center gap-3 w-full md:w-auto shrink-0 bg-[#f8fafc] px-3 py-2 rounded-lg border border-gray-100/80">
+                         <div className="flex items-center gap-3 w-full md:w-auto shrink-0 bg-[#f8fafc] dark:bg-slate-800/60 px-3 py-2 rounded-lg border border-gray-100/80 dark:border-slate-700/80">
                              {/* STRIP */}
                              <div className="flex flex-col items-center">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{isMulti ? "Strips" : "Qty"} <span className="text-[#11327c]/70 ml-0.5">(₹{item.stripSellingPrice})</span></span>
-                                <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
-                                  <button onClick={() => updateItem(item.medicineId, "stripQty", Math.max(0, (item.stripQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                  <input type="text" inputMode="numeric" className="w-10 text-[13px] font-black text-[#11327c] text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.stripQty === 0 ? '' : item.stripQty} onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)} />
-                                  <button onClick={() => updateItem(item.medicineId, "stripQty", (item.stripQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-blue-600 hover:bg-blue-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
+                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{isMulti ? "Strips" : "Qty"} <span className="text-[#11327c]/70 dark:text-blue-400/70 ml-0.5">(₹{item.stripSellingPrice})</span></span>
+                                <div className="flex items-center bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md shadow-sm h-7">
+                                  <button onClick={() => updateItem(item.medicineId, "stripQty", Math.max(0, (item.stripQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
+                                  <input type="text" inputMode="numeric" className="w-10 text-[13px] font-black text-[#11327c] dark:text-blue-300 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.stripQty === 0 ? '' : item.stripQty} onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)} />
+                                  <button onClick={() => updateItem(item.medicineId, "stripQty", (item.stripQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
                                 </div>
                              </div>
 
                              {isMulti && (
                                <>
-                                 <div className="w-px h-8 bg-gray-200 mx-1"></div>
+                                 <div className="w-px h-8 bg-gray-200 dark:bg-slate-700 mx-1"></div>
                                  {/* TABLET */}
                                  <div className="flex flex-col items-center">
-                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tabs <span className="text-[#11327c]/70 ml-0.5">(₹{item.tabletSellingPrice})</span></span>
-                                    <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
-                                      <button onClick={() => updateItem(item.medicineId, "tabletQty", Math.max(0, (item.tabletQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                      <input type="text" inputMode="numeric" className="w-10 text-[13px] font-black text-emerald-700 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.tabletQty === 0 ? '' : item.tabletQty} onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)} />
-                                      <button onClick={() => updateItem(item.medicineId, "tabletQty", (item.tabletQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-emerald-600 hover:bg-emerald-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
+                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tabs <span className="text-[#11327c]/70 dark:text-blue-400/70 ml-0.5">(₹{item.tabletSellingPrice})</span></span>
+                                    <div className="flex items-center bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md shadow-sm h-7">
+                                      <button onClick={() => updateItem(item.medicineId, "tabletQty", Math.max(0, (item.tabletQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-700 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
+                                      <input type="text" inputMode="numeric" className="w-10 text-[13px] font-black text-emerald-700 dark:text-emerald-300 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.tabletQty === 0 ? '' : item.tabletQty} onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)} />
+                                      <button onClick={() => updateItem(item.medicineId, "tabletQty", (item.tabletQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-700 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
                                     </div>
                                  </div>
                                </>
@@ -875,9 +875,9 @@ function BillingContent() {
                          <div className="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end md:justify-between">
                             <div className="flex flex-col items-center">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Disc %</span>
-                                <div className="flex items-center bg-white border border-gray-200 rounded-md shadow-sm h-7">
-                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.max(0, Number((Number(item.discountPercent || 0) - 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-orange-600 hover:bg-orange-50 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                  <input type="text" inputMode="decimal" className="w-12 text-[12px] font-black text-orange-600 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.discountPercent === 0 ? '' : item.discountPercent} onChange={(e) => {
+                                <div className="flex items-center bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md shadow-sm h-7">
+                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.max(0, Number((Number(item.discountPercent || 0) - 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
+                                  <input type="text" inputMode="decimal" className="w-12 text-[12px] font-black text-orange-600 dark:text-orange-400 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.discountPercent === 0 ? '' : item.discountPercent} onChange={(e) => {
                                       const val = e.target.value;
                                       if (val === '') {
                                           updateItem(item.medicineId, "discountPercent", '');
@@ -888,15 +888,15 @@ function BillingContent() {
                                           }
                                       }
                                   }} />
-                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.min(100, Number((Number(item.discountPercent || 0) + 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-orange-600 hover:bg-orange-50 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
+                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.min(100, Number((Number(item.discountPercent || 0) + 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
                                 </div>
                             </div>
 
-                            <div className="w-px h-8 bg-gray-100 hidden md:block mx-1"></div>
+                            <div className="w-px h-8 bg-gray-100 dark:bg-slate-800 hidden md:block mx-1"></div>
 
                             <div className="flex flex-col items-end w-20">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</span>
-                                <span className="text-[14px] font-black text-[#11327c]">
+                                <span className="text-[14px] font-black text-[#11327c] dark:text-blue-300">
                                    ₹{(((item.stripQty || 0) * (Number(item.stripSellingPrice) || 0) + (item.tabletQty || 0) * (Number(item.tabletSellingPrice) || 0)) * (1 - (Number(item.discountPercent) || 0) / 100)).toFixed(2)}
                                 </span>
                             </div>
@@ -1014,13 +1014,13 @@ function BillingContent() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white rounded-3xl shadow-[0_30px_70px_-15px_rgba(17,50,124,0.3)] w-full max-w-[400px] overflow-hidden"
+              className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-3xl shadow-[0_30px_70px_-15px_rgba(17,50,124,0.3)] w-full max-w-[400px] overflow-hidden transition-colors"
             >
               <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 shadow-sm">
+                <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-950/40 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 dark:border-emerald-800/60 shadow-sm">
                   <CheckCircle2 size={40} className="text-emerald-500" strokeWidth={2.5} />
                 </div>
-                <h3 className="text-[22px] font-black text-[#11327c] mb-2 tracking-tight">Success!</h3>
+                <h3 className="text-[22px] font-black text-[#11327c] dark:text-blue-400 mb-2 tracking-tight">Success!</h3>
                 <p className="text-gray-500 font-bold text-[14px] mb-8">
                   Your bill has been generated successfully and saved to your records.
                 </p>

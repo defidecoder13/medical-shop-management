@@ -283,52 +283,52 @@ export default function TransactionsPage() {
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* Total Sales */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5 transition-colors">
+          <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
             <ShoppingCart size={28} strokeWidth={2.5} />
           </div>
           <div>
-            <div className="text-[13px] text-gray-500 font-bold mb-1">Total Sales</div>
-            <div className="text-[24px] font-black text-[#11327c] tracking-tight leading-none mb-2">₹{summary.totalSales.toFixed(2)}</div>
-            <div className="text-[13px] font-black text-gray-400">{summary.totalSalesCount} Bills</div>
+            <div className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mb-1">Total Sales</div>
+            <div className="text-[24px] font-black text-[#11327c] dark:text-blue-400 tracking-tight leading-none mb-2">₹{summary.totalSales.toFixed(2)}</div>
+            <div className="text-[13px] font-black text-gray-400 dark:text-gray-500">{summary.totalSalesCount} Bills</div>
           </div>
         </div>
         
         {/* Total Items Sold */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5 transition-colors">
+          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
             <TrendingUp size={28} strokeWidth={2.5} />
           </div>
           <div>
-            <div className="text-[13px] text-gray-500 font-bold mb-1">Total Items Sold</div>
-            <div className="text-[24px] font-black text-emerald-600 tracking-tight leading-none mb-2">{summary.totalItemsSold}</div>
-            <div className="text-[13px] font-black text-gray-400">Selected Period</div>
+            <div className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mb-1">Total Items Sold</div>
+            <div className="text-[24px] font-black text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mb-2">{summary.totalItemsSold}</div>
+            <div className="text-[13px] font-black text-gray-400 dark:text-gray-500">Selected Period</div>
           </div>
         </div>
         
         {/* Total Refunds */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5 transition-colors">
+          <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400 flex items-center justify-center shrink-0">
             <Undo size={28} strokeWidth={2.5} />
           </div>
           <div>
-            <div className="text-[13px] text-gray-500 font-bold mb-1">Total Refunds</div>
-            <div className="text-[24px] font-black text-orange-500 tracking-tight leading-none mb-2">₹{summary.totalRefunds.toFixed(2)}</div>
-            <div className="text-[13px] font-black text-gray-400">{summary.totalRefundsCount} Refunds</div>
+            <div className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mb-1">Total Refunds</div>
+            <div className="text-[24px] font-black text-orange-500 dark:text-orange-400 tracking-tight leading-none mb-2">₹{summary.totalRefunds.toFixed(2)}</div>
+            <div className="text-[13px] font-black text-gray-400 dark:text-gray-500">{summary.totalRefundsCount} Refunds</div>
           </div>
         </div>
 
         {/* Avg. Bill Value */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5">
-          <div className="w-14 h-14 rounded-2xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0">
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5 transition-colors">
+          <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
             <Receipt size={28} strokeWidth={2.5} />
           </div>
           <div>
-            <div className="text-[13px] text-gray-500 font-bold mb-1">Avg. Bill Value</div>
-            <div className="text-[24px] font-black text-purple-600 tracking-tight leading-none mb-2">
+            <div className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mb-1">Avg. Bill Value</div>
+            <div className="text-[24px] font-black text-purple-600 dark:text-purple-400 tracking-tight leading-none mb-2">
               ₹{summary.totalSalesCount > 0 ? (summary.totalSales / summary.totalSalesCount).toFixed(2) : "0.00"}
             </div>
-            <div className="text-[13px] font-black text-gray-400">Selected Period</div>
+            <div className="text-[13px] font-black text-gray-400 dark:text-gray-500">Selected Period</div>
           </div>
         </div>
       </div>
@@ -336,11 +336,11 @@ export default function TransactionsPage() {
       {/* Filters Bar */}
       <div className="flex flex-wrap xl:flex-nowrap gap-4 items-center justify-between">
         <div className="relative flex-1 min-w-[300px] group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] dark:group-focus-within:text-blue-400 transition-colors" size={18} strokeWidth={2.5} />
           <input 
             type="text" 
             placeholder="Search by customer name, phone, or invoice no..."
-            className="w-full pl-11 pr-4 py-3.5 bg-white border border-gray-200 rounded-xl text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-500 transition-all text-gray-800 placeholder:text-gray-400 shadow-sm"
+            className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40 focus:border-blue-500 transition-all text-gray-800 dark:text-gray-100 placeholder:text-gray-400 shadow-sm"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -348,7 +348,7 @@ export default function TransactionsPage() {
 
         <div className="flex items-center gap-3 w-full xl:w-auto overflow-x-auto pb-2 xl:pb-0">
           <select 
-            className="px-4 py-3.5 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-100 min-w-[170px] shadow-sm appearance-none cursor-pointer"
+            className="px-4 py-3.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-100 min-w-[170px] shadow-sm appearance-none cursor-pointer"
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
           >
@@ -359,7 +359,7 @@ export default function TransactionsPage() {
           </select>
 
           <select 
-            className="px-4 py-3.5 bg-white border border-gray-200 rounded-xl text-[13px] font-bold text-gray-700 outline-none focus:ring-2 focus:ring-blue-100 min-w-[130px] shadow-sm appearance-none cursor-pointer"
+            className="px-4 py-3.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-100 min-w-[130px] shadow-sm appearance-none cursor-pointer"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -368,7 +368,7 @@ export default function TransactionsPage() {
             <option value="refunded">Refunded</option>
           </select>
 
-          <div className="flex bg-white p-1 rounded-xl border border-gray-200 shrink-0 shadow-sm">
+          <div className="flex bg-white dark:bg-slate-900 p-1 rounded-xl border border-gray-200 dark:border-slate-700 shrink-0 shadow-sm">
             {(["1d", "7d", "1m", "all"] as const).map((range) => (
               <button
                 key={range}
@@ -376,7 +376,7 @@ export default function TransactionsPage() {
                 className={`px-4 py-2.5 text-[12px] font-bold rounded-lg transition-all ${
                   dateFilter === range
                     ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
+                    : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-800"
                 }`}
               >
                 {range === "all" ? "ALL TIME" : range.toUpperCase()}
@@ -387,16 +387,16 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transactions Table Container */}
-      <div className={`bg-white rounded-2xl border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-200 ${loading ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-200 ${loading ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
         <div className="overflow-x-auto relative">
           {loading && (
-             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/20 backdrop-blur-[1px]">
-               <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/20 dark:bg-slate-900/20 backdrop-blur-[1px]">
+               <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
              </div>
           )}
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#f8fafc] border-b border-gray-100">
+              <tr className="bg-[#f8fafc] dark:bg-slate-800/80 border-b border-gray-100 dark:border-slate-800">
                 <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Date & Time</th>
                 <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Transaction ID</th>
                 <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Customer</th>
@@ -407,17 +407,17 @@ export default function TransactionsPage() {
                 <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
               {filteredTransactions.map((t) => (
                 <Fragment key={t._id}>
-                <tr className="hover:bg-[#f8fafc] transition-colors group bg-white">
+                <tr className="hover:bg-[#f8fafc] dark:hover:bg-slate-800/50 transition-colors group bg-white dark:bg-slate-900">
                   <td className="px-5 py-5">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                         {t.isReturn ? <Undo size={14} strokeWidth={2.5} /> : <FileText size={14} strokeWidth={2.5} />}
                       </div>
                       <div className="flex flex-col">
-                        <div className="text-[13px] font-black text-[#11327c]">
+                        <div className="text-[13px] font-black text-[#11327c] dark:text-blue-300">
                           {format(new Date(t.createdAt), "dd MMM, yyyy")}
                         </div>
                         <div className="text-[11px] font-bold text-gray-400">
@@ -428,20 +428,20 @@ export default function TransactionsPage() {
                   </td>
                   <td className="px-5 py-5">
                     <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-black text-blue-600">
+                      <span className="text-[13px] font-black text-blue-600 dark:text-blue-400">
                         #{t.invoiceNumber || t._id.slice(-8).toUpperCase()}
                       </span>
-                      <button className="text-gray-300 hover:text-gray-500" onClick={() => navigator.clipboard.writeText(t.invoiceNumber || t._id.slice(-8).toUpperCase())}>
+                      <button className="text-gray-300 hover:text-gray-500 dark:hover:text-gray-300" onClick={() => navigator.clipboard.writeText(t.invoiceNumber || t._id.slice(-8).toUpperCase())}>
                         <Copy size={12} strokeWidth={2.5} />
                       </button>
                     </div>
                   </td>
                   <td className="px-5 py-5">
                     <div className="flex flex-col">
-                      <div className="text-[13px] font-bold text-gray-800">
+                      <div className="text-[13px] font-bold text-gray-800 dark:text-gray-200">
                          {t.patientName || "Walk-in Customer"}
                       </div>
-                      <div className="text-[11px] font-medium text-gray-500 mt-0.5">
+                      <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">
                          {t.patientPhone ? `+91 ${t.patientPhone}` : "-"}
                       </div>
                     </div>
@@ -450,8 +450,8 @@ export default function TransactionsPage() {
                     <div className="flex flex-col gap-1 items-start">
                       {t.items.slice(0, 1).map((item, index) => (
                         <div key={index} className="flex items-center gap-2">
-                          <span className="text-[13px] font-bold text-gray-800">{item.name}</span>
-                          <span className="bg-blue-50 text-blue-600 text-[10px] font-black px-1.5 py-0.5 rounded">× {item.qty}</span>
+                          <span className="text-[13px] font-bold text-gray-800 dark:text-gray-200">{item.name}</span>
+                          <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 text-[10px] font-black px-1.5 py-0.5 rounded">× {item.qty}</span>
                         </div>
                       ))}
                       <div className="text-[11px] text-gray-400 font-medium">
@@ -461,7 +461,7 @@ export default function TransactionsPage() {
                   </td>
                   <td className="px-5 py-5">
                     <div className="flex flex-col">
-                      <div className="text-[14px] font-black text-blue-600">
+                      <div className="text-[14px] font-black text-blue-600 dark:text-blue-400">
                         ₹{Math.abs(t.grandTotal).toFixed(2)}
                       </div>
                       <div className="text-[11px] font-medium text-gray-400 mt-0.5">
@@ -471,8 +471,8 @@ export default function TransactionsPage() {
                   </td>
                   <td className="px-5 py-5">
                     <div className="flex items-center gap-1.5">
-                      {t.paymentMethod === 'Card' ? <CreditCard size={14} className="text-emerald-600" /> : <Banknote size={14} className="text-emerald-600" />}
-                      <span className="text-[12px] font-bold text-gray-700">{t.paymentMethod || 'Cash'}</span>
+                      {t.paymentMethod === 'Card' ? <CreditCard size={14} className="text-emerald-600 dark:text-emerald-400" /> : <Banknote size={14} className="text-emerald-600 dark:text-emerald-400" />}
+                      <span className="text-[12px] font-bold text-gray-700 dark:text-gray-300">{t.paymentMethod || 'Cash'}</span>
                     </div>
                   </td>
                   <td className="px-5 py-5">
@@ -538,22 +538,22 @@ export default function TransactionsPage() {
           
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="p-4 border-t border-gray-100 flex items-center justify-between bg-gray-50 rounded-b-xl">
-              <span className="text-sm text-gray-500 font-medium">
+            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between bg-gray-50 dark:bg-slate-800/60 rounded-b-xl">
+              <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
                 Page {page} of {totalPages}
               </span>
               <div className="flex gap-2">
                 <button
                   disabled={page === 1}
                   onClick={() => setPage(p => Math.max(1, p - 1))}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   Previous
                 </button>
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  className="px-4 py-2 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                 >
                   Next
                 </button>
@@ -561,8 +561,8 @@ export default function TransactionsPage() {
             </div>
           )}
         </div>
-        <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 flex justify-between items-center">
-           <span>Sales: <span className="text-[#11327c] ml-1">{filteredTransactions.filter(t => !t.isReturn).length}</span></span>
+        <div className="p-6 bg-[#f8fafc]/50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-800 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 flex justify-between items-center">
+           <span>Sales: <span className="text-[#11327c] dark:text-blue-400 ml-1">{filteredTransactions.filter(t => !t.isReturn).length}</span></span>
            <span>Refunds: <span className="text-rose-500 ml-1">{filteredTransactions.filter(t => t.isReturn).length}</span></span>
         </div>
       </div>
@@ -572,36 +572,36 @@ export default function TransactionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-[2px]" onClick={() => setExpandedBillId(null)} />
           
-          <div className="relative bg-white rounded-2xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100">
+          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100 dark:border-slate-800 transition-colors">
              <div className="p-6">
-                <button onClick={() => setExpandedBillId(null)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors">
+                <button onClick={() => setExpandedBillId(null)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
                   <X size={20} strokeWidth={2.5} />
                 </button>
                 
-                <h3 className="text-[17px] font-black text-[#e11d48] tracking-tight flex items-center gap-2 mb-6">
-                  <RotateCcw size={20} className="text-[#e11d48]" strokeWidth={2.5} />
+                <h3 className="text-[17px] font-black text-[#e11d48] dark:text-rose-400 tracking-tight flex items-center gap-2 mb-6">
+                  <RotateCcw size={20} className="text-[#e11d48] dark:text-rose-400" strokeWidth={2.5} />
                   Process Return for Invoice #{expandedBill.invoiceNumber || expandedBill._id.slice(-8).toUpperCase()}
                 </h3>
                 
-                <div className="border border-gray-100 rounded-xl overflow-hidden mb-6 shadow-sm">
+                <div className="border border-gray-100 dark:border-slate-800 rounded-xl overflow-hidden mb-6 shadow-sm">
                    <table className="w-full text-left">
-                      <thead className="bg-[#f8fafc] border-b border-gray-100">
+                      <thead className="bg-[#f8fafc] dark:bg-slate-800 border-b border-gray-100 dark:border-slate-800">
                          <tr>
                             <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Item</th>
                             <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-center">Purchased Qty</th>
                             <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">Return Qty</th>
                          </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-50">
+                      <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
                          {expandedBill.items.map((item, idx) => {
                             const maxQty = item.qty;
                             return (
-                               <tr key={idx} className="bg-white">
+                               <tr key={idx} className="bg-white dark:bg-slate-900">
                                   <td className="px-5 py-4">
-                                     <div className="font-bold text-gray-800 text-[14px]">{item.name}</div>
+                                     <div className="font-bold text-gray-800 dark:text-gray-200 text-[14px]">{item.name}</div>
                                      <div className="text-[11px] text-gray-400 font-mono mt-0.5">Batch: {item.batchNumber}</div>
                                   </td>
-                                  <td className="px-5 py-4 text-center font-black text-gray-600 text-[15px]">{maxQty}</td>
+                                  <td className="px-5 py-4 text-center font-black text-gray-600 dark:text-gray-300 text-[15px]">{maxQty}</td>
                                   <td className="px-5 py-4 text-right">
                                      <input
                                         type="number"
@@ -609,7 +609,7 @@ export default function TransactionsPage() {
                                         max={maxQty}
                                         value={returnItems[idx] || ""}
                                         onChange={(e) => handleReturnQtyChange(idx, e.target.value, maxQty)}
-                                        className="w-24 px-3 py-2 text-center border border-gray-200 rounded-lg focus:outline-none focus:border-[#e11d48] focus:ring-2 focus:ring-[#e11d48]/20 font-black text-[#e11d48] text-[15px] transition-all bg-gray-50 focus:bg-white mx-auto block mr-0"
+                                        className="w-24 px-3 py-2 text-center border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-[#e11d48] focus:ring-2 focus:ring-[#e11d48]/20 font-black text-[#e11d48] dark:text-rose-400 text-[15px] transition-all bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 mx-auto block mr-0"
                                         placeholder="0"
                                      />
                                   </td>

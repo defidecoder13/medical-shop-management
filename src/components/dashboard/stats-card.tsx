@@ -37,18 +37,18 @@ export function StatsCard({
   const path = getPath();
 
   return (
-    <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] flex flex-col h-[150px] relative overflow-hidden group">
+    <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_10px_-3px_rgba(0,0,0,0.07)] flex flex-col h-[150px] relative overflow-hidden group transition-colors">
       <div className="flex gap-4 relative z-10">
         <div className={cn(
-          "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300",
+          "w-12 h-12 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-transform duration-300 dark:bg-opacity-20",
           iconBgColor,
           iconColor
         )}>
           <Icon size={22} strokeWidth={2.5} />
         </div>
         <div className="flex flex-col pt-0.5">
-          <span className="text-gray-500 text-[13px] font-semibold">{title}</span>
-          <span className="text-gray-900 font-bold text-[22px] tracking-tight mt-0.5">{value}</span>
+          <span className="text-gray-500 dark:text-gray-400 text-[13px] font-semibold">{title}</span>
+          <span className="text-gray-900 dark:text-gray-100 font-bold text-[22px] tracking-tight mt-0.5">{value}</span>
         </div>
       </div>
       

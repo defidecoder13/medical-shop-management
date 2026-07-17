@@ -659,58 +659,58 @@ export default function InventoryPage() {
     <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
       {/* Stats Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-2">
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 bg-[#f0f4ff] rounded-xl flex items-center justify-center text-[#2563eb] shrink-0">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
+           <div className="w-14 h-14 bg-[#f0f4ff] dark:bg-blue-950/40 rounded-xl flex items-center justify-center text-[#2563eb] dark:text-blue-400 shrink-0">
              <Package size={26} strokeWidth={2} />
            </div>
            <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Total Items</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate">{stats ? stats.totalItems.toLocaleString() : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">All medicines in stock</p>
+             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Total Items</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate">{stats ? stats.totalItems.toLocaleString() : "..."}</h3>
+             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">All medicines in stock</p>
            </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 bg-[#ecfdf5] rounded-xl flex items-center justify-center text-[#10b981] shrink-0">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
+           <div className="w-14 h-14 bg-[#ecfdf5] dark:bg-emerald-950/40 rounded-xl flex items-center justify-center text-[#10b981] dark:text-emerald-400 shrink-0">
              <TrendingUp size={26} strokeWidth={2} />
            </div>
            <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Total Stock Value</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate" title={stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : ""}>{stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">At purchase price</p>
+             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Total Stock Value</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate" title={stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : ""}>{stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : "..."}</h3>
+             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">At purchase price</p>
            </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 bg-[#fff7ed] rounded-xl flex items-center justify-center text-[#f97316] shrink-0">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
+           <div className="w-14 h-14 bg-[#fff7ed] dark:bg-orange-950/40 rounded-xl flex items-center justify-center text-[#f97316] dark:text-orange-400 shrink-0">
              <AlertTriangle size={26} strokeWidth={2} />
            </div>
            <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Low Stock Items</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate">{stats ? stats.lowStockItems : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">Reorder soon</p>
+             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Low Stock Items</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate">{stats ? stats.lowStockItems : "..."}</h3>
+             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">Reorder soon</p>
            </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 bg-[#fef2f2] rounded-xl flex items-center justify-center text-[#ef4444] shrink-0">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
+           <div className="w-14 h-14 bg-[#fef2f2] dark:bg-rose-950/40 rounded-xl flex items-center justify-center text-[#ef4444] dark:text-rose-400 shrink-0">
              <Clock size={26} strokeWidth={2} />
            </div>
            <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Expiring Soon</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate">{stats ? stats.expiringSoon : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">Within 6 months</p>
+             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Expiring Soon</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate">{stats ? stats.expiringSoon : "..."}</h3>
+             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">Within 6 months</p>
            </div>
         </div>
 
-        <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 bg-[#faf5ff] rounded-xl flex items-center justify-center text-[#a855f7] shrink-0">
+        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
+           <div className="w-14 h-14 bg-[#faf5ff] dark:bg-purple-950/40 rounded-xl flex items-center justify-center text-[#a855f7] dark:text-purple-400 shrink-0">
              <LayoutGrid size={26} strokeWidth={2} />
            </div>
            <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 font-semibold mb-0.5 truncate">Out of Stock</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] truncate">{stats ? stats.outOfStock : "..."}</h3>
-             <p className="text-[11px] text-gray-400 font-medium mt-1 truncate">Out of stock items</p>
+             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Out of Stock</p>
+             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate">{stats ? stats.outOfStock : "..."}</h3>
+             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">Out of stock items</p>
            </div>
         </div>
       </div>
@@ -738,15 +738,15 @@ export default function InventoryPage() {
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white p-8 rounded-[32px] border border-gray-100 shadow-2xl max-w-5xl w-full"
+            className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-2xl max-w-5xl w-full transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
           <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 bg-[#11327c]/5 rounded-2xl flex items-center justify-center text-[#11327c]">
+            <div className="w-12 h-12 bg-[#11327c]/5 dark:bg-blue-950/40 rounded-2xl flex items-center justify-center text-[#11327c] dark:text-blue-400">
               <Edit3 size={24} strokeWidth={2.5} />
             </div>
             <div>
-              <h3 className="text-[18px] font-black text-[#11327c] tracking-tight">{editingId ? "Edit Medicine" : isRestock ? "Restock Medicine Batch" : "Add New Medicine"}</h3>
+              <h3 className="text-[18px] font-black text-[#11327c] dark:text-blue-400 tracking-tight">{editingId ? "Edit Medicine" : isRestock ? "Restock Medicine Batch" : "Add New Medicine"}</h3>
               <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest">Update your catalog information</p>
             </div>
           </div>
@@ -759,7 +759,7 @@ export default function InventoryPage() {
                 placeholder="e.g. Paracetamol 500mg" 
                 value={form.name}
                 onChange={e => setForm({...form, name: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 dark:focus:ring-blue-900/40 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -776,7 +776,7 @@ export default function InventoryPage() {
                     tabletsPerStrip: isCatMulti ? "" : 1
                   });
                 }}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 cursor-pointer"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100 cursor-pointer"
               >
                 <option value="Tablet">Tablet</option>
                 <option value="Capsule">Capsule</option>
@@ -797,7 +797,7 @@ export default function InventoryPage() {
                 placeholder="0" 
                 value={form.stock}
                 onChange={e => setForm({...form, stock: e.target.value === "" ? "" : Number(e.target.value)})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -809,7 +809,7 @@ export default function InventoryPage() {
                   placeholder="0" 
                   value={form.tabletsPerStrip}
                   onChange={e => setForm({...form, tabletsPerStrip: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                  className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
                 />
               </div>
             )}
@@ -821,7 +821,7 @@ export default function InventoryPage() {
                 placeholder="e.g. BATCH123" 
                 value={form.batchNumber}
                 onChange={e => setForm({...form, batchNumber: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -839,7 +839,7 @@ export default function InventoryPage() {
                   setForm({...form, expiryDate: val});
                 }}
                 maxLength={5}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -852,7 +852,7 @@ export default function InventoryPage() {
                   placeholder="0.00" 
                   value={form.sellingPrice}
                   onChange={e => setForm({...form, sellingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                  className="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
                 />
               </div>
             </div>
@@ -866,12 +866,12 @@ export default function InventoryPage() {
                   placeholder="0.00" 
                   value={form.buyingPrice}
                   onChange={e => setForm({...form, buyingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="w-full pl-8 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                  className="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
                 />
               </div>
             </div>
 
-            <div className="lg:col-span-4 h-px bg-gray-100 my-2"></div>
+            <div className="lg:col-span-4 h-px bg-gray-100 dark:bg-slate-800 my-2"></div>
 
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Brand</label>
@@ -879,17 +879,17 @@ export default function InventoryPage() {
                 placeholder="e.g. Micro Labs" 
                 value={form.brand}
                 onChange={e => setForm({...form, brand: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${!gstEnabled ? 'text-gray-300 line-through' : 'text-gray-400'}`}>GST Slab (%)</label>
+              <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${!gstEnabled ? 'text-gray-300 dark:text-slate-600 line-through' : 'text-gray-400'}`}>GST Slab (%)</label>
               <select
                 disabled={!gstEnabled}
                 value={form.gstPercent}
                 onChange={e => setForm({...form, gstPercent: Number(e.target.value)})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100/50"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100/50 dark:disabled:bg-slate-900/50"
               >
                 <option value="0">0% (Tax Free / Exempt)</option>
                 <option value="5">5% (Insulin / Life Saving)</option>
@@ -905,7 +905,7 @@ export default function InventoryPage() {
                 placeholder="Scan barcode" 
                 value={form.barcode || ''}
                 onChange={e => handleBarcodeChange(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -915,7 +915,7 @@ export default function InventoryPage() {
                 placeholder="e.g. A1" 
                 value={form.rackNumber}
                 onChange={e => setForm({...form, rackNumber: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -926,7 +926,7 @@ export default function InventoryPage() {
                 placeholder="e.g. 10 TAB" 
                 value={form.pack}
                 onChange={e => setForm({...form, pack: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -937,7 +937,7 @@ export default function InventoryPage() {
                 placeholder="0" 
                 value={form.discountPercent === 0 ? "" : form.discountPercent}
                 onChange={e => setForm({...form, discountPercent: e.target.value === "" ? 0 : Number(e.target.value)})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -946,7 +946,7 @@ export default function InventoryPage() {
               <select
                 value={form.supplierName || "Direct Purchase"}
                 onChange={e => setForm({...form, supplierName: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800 cursor-pointer"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100 cursor-pointer"
               >
                 <option value="Direct Purchase">Direct Purchase</option>
                 {suppliers.map((sup) => (
@@ -963,7 +963,7 @@ export default function InventoryPage() {
                 placeholder="e.g. INV-101" 
                 value={form.purchaseInvoiceNumber || ""}
                 onChange={e => setForm({...form, purchaseInvoiceNumber: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -973,7 +973,7 @@ export default function InventoryPage() {
                 placeholder="e.g. Paracetamol 500mg" 
                 value={form.composition}
                 onChange={e => setForm({...form, composition: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] focus:bg-white transition-all text-gray-800"
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
 
@@ -984,14 +984,14 @@ export default function InventoryPage() {
                   setEditingId(null);
                   setForm(emptyMedicine);
                 }}
-                className="w-1/3 bg-gray-50 border border-gray-200 text-gray-500 hover:text-gray-700 font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-gray-100 transition-all shadow-sm"
+                className="w-1/3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all shadow-sm"
               >
                 CANCEL
               </button>
               <button 
                 onClick={handleSubmit}
                 disabled={isSaving}
-                className="w-2/3 bg-[#11327c] text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-[#1e4db7] transition-all disabled:opacity-50 shadow-lg shadow-[#11327c]/20 focus:outline-none focus:ring-4 focus:ring-[#11327c]/40 focus:ring-offset-2"
+                className="w-2/3 bg-[#11327c] hover:bg-[#1e4db7] text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 transition-all disabled:opacity-50 shadow-lg shadow-[#11327c]/20 focus:outline-none focus:ring-4 focus:ring-[#11327c]/40 focus:ring-offset-2"
               >
                 {isSaving ? "SAVING..." : "SAVE MEDICINE"}
               </button>
@@ -1007,7 +1007,7 @@ export default function InventoryPage() {
         <select 
           value={filterCategory}
           onChange={e => setFilterCategory(e.target.value)}
-          className="px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 w-full sm:w-[140px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+          className="px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 w-full sm:w-[140px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
         >
            <option>All Categories</option>
            <option>Tablet</option>
@@ -1020,7 +1020,7 @@ export default function InventoryPage() {
         <select 
           value={filterCompany}
           onChange={e => setFilterCompany(e.target.value)}
-          className="px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 w-full sm:w-[150px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+          className="px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 w-full sm:w-[150px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
         >
            <option>All Companies</option>
            {Array.from(new Set(medicines.map(m => m.brand).filter(Boolean))).map(brand => (
@@ -1030,23 +1030,23 @@ export default function InventoryPage() {
         <select 
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
-          className="px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 w-full sm:w-[130px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+          className="px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 w-full sm:w-[130px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
         >
            <option>All Status</option>
            <option>In Stock</option>
            <option>Low Stock</option>
            <option>Out of Stock</option>
         </select>
-        <label className="flex items-center gap-2 px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold text-gray-800 cursor-pointer shrink-0 hover:bg-gray-50 transition-colors">
-           <input type="checkbox" checked={hideZeroStock} onChange={e => setHideZeroStock(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-[#11327c] focus:ring-[#11327c]" />
+        <label className="flex items-center gap-2 px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 cursor-pointer shrink-0 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
+           <input type="checkbox" checked={hideZeroStock} onChange={e => setHideZeroStock(e.target.checked)} className="w-4 h-4 rounded border-gray-300 dark:border-slate-700 text-[#11327c] focus:ring-[#11327c]" />
            Hide Dead Stock
         </label>
         <div className="relative flex-1 min-w-[280px] sm:min-w-[340px] group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] dark:group-focus-within:text-blue-400 transition-colors" size={18} strokeWidth={2.5} />
           <input 
             type="text" 
             placeholder="Search medicine by name, composition, barcode..."
-            className="w-full pl-11 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 transition-all text-gray-800 placeholder:text-gray-400"
+            className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 dark:focus:ring-blue-900/40 transition-all text-gray-800 dark:text-gray-100 placeholder:text-gray-400"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -1065,27 +1065,27 @@ export default function InventoryPage() {
       </div>
 
       {/* Data Table Container */}
-      <div className="bg-white rounded-[24px] border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden transition-colors">
         <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
           <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 bg-white border-b border-gray-100 z-10">
+            <thead className="sticky top-0 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 z-10">
               <tr>
 
-                <th className="px-2 py-4 text-[12px] font-bold text-gray-800">#</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Medicine Details</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Category</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Composition</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Batch No.</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800">Expiry Date</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-right">MRP (₹)</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-center">Stock</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-right">Purchase (₹)</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-right">Discount (%)</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-center">Status</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 text-center">Action</th>
+                <th className="px-2 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">#</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Medicine Details</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Category</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Composition</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Batch No.</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Expiry Date</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-right">MRP (₹)</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-center">Stock</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-right">Purchase (₹)</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-right">Discount (%)</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-center">Status</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
               <AnimatePresence>
               {paginatedMeds.map((med, index) => (
                 <motion.tr 
@@ -1095,14 +1095,14 @@ export default function InventoryPage() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: Math.min(index * 0.03, 0.5) }}
                   onClick={() => handleEdit(med)}
-                  className="hover:bg-[#f8fafc]/80 transition-colors group border-b border-gray-50 cursor-pointer"
+                  className="hover:bg-[#f8fafc]/80 dark:hover:bg-slate-800/60 transition-colors group border-b border-gray-50 dark:border-slate-800/60 cursor-pointer"
                 >
 
-                  <td className="px-2 py-4 text-[13px] font-bold text-gray-800">{index + 1}</td>
+                  <td className="px-2 py-4 text-[13px] font-bold text-gray-800 dark:text-gray-200">{index + 1}</td>
                   <td className="px-4 py-4">
                      <div>
-                       <div className="font-bold text-[#2563eb] text-[13px] mb-0.5">{med.name}</div>
-                       <div className="text-[11px] text-gray-500 font-medium">
+                       <div className="font-bold text-[#2563eb] dark:text-blue-400 text-[13px] mb-0.5">{med.name}</div>
+                       <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
                          {med.rackNumber ? `Rack: ${med.rackNumber}` : ""}
                        </div>
                      </div>
@@ -1112,23 +1112,23 @@ export default function InventoryPage() {
                       {med.category || "Tablet"}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800 max-w-[180px] truncate" title={med.composition || "-"}>
+                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800 dark:text-gray-200 max-w-[180px] truncate" title={med.composition || "-"}>
                     {med.composition || "-"}
                   </td>
-                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800">
+                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800 dark:text-gray-200">
                     {med.batchNumber || "-"}
                   </td>
                   <td className="px-4 py-4">
-                    <div className="text-[13px] font-medium text-gray-800">{renderExpiry(med.expiryDate).date}</div>
+                    <div className="text-[13px] font-medium text-gray-800 dark:text-gray-200">{renderExpiry(med.expiryDate).date}</div>
                     <div className={`text-[11px] font-semibold mt-0.5 ${renderExpiry(med.expiryDate).color}`}>
                       {renderExpiry(med.expiryDate).text}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800">
+                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800 dark:text-gray-200">
                     {Number(med.sellingPrice).toFixed(2)}
                   </td>
                   <td className="px-4 py-4 text-center">
-                    <div className={`text-[13px] font-bold ${Number(med.stock) <= 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+                    <div className={`text-[13px] font-bold ${Number(med.stock) <= 0 ? 'text-rose-600 dark:text-rose-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
                       {
                         Number(med.tabletsPerStrip) > 1 
                         ? (() => {
@@ -1144,14 +1144,14 @@ export default function InventoryPage() {
                         : `${Math.round(Number(med.stock || 0))} Units`
                       }
                     </div>
-                    <div className="text-[10px] font-bold text-gray-400 mt-0.5 uppercase tracking-wider">
+                    <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 mt-0.5 uppercase tracking-wider">
                       {med.pack || "Strip"} {Number(med.tabletsPerStrip) > 1 ? `(${med.tabletsPerStrip} Tabs/Strip)` : ""}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800">
+                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800 dark:text-gray-200">
                     {Number(med.buyingPrice).toFixed(2)}
                   </td>
-                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800">
+                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800 dark:text-gray-200">
                     {med.discountPercent ? `${Number(med.discountPercent)}%` : "0%"}
                   </td>
                   <td className="px-4 py-4 text-center">
@@ -1197,22 +1197,22 @@ export default function InventoryPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-4 bg-[#f8fafc]/50 border-t border-gray-100 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
-          <p>Total Catalog Size: <span className="text-[#11327c] ml-1">{filteredMeds.length} Items</span></p>
+        <div className="p-4 bg-[#f8fafc]/50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
+          <p>Total Catalog Size: <span className="text-[#11327c] dark:text-blue-400 ml-1">{filteredMeds.length} Items</span></p>
           
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white text-gray-600 transition-colors"
+              className="px-3 py-1.5 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50 hover:bg-white dark:hover:bg-slate-800 text-gray-600 dark:text-gray-300 transition-colors"
             >
               Prev
             </button>
-            <span className="px-2 text-[#11327c]">Page {page} of {totalFrontendPages}</span>
+            <span className="px-2 text-[#11327c] dark:text-blue-400">Page {page} of {totalFrontendPages}</span>
             <button 
               onClick={() => setPage(p => Math.min(totalFrontendPages, p + 1))}
               disabled={page === totalFrontendPages}
-              className="px-3 py-1.5 border border-gray-200 rounded-lg disabled:opacity-50 hover:bg-white text-gray-600 transition-colors"
+              className="px-3 py-1.5 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50 hover:bg-white dark:hover:bg-slate-800 text-gray-600 dark:text-gray-300 transition-colors"
             >
               Next
             </button>

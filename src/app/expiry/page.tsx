@@ -89,13 +89,13 @@ export default function ExpiryPage() {
 
   const getCategoryStyles = (category?: string) => {
     switch(category?.toLowerCase()) {
-      case "pain relief": return "bg-indigo-50 text-indigo-600 border border-indigo-100";
-      case "antibiotic": return "bg-emerald-50 text-emerald-600 border border-emerald-100";
-      case "antihistamine": return "bg-purple-50 text-purple-600 border border-purple-100";
-      case "wellness": return "bg-orange-50 text-orange-600 border border-orange-100";
-      case "supplements": return "bg-fuchsia-50 text-fuchsia-600 border border-fuchsia-100";
-      case "gastric care": return "bg-teal-50 text-teal-600 border border-teal-100";
-      default: return "bg-blue-50 text-blue-600 border border-blue-100";
+      case "pain relief": return "bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-900/40";
+      case "antibiotic": return "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-300 border border-emerald-100 dark:border-emerald-900/40";
+      case "antihistamine": return "bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-300 border border-purple-100 dark:border-purple-900/40";
+      case "wellness": return "bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-300 border border-orange-100 dark:border-orange-900/40";
+      case "supplements": return "bg-fuchsia-50 dark:bg-fuchsia-950/40 text-fuchsia-600 dark:text-fuchsia-300 border border-fuchsia-100 dark:border-fuchsia-900/40";
+      case "gastric care": return "bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-300 border border-teal-100 dark:border-teal-900/40";
+      default: return "bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-100 dark:border-blue-900/40";
     }
   };
 
@@ -122,15 +122,15 @@ export default function ExpiryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white py-8">
+      <div className="min-h-screen bg-white dark:bg-slate-950 py-8">
         <div className="max-w-[1400px] mx-auto px-6 space-y-8 animate-pulse">
-          <div className="h-10 bg-gray-100 rounded-xl w-48"></div>
+          <div className="h-10 bg-gray-100 dark:bg-slate-800 rounded-xl w-48"></div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="h-24 bg-gray-100 rounded-[24px]"></div>
-            <div className="h-24 bg-gray-100 rounded-[24px]"></div>
-            <div className="h-24 bg-gray-100 rounded-[24px]"></div>
+            <div className="h-24 bg-gray-100 dark:bg-slate-800 rounded-[24px]"></div>
+            <div className="h-24 bg-gray-100 dark:bg-slate-800 rounded-[24px]"></div>
+            <div className="h-24 bg-gray-100 dark:bg-slate-800 rounded-[24px]"></div>
           </div>
-          <div className="h-96 bg-gray-100 rounded-[40px]"></div>
+          <div className="h-96 bg-gray-100 dark:bg-slate-800 rounded-[40px]"></div>
         </div>
       </div>
     );
@@ -143,18 +143,18 @@ export default function ExpiryPage() {
         <div className="flex items-center gap-5">
           <Link 
             href="/"
-            className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl border border-gray-100 text-gray-400 hover:text-[#11327c] hover:border-[#11327c]/20 transition-all shadow-sm group"
+            className="w-12 h-12 flex items-center justify-center bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 text-gray-400 dark:text-gray-300 hover:text-[#11327c] dark:hover:text-blue-400 hover:border-[#11327c]/20 transition-all shadow-sm group"
           >
             <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} />
           </Link>
           <div>
-            <h1 className="text-[28px] font-black text-[#11327c] tracking-tight">Expiry Tracker</h1>
-            <p className="text-[13px] text-gray-500 font-medium">Proactively manage products nearing end-of-life</p>
+            <h1 className="text-[28px] font-black text-[#11327c] dark:text-blue-400 tracking-tight">Expiry Tracker</h1>
+            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">Proactively manage products nearing end-of-life</p>
           </div>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex bg-gray-100/50 p-1.5 rounded-2xl border border-gray-200/50 shadow-inner">
+        <div className="flex bg-gray-100/50 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-gray-200/50 dark:border-slate-700/50 shadow-inner">
           {(['expired', 'under30', 'under60'] as const).map((tab) => (
             <button
               key={tab}
@@ -162,7 +162,7 @@ export default function ExpiryPage() {
               className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
                 activeTab === tab 
                 ? 'bg-[#11327c] text-white shadow-lg' 
-                : 'text-gray-400 hover:text-[#11327c] hover:bg-white'
+                : 'text-gray-400 dark:text-gray-300 hover:text-[#11327c] dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-800'
               }`}
             >
               {tab === 'expired' ? 'Expired' : tab === 'under30' ? '30 Days' : '60 Days'}
@@ -177,18 +177,18 @@ export default function ExpiryPage() {
           onClick={() => setActiveTab('expired')}
           className={`p-6 rounded-[32px] border transition-all flex items-center gap-5 text-left group ${
             activeTab === 'expired' 
-            ? 'bg-rose-50 border-rose-100 shadow-[0_15px_40px_-10px_rgba(225,29,72,0.1)]' 
-            : 'bg-white border-gray-100 hover:border-rose-200'
+            ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-100 dark:border-rose-900/60 shadow-[0_15px_40px_-10px_rgba(225,29,72,0.1)]' 
+            : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900/60'
           }`}
         >
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-            activeTab === 'expired' ? 'bg-rose-500 text-white' : 'bg-rose-50 text-rose-500'
+            activeTab === 'expired' ? 'bg-rose-500 text-white' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400'
           }`}>
              <AlertCircle size={28} strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Status: Expired</p>
-            <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{expiredItems.length} Products</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-300 mb-1">Status: Expired</p>
+            <h2 className="text-2xl font-black text-[#11327c] dark:text-gray-100 tracking-tighter">{expiredItems.length} Products</h2>
           </div>
         </button>
 
@@ -196,18 +196,18 @@ export default function ExpiryPage() {
           onClick={() => setActiveTab('under30')}
           className={`p-6 rounded-[32px] border transition-all flex items-center gap-5 text-left group ${
             activeTab === 'under30' 
-            ? 'bg-orange-50 border-orange-100 shadow-[0_15px_40px_-10px_rgba(249,115,22,0.1)]' 
-            : 'bg-white border-gray-100 hover:border-orange-200'
+            ? 'bg-orange-50 dark:bg-orange-950/40 border-orange-100 dark:border-orange-900/60 shadow-[0_15px_40px_-10px_rgba(249,115,22,0.1)]' 
+            : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 hover:border-orange-200 dark:hover:border-orange-900/60'
           }`}
         >
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-            activeTab === 'under30' ? 'bg-orange-500 text-white' : 'bg-orange-50 text-orange-500'
+            activeTab === 'under30' ? 'bg-orange-500 text-white' : 'bg-orange-50 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400'
           }`}>
              <Clock size={28} strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Status: &lt; 30 Days</p>
-            <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{under30Items.length} Products</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-300 mb-1">Status: &lt; 30 Days</p>
+            <h2 className="text-2xl font-black text-[#11327c] dark:text-gray-100 tracking-tighter">{under30Items.length} Products</h2>
           </div>
         </button>
 
@@ -215,63 +215,63 @@ export default function ExpiryPage() {
           onClick={() => setActiveTab('under60')}
           className={`p-6 rounded-[32px] border transition-all flex items-center gap-5 text-left group ${
             activeTab === 'under60' 
-            ? 'bg-blue-50 border-blue-100 shadow-[0_15px_40px_-10px_rgba(30,58,138,0.1)]' 
-            : 'bg-white border-gray-100 hover:border-blue-200'
+            ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900/60 shadow-[0_15px_40px_-10px_rgba(30,58,138,0.1)]' 
+            : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-900/60'
           }`}
         >
           <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-            activeTab === 'under60' ? 'bg-[#11327c] text-white' : 'bg-blue-50 text-[#11327c]'
+            activeTab === 'under60' ? 'bg-[#11327c] text-white' : 'bg-blue-50 dark:bg-blue-950/40 text-[#11327c] dark:text-blue-400'
           }`}>
              <Calendar size={28} strokeWidth={2.5} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Status: &lt; 60 Days</p>
-            <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{under60Items.length} Products</h2>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-300 mb-1">Status: &lt; 60 Days</p>
+            <h2 className="text-2xl font-black text-[#11327c] dark:text-gray-100 tracking-tighter">{under60Items.length} Products</h2>
           </div>
         </button>
       </div>
 
       {/* Main List Table */}
-      <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-gray-100 dark:border-slate-800 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] overflow-hidden transition-colors">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-[#f8fafc] border-b border-gray-100">
+            <thead className="bg-[#f8fafc] dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700/60">
               <tr>
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center w-12">
+                <th className="px-5 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em] text-center w-12">
                    <div 
                       onClick={() => handleSelectAll(filteredItems.map(m => m.batchNumber))}
-                      className="w-5 h-5 rounded border-2 border-gray-300 flex items-center justify-center cursor-pointer hover:border-[#11327c] transition-all bg-white mx-auto"
+                      className="w-5 h-5 rounded border-2 border-gray-300 dark:border-slate-600 flex items-center justify-center cursor-pointer hover:border-[#11327c] transition-all bg-white dark:bg-slate-800 mx-auto"
                    >
-                     {filteredItems.length > 0 && filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-2.5 bg-[#11327c] rounded-sm" />}
-                     {filteredItems.length > 0 && !filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && filteredItems.some(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-0.5 bg-[#11327c] rounded-sm" />}
+                     {filteredItems.length > 0 && filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-2.5 bg-[#11327c] dark:bg-blue-400 rounded-sm" />}
+                     {filteredItems.length > 0 && !filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && filteredItems.some(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-0.5 bg-[#11327c] dark:bg-blue-400 rounded-sm" />}
                    </div>
                 </th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Medicine Name & Pack</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Category</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Company / Supplier</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Batch No.</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Expiry Date</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">MRP (₹)</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-center">Physical Stock</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Medicine Name & Pack</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Category</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Company / Supplier</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Batch No.</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Expiry Date</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em] text-right">MRP (₹)</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em] text-center">Physical Stock</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
               {filteredItems.length > 0 ? (
                 filteredItems.map((med, idx) => {
                   const isExpired = new Date(med.expiryDate) < today;
                   return (
-                    <tr key={med._id} className={`transition-all group animate-in fade-in slide-in-from-bottom-1 duration-300 ${selectedBatches.includes(med.batchNumber) ? 'bg-blue-50/50' : 'hover:bg-[#f8fafc]/50'}`} style={{ animationDelay: `${idx * 20}ms` }}>
+                    <tr key={med._id} className={`transition-all group animate-in fade-in slide-in-from-bottom-1 duration-300 ${selectedBatches.includes(med.batchNumber) ? 'bg-blue-50/50 dark:bg-blue-950/30' : 'hover:bg-[#f8fafc]/50 dark:hover:bg-slate-800/50'}`} style={{ animationDelay: `${idx * 20}ms` }}>
                       <td className="px-5 py-4 text-center">
                          <div 
                             onClick={() => handleToggleBatch(med.batchNumber)}
-                            className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all mx-auto ${selectedBatches.includes(med.batchNumber) ? 'border-[#11327c] bg-[#11327c]' : 'border-gray-300 bg-white hover:border-[#11327c]'}`}
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all mx-auto ${selectedBatches.includes(med.batchNumber) ? 'border-[#11327c] dark:border-blue-500 bg-[#11327c] dark:bg-blue-500' : 'border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-[#11327c]'}`}
                          >
                            {selectedBatches.includes(med.batchNumber) && <CheckCircle2 size={14} className="text-white" strokeWidth={4} />}
                          </div>
                       </td>
                       <td className="px-4 py-4">
-                         <div className="text-[13px] font-black text-[#11327c] uppercase tracking-tight mb-0.5 line-clamp-1">{med.name}</div>
-                         <div className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">{med.pack || 'Unit'} • {med.barcode || 'NO BARCODE'}</div>
+                         <div className="text-[13px] font-black text-[#11327c] dark:text-blue-400 uppercase tracking-tight mb-0.5 line-clamp-1">{med.name}</div>
+                         <div className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{med.pack || 'Unit'} • {med.barcode || 'NO BARCODE'}</div>
                       </td>
                       <td className="px-4 py-4">
                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${getCategoryStyles(med.category || 'Tablet')}`}>
@@ -279,29 +279,29 @@ export default function ExpiryPage() {
                          </span>
                       </td>
                       <td className="px-4 py-4">
-                         <div className="text-[13px] font-bold text-gray-800 line-clamp-1">{med.brand || "Generics"}</div>
-                         <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5 line-clamp-1">{med.supplierName || "Direct"}</div>
+                         <div className="text-[13px] font-bold text-gray-800 dark:text-gray-200 line-clamp-1">{med.brand || "Generics"}</div>
+                         <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-0.5 line-clamp-1">{med.supplierName || "Direct"}</div>
                       </td>
                       <td className="px-4 py-4">
-                         <span className="text-[12px] font-black text-gray-600 font-mono tracking-wider bg-gray-50 px-2 py-1 rounded border border-gray-100">
+                         <span className="text-[12px] font-black text-gray-600 dark:text-gray-300 font-mono tracking-wider bg-gray-50 dark:bg-slate-800 px-2 py-1 rounded border border-gray-100 dark:border-slate-700">
                            {med.batchNumber}
                          </span>
                       </td>
                       <td className="px-4 py-4">
                          <div className="flex items-center gap-2">
                            <div className={`w-2 h-2 rounded-full ${isExpired ? 'bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-orange-500'}`} />
-                           <span className={`text-[13px] font-black tracking-tight ${isExpired ? 'text-rose-600' : 'text-gray-700'}`}>
+                           <span className={`text-[13px] font-black tracking-tight ${isExpired ? 'text-rose-600 dark:text-rose-400' : 'text-gray-700 dark:text-gray-300'}`}>
                              {format(new Date(med.expiryDate), "dd MMM, yyyy")}
                            </span>
                          </div>
                       </td>
                       <td className="px-4 py-4 text-right">
-                         <div className="text-[13px] font-bold text-gray-800">{Number(med.sellingPrice || 0).toFixed(2)}</div>
+                         <div className="text-[13px] font-bold text-gray-800 dark:text-gray-200">{Number(med.sellingPrice || 0).toFixed(2)}</div>
                       </td>
                       <td className="px-4 py-4 text-center">
-                         <div className="inline-flex flex-col items-center justify-center bg-gray-50 border border-gray-100 px-3 py-1.5 rounded-xl">
-                           <span className="text-[14px] font-black text-[#11327c] tracking-tighter leading-none">{med.stock}</span>
-                           <span className="text-[8px] font-black text-gray-400 uppercase tracking-widest mt-1">Units</span>
+                         <div className="inline-flex flex-col items-center justify-center bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 px-3 py-1.5 rounded-xl">
+                           <span className="text-[14px] font-black text-[#11327c] dark:text-blue-400 tracking-tighter leading-none">{med.stock}</span>
+                           <span className="text-[8px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">Units</span>
                          </div>
                       </td>
                     </tr>
@@ -313,8 +313,8 @@ export default function ExpiryPage() {
                      <div className="flex flex-col items-center gap-4 opacity-20">
                         <CheckCircle2 size={56} strokeWidth={1} className="text-emerald-500" />
                         <div className="space-y-1">
-                          <p className="text-[#11327c] font-black text-sm uppercase tracking-widest">Healthy Inventory</p>
-                          <p className="text-gray-400 font-medium text-xs">No items detected in this category</p>
+                          <p className="text-[#11327c] dark:text-blue-400 font-black text-sm uppercase tracking-widest">Healthy Inventory</p>
+                          <p className="text-gray-400 dark:text-gray-300 font-medium text-xs">No items detected in this category</p>
                         </div>
                      </div>
                   </td>

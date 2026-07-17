@@ -25,10 +25,10 @@ import {
   ScrollText,
   ArrowRightLeft,
   FileSpreadsheet,
-  RotateCcw,
   Layers
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
+import { ThemeToggle } from "@/src/components/theme-toggle";
 
 const navigationGroups = [
   {
@@ -91,7 +91,7 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
 
   return (
     <aside className={cn(
-      "transition-all duration-300 bg-white border-r border-gray-100 flex flex-col z-20 h-screen shrink-0",
+      "transition-all duration-300 bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-800 flex flex-col z-20 h-screen shrink-0",
       isSidebarCollapsed ? "w-20" : "w-[240px]"
     )}>
       {/* App Branding */}
@@ -105,7 +105,7 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
               <span className="font-black text-[16px] tracking-tight leading-none">
                 <span className="text-[#f97316]">MEDSATHI</span>
               </span>
-              <span className="font-black text-[16px] tracking-tight leading-none text-[#11327c]">
+              <span className="font-black text-[16px] tracking-tight leading-none text-[#11327c] dark:text-blue-400">
                 PHARMACY
               </span>
             </div>
@@ -127,7 +127,7 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
         {navigationGroups.map((section, sectionIdx) => (
           <div key={sectionIdx} className="space-y-1">
             {!isSidebarCollapsed && (
-              <div className="px-3 mb-2 text-[11px] font-bold tracking-wider text-[#11327c]/60">
+              <div className="px-3 mb-2 text-[11px] font-bold tracking-wider text-[#11327c]/60 dark:text-blue-400/80">
                 {section.group}
               </div>
             )}
@@ -144,7 +144,7 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
                     "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] font-bold transition-all group",
                     isActive 
                       ? "bg-[#0047ab] shadow-sm shadow-[#0047ab]/20 text-white" 
-                      : "text-gray-500 hover:bg-gray-50 hover:text-[#11327c]"
+                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-[#11327c] dark:hover:text-blue-400"
                   )}
                   title={isSidebarCollapsed ? route.label : undefined}
                 >
@@ -155,7 +155,7 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
                       "transition-colors",
                       isActive 
                         ? "text-white" 
-                        : "text-gray-400 group-hover:text-[#11327c]"
+                        : "text-gray-400 dark:text-gray-500 group-hover:text-[#11327c] dark:group-hover:text-blue-400"
                     )} 
                   />
                   {!isSidebarCollapsed && <span>{route.label}</span>}
@@ -167,11 +167,12 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
       </nav>
 
       {/* Bottom Actions */}
-      <div className="p-3 shrink-0 border-t border-gray-50 space-y-0.5">
+      <div className="p-3 shrink-0 border-t border-gray-50 dark:border-slate-800 space-y-1">
+        <ThemeToggle showLabel={!isSidebarCollapsed} />
         {!isMobile && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center gap-3 px-3 py-2 text-gray-500 hover:bg-gray-50 rounded-lg text-[13.5px] font-bold transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg text-[13.5px] font-bold transition-colors"
           >
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
             {!collapsed && <span>Collapse Sidebar</span>}
@@ -179,7 +180,7 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
         )}
         <button 
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 text-[#ef4444] hover:bg-red-50 rounded-lg text-[13.5px] font-bold transition-colors"
+          className="w-full flex items-center gap-3 px-3 py-2 text-[#ef4444] hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg text-[13.5px] font-bold transition-colors"
         >
           <LogOut size={18} />
           {!isSidebarCollapsed && <span>Logout</span>}

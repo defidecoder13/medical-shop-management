@@ -142,26 +142,26 @@ export default function Home() {
 
       {/* Row 3: Quick Actions */}
       <div className="order-3">
-        <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)]">
-          <h3 className="text-[17px] font-extrabold text-[#11327c] mb-5 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-[#11327c] fill-[#11327c]" strokeWidth={1} />
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] transition-colors">
+          <h3 className="text-[17px] font-extrabold text-[#11327c] dark:text-blue-400 mb-5 flex items-center gap-2">
+            <Zap className="w-5 h-5 text-[#11327c] dark:text-blue-400 fill-[#11327c] dark:fill-blue-400" strokeWidth={1} />
             Quick Actions
           </h3>
           <div className="grid grid-cols-2 gap-4">
-            <Link href="/billing" className="bg-blue-50 hover:bg-blue-100/70 border border-blue-200/60 text-[#11327c] p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-[#11327c] shadow-sm"><FileText size={22} strokeWidth={2.5} /></div>
+            <Link href="/billing" className="bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100/70 dark:hover:bg-blue-900/60 border border-blue-200/60 dark:border-blue-800/60 text-[#11327c] dark:text-blue-300 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-[#11327c] dark:text-blue-300 shadow-sm"><FileText size={22} strokeWidth={2.5} /></div>
               <span className="text-[13px] font-extrabold tracking-wide">New Bill</span>
             </Link>
-            <Link href="/inventory" className="bg-emerald-50 hover:bg-emerald-100/70 border border-emerald-200/60 text-emerald-800 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 shadow-sm"><Plus size={22} strokeWidth={3} /></div>
+            <Link href="/inventory" className="bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-emerald-600 dark:text-emerald-300 shadow-sm"><Plus size={22} strokeWidth={3} /></div>
               <span className="text-[13px] font-extrabold tracking-wide">Add Medicine</span>
             </Link>
-            <Link href="/transactions" className="bg-orange-50 hover:bg-orange-100/70 border border-orange-200/60 text-orange-800 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 shadow-sm"><ReceiptText size={22} strokeWidth={2.5} /></div>
+            <Link href="/transactions" className="bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100/70 dark:hover:bg-orange-900/60 border border-orange-200/60 dark:border-orange-800/60 text-orange-800 dark:text-orange-300 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center text-orange-600 dark:text-orange-300 shadow-sm"><ReceiptText size={22} strokeWidth={2.5} /></div>
               <span className="text-[13px] font-extrabold tracking-wide">Transactions History</span>
             </Link>
-            <Link href="/low-stock" className="bg-indigo-50 hover:bg-indigo-100/70 border border-indigo-200/60 text-indigo-800 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 shadow-sm"><AlertOctagon size={22} strokeWidth={2.5} /></div>
+            <Link href="/low-stock" className="bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100/70 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60 text-indigo-800 dark:text-indigo-300 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
+              <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shadow-sm"><AlertOctagon size={22} strokeWidth={2.5} /></div>
               <span className="text-[13px] font-extrabold tracking-wide">Low Stock</span>
             </Link>
           </div>

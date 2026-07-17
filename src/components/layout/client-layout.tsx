@@ -21,7 +21,7 @@ export default function ClientLayout({
   }
 
   return (
-    <div className="flex h-screen bg-[#f8fafc] text-foreground font-sans overflow-hidden">
+    <div className="flex h-screen bg-[#f8fafc] dark:bg-[#090d16] text-foreground font-sans overflow-hidden transition-colors duration-200">
       {/* Desktop Sidebar (Left Panel) */}
       <div className="hidden lg:flex shrink-0">
         <Sidebar />
@@ -45,7 +45,7 @@ export default function ClientLayout({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "tween", ease: "easeInOut", duration: 0.25 }}
-              className="fixed inset-y-0 left-0 w-[240px] bg-white z-[110] lg:hidden shadow-2xl"
+              className="fixed inset-y-0 left-0 w-[240px] bg-white dark:bg-slate-900 z-[110] lg:hidden shadow-2xl"
             >
               <Sidebar isMobile={true} onClose={() => setMobileOpen(false)} />
             </motion.div>
