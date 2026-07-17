@@ -69,7 +69,7 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [dateFilter, setDateFilter] = useState<"1d" | "7d" | "1m">("1m");
+  const [dateFilter, setDateFilter] = useState<"1d" | "7d" | "1m" | "all">("1m");
   const [paymentMethod, setPaymentMethod] = useState("all");
   const [status, setStatus] = useState("all");
   const [page, setPage] = useState(1);
@@ -369,7 +369,7 @@ export default function TransactionsPage() {
           </select>
 
           <div className="flex bg-white p-1 rounded-xl border border-gray-200 shrink-0 shadow-sm">
-            {(["1d", "7d", "1m"] as const).map((range) => (
+            {(["1d", "7d", "1m", "all"] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => setDateFilter(range)}
@@ -379,7 +379,7 @@ export default function TransactionsPage() {
                     : "text-gray-500 hover:text-gray-800 hover:bg-gray-50"
                 }`}
               >
-                {range.toUpperCase()}
+                {range === "all" ? "ALL TIME" : range.toUpperCase()}
               </button>
             ))}
           </div>
