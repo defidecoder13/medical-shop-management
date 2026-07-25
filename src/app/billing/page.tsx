@@ -123,7 +123,7 @@ function BillingContent() {
   const [discountPercent, setDiscountPercent] = useState<number | "">("");
   const [patientName, setPatientName] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
-  const debouncedPhone = useDebounce(patientPhone, 500);
+  const debouncedName = useDebounce(patientName, 500);
   const [patientAddress, setPatientAddress] = useState("");
   const [doctorName, setDoctorName] = useState("");
   const [regularMedicines, setRegularMedicines] = useState<any[]>([]);
@@ -250,37 +250,35 @@ function BillingContent() {
 
   // Handle Patient Autofill
   useEffect(() => {
-    if (!debouncedPhone || debouncedPhone.length < 5) {
+    if (!debouncedName || debouncedName.length < 3) {
       setRegularMedicines([]);
       return;
     }
     let ignore = false;
     const fetchPatient = async () => {
       try {
-        const handlePatient = (patients: any) => {
-          if (ignore) return;
-          if (patients && patients.length > 0) {
-             const p = patients[0];
-             if (p.phone === debouncedPhone) {
-                if (!patientName) setPatientName(p.name || "");
-                if (!doctorName) setDoctorName(p.doctorName || "");
-                if (!patientAddress) setPatientAddress(p.address || "");
-                if (p.regularMedicines?.length > 0) {
-                   setRegularMedicines(p.regularMedicines);
-                }
-             }
-          } else {
-             setRegularMedicines([]);
-          }
+        const handlePatient = (res: any) => {
+           if (ignore) return;
+           const p = res?.data?.[0] || (Array.isArray(res) ? res[0] : null);
+           if (p) {
+              if (!patientPhone) setPatientPhone(p.phone || "");
+              if (!doctorName) setDoctorName(p.doctorName || "");
+              if (!patientAddress) setPatientAddress(p.address || "");
+              if (p.regularMedicines?.length > 0) {
+                 setRegularMedicines(p.regularMedicines);
+              }
+           } else {
+              setRegularMedicines([]);
+           }
         };
-        await apiClient.get(`/api/patients?search=${debouncedPhone}`, {}, handlePatient).then(handlePatient);
+        await apiClient.get(`/api/patients?search=${debouncedName}`, {}, handlePatient).then(handlePatient);
       } catch (err) {
         console.error("Failed to fetch patient details", err);
       }
     };
     fetchPatient();
     return () => { ignore = true; };
-  }, [debouncedPhone]);
+  }, [debouncedName]);
 
   useEffect(() => {
     const fetchSettings = async () => {

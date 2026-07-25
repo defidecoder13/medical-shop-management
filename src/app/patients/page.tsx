@@ -216,57 +216,57 @@ export default function PatientsPage() {
                         <p className="text-[10px] font-black uppercase tracking-widest">Synchronizing Database...</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="flex flex-col gap-3">
                         <AnimatePresence>
                             {patients.map((patient, idx) => (
                                 <motion.button
                                     key={patient._id}
-                                    initial={{ opacity: 0, y: 20 }}
+                                    initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
+                                    transition={{ delay: idx * 0.03 }}
                                     onClick={() => setSelectedPatient(patient)}
-                                    className="group relative p-6 rounded-[32px] border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all text-left flex flex-col gap-5 hover:shadow-[0_20px_50px_-15px_rgba(17,50,124,0.1)] active:scale-[0.98]"
+                                    className="group relative p-4 rounded-2xl border border-gray-100 bg-white hover:border-[#11327c]/20 transition-all text-left flex items-center justify-between gap-5 hover:shadow-[0_10px_30px_-10px_rgba(17,50,124,0.08)] active:scale-[0.99] w-full"
                                 >
-                                    <div className="flex justify-between items-start">
-                                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-[#11327c]/30 group-hover:bg-[#11327c] group-hover:text-white transition-all">
-                                            <Users size={24} strokeWidth={2.5} />
+                                    <div className="flex items-center gap-5 w-1/3 min-w-[200px]">
+                                        <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-[#11327c]/30 group-hover:bg-[#11327c] group-hover:text-white transition-all shrink-0">
+                                            <Users size={20} strokeWidth={2.5} />
                                         </div>
+                                        <div>
+                                            <h3 className="text-[14px] font-black text-[#11327c] group-hover:text-[#11327c] transition-colors uppercase tracking-tight">{patient.name}</h3>
+                                            <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold mt-1 uppercase tracking-wider">
+                                                <Phone size={12} className="text-orange-500" />
+                                                {patient.phone}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-6 w-1/3 min-w-[200px] justify-center border-l border-r border-gray-50 px-6">
+                                        <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                                            <Activity size={14} className="text-indigo-400" />
+                                            {patient.regularMedicines?.length || 0} RX
+                                        </div>
+                                        {patient.doctorName && (
+                                            <div className="flex items-center gap-1.5 text-[10px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[150px]">
+                                                <Stethoscope size={14} className="text-rose-400" />
+                                                {patient.doctorName}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="flex justify-end items-center gap-4 w-1/3 min-w-[150px]">
                                         <div className="flex flex-col items-end">
-                                            <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-widest border border-emerald-100">
+                                            <div className="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-xl text-[11px] font-black uppercase tracking-widest border border-emerald-100">
                                                 ₹{patient.totalSpent.toLocaleString()}
                                             </div>
-                                            <span className="text-[8px] font-black text-gray-300 uppercase tracking-widest mt-1">Total Value</span>
+                                            <span className="text-[9px] font-black text-gray-300 uppercase tracking-widest mt-1">Lifetime Value</span>
                                         </div>
-                                    </div>
-
-                                    <div>
-                                        <h3 className="text-[16px] font-black text-[#11327c] group-hover:text-[#11327c] transition-colors uppercase tracking-tight">{patient.name}</h3>
-                                        <div className="flex items-center gap-2 text-[11px] text-gray-400 font-bold mt-1 uppercase tracking-wider">
-                                            <Phone size={12} className="text-orange-500" />
-                                            {patient.phone}
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-4 border-t border-gray-50 flex items-center justify-between">
-                                        <div className="flex gap-4">
-                                            <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-400 uppercase tracking-widest">
-                                                <Activity size={12} className="text-indigo-400" />
-                                                {patient.regularMedicines?.length || 0} RX
-                                            </div>
-                                            {patient.doctorName && (
-                                                <div className="flex items-center gap-1.5 text-[9px] font-black text-gray-400 uppercase tracking-widest truncate max-w-[120px]">
-                                                    <Stethoscope size={12} className="text-rose-400" />
-                                                    {patient.doctorName}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <ChevronRight size={16} className="text-gray-200 group-hover:text-[#11327c] group-hover:translate-x-1 transition-all" strokeWidth={3} />
+                                        <ChevronRight size={18} className="text-gray-200 group-hover:text-[#11327c] group-hover:translate-x-1 transition-all ml-2" strokeWidth={3} />
                                     </div>
                                 </motion.button>
                             ))}
                         </AnimatePresence>
                         {patients.length === 0 && (
-                            <div className="col-span-full flex flex-col items-center justify-center py-32 opacity-20">
+                            <div className="flex flex-col items-center justify-center py-32 opacity-20 w-full">
                                 <Users size={64} strokeWidth={1} className="text-gray-400 mb-6" />
                                 <div className="text-center">
                                     <p className="text-[#11327c] font-black text-sm uppercase tracking-widest">No Patients Found</p>
