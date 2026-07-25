@@ -1040,8 +1040,8 @@ export default function InventoryPage() {
           className="px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 w-full sm:w-[150px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
         >
            <option>All Suppliers</option>
-           {Array.from(new Set(medicines.map(m => m.supplierName).filter(Boolean))).map(supplier => (
-             <option key={supplier as string}>{supplier}</option>
+           {suppliers.map((supplier: any) => (
+             <option key={supplier.name} value={supplier.name}>{supplier.name}</option>
            ))}
         </select>
         <select 
