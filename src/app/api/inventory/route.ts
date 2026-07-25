@@ -73,6 +73,7 @@ export async function GET(req: Request) {
             purchaseInvoiceNumber: batch.purchaseInvoiceNumber || "",
             category: med.category || "Tablet",
             pack: batch.pack || med.pack || "",
+            purchaseDate: batch.purchaseDate || batch.createdAt,
           };
         });
         
@@ -183,6 +184,7 @@ export async function GET(req: Request) {
         purchaseInvoiceNumber: batch.purchaseInvoiceNumber || "",
         category: med.category || "Tablet",
         pack: batch.pack || med.pack || "",
+        purchaseDate: batch.purchaseDate || batch.createdAt,
       };
     });
 
@@ -234,6 +236,7 @@ export async function POST(req: Request) {
       supplierName,
       purchaseInvoiceNumber,
       category,
+      purchaseDate,
     } = body;
     
     name = name || "Unknown Medicine";
@@ -312,6 +315,7 @@ export async function POST(req: Request) {
       if (purchaseInvoiceNumber) existingBatch.purchaseInvoiceNumber = purchaseInvoiceNumber;
       if (body.pack) existingBatch.pack = body.pack;
       if (expiryDate !== undefined) existingBatch.expiryDate = expiryDate;
+      if (purchaseDate !== undefined) existingBatch.purchaseDate = purchaseDate;
       
       await existingBatch.save();
       newBatch = existingBatch;
@@ -328,6 +332,7 @@ export async function POST(req: Request) {
         supplierName: supplierName || "Direct Purchase",
         purchaseInvoiceNumber: purchaseInvoiceNumber || "",
         pack: body.pack || "",
+        purchaseDate: purchaseDate || new Date(),
       };
       if (expiryDate !== undefined) {
         newBatchData.expiryDate = expiryDate;
@@ -456,6 +461,7 @@ export async function PUT(req: Request) {
         batch.expiryDate = body.expiryDate === "" ? undefined : body.expiryDate;
     }
     if (body.rackNumber !== undefined) batch.rackNumber = body.rackNumber;
+    if (body.purchaseDate !== undefined) batch.purchaseDate = body.purchaseDate;
 
     if (typeof body.buyingPrice === "number" && body.buyingPrice > 0) {
       batch.buyingPricePerStrip = body.buyingPrice;

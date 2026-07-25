@@ -74,7 +74,7 @@ export default function ImportPurchasePage() {
            // Auto-map the known columns for PDFs
            setMapping(prev => ({
               ...prev,
-              name: "Medicine Name",
+              name: "Product Name",
               batchNumber: "Batch Number",
               expiryDate: "Expiry Date",
               qty: "Billed Qty",
@@ -137,7 +137,7 @@ export default function ImportPurchasePage() {
 
   const handleProceedToPreview = () => {
     if (!mapping.name || !mapping.qty || !mapping.buyingPrice) {
-      setError("Medicine Name, Quantity, and Buying Price must be mapped.");
+      setError("Product Name, Quantity, and Buying Price must be mapped.");
       return;
     }
 
@@ -357,7 +357,7 @@ export default function ImportPurchasePage() {
                 <thead className="bg-gray-50 sticky top-0 z-10">
                    <tr>
                       <th className="py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Status</th>
-                      <th className="py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Medicine Name</th>
+                      <th className="py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Product Name</th>
                       <th className="py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100">Batch</th>
                       <th className="py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-center">Qty</th>
                       <th className="py-3 px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 text-right">Buying Price</th>

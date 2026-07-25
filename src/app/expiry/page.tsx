@@ -246,7 +246,7 @@ export default function ExpiryPage() {
                      {filteredItems.length > 0 && !filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && filteredItems.some(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-0.5 bg-[#11327c] dark:bg-blue-400 rounded-sm" />}
                    </div>
                 </th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Medicine Name & Pack</th>
+                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Product Name & Pack</th>
                 <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Category</th>
                 <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Company / Supplier</th>
                 <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Batch No.</th>

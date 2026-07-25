@@ -352,7 +352,7 @@ function ReturnContent() {
             <div className="relative group">
               <input
                 className="w-full bg-white border border-gray-300 shadow-sm pl-12 pr-6 py-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-gray-800 font-bold placeholder:text-gray-400 text-sm"
-                placeholder="Search by medicine name, brand or batch..."
+                placeholder="Search by product name, brand or batch..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />

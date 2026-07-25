@@ -58,7 +58,7 @@ export async function POST(req: Request) {
             if (!rawName) rawName = fullName.trim();
 
             items.push({
-                "Medicine Name": rawName.trim(),
+                "Product Name": rawName.trim(),
                 "Pack": packStr.trim(),
                 "Batch Number": batch,
                 "Expiry Date": dateMatch[1],
@@ -81,7 +81,7 @@ export async function POST(req: Request) {
             (items[i] as any)["Composition"] = "";
         }
 
-        const headers = ["Medicine Name", "Pack", "Batch Number", "Expiry Date", "Billed Qty", "MRP", "Buying Price", "Composition"];
+        const headers = ["Product Name", "Pack", "Batch Number", "Expiry Date", "Billed Qty", "MRP", "Buying Price", "Composition"];
         
         resolve(NextResponse.json({
             headers,

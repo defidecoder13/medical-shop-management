@@ -102,7 +102,7 @@ export default function SupplierReturnsPage() {
             'Return Note ID': t._id.slice(-8).toUpperCase(),
             'Supplier': t.supplierName,
             'Reason': t.reason,
-            'Medicine Name': item.name,
+            'Product Name': item.name,
             'Batch': item.batchNumber,
             'Unit': item.unitType,
             'Qty': item.qty,

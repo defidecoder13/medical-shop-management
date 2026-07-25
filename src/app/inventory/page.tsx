@@ -123,6 +123,7 @@ type Medicine = {
   supplierName?: string;
   purchaseInvoiceNumber?: string;
   category?: string;
+  purchaseDate?: string;
 };
 
 const emptyMedicine: Medicine = {
@@ -144,6 +145,7 @@ const emptyMedicine: Medicine = {
   supplierName: "",
   purchaseInvoiceNumber: "",
   category: "Tablet",
+  purchaseDate: new Date().toISOString().split('T')[0],
 };
 
 export default function InventoryPage() {
@@ -462,7 +464,7 @@ export default function InventoryPage() {
       }
 
       setMessage({ 
-        text: editingId ? "Medicine updated successfully" : "Medicine added successfully", 
+        text: editingId ? "Product updated successfully" : "Product added successfully", 
         type: 'success' 
       });
       
@@ -529,7 +531,7 @@ export default function InventoryPage() {
         setMedicines(prev => prev.filter(m => m._id !== id));
         const data = await apiClient.delete(`/api/inventory/${id}`);
 
-        setMessage({ text: data.offlineQueued ? "Deletion queued for sync" : "Medicine deleted permanently", type: 'success' });
+        setMessage({ text: data.offlineQueued ? "Deletion queued for sync" : "Product deleted permanently", type: 'success' });
         fetchMedicines();
       } catch (error: any) {
         fetchMedicines();
@@ -666,7 +668,7 @@ export default function InventoryPage() {
            <div className="flex-1 overflow-hidden">
              <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Total Items</p>
              <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate">{stats ? stats.totalItems.toLocaleString() : "..."}</h3>
-             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">All medicines in stock</p>
+             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">All products in stock</p>
            </div>
         </div>
 
@@ -746,14 +748,14 @@ export default function InventoryPage() {
               <Edit3 size={24} strokeWidth={2.5} />
             </div>
             <div>
-              <h3 className="text-[18px] font-black text-[#11327c] dark:text-blue-400 tracking-tight">{editingId ? "Edit Medicine" : isRestock ? "Restock Medicine Batch" : "Add New Medicine"}</h3>
+              <h3 className="text-[18px] font-black text-[#11327c] dark:text-blue-400 tracking-tight">{editingId ? "Edit Product" : isRestock ? "Restock Product Batch" : "Add New Product"}</h3>
               <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest">Update your catalog information</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="flex flex-col gap-2 relative">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Medicine Name</label>
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Product Name</label>
               <input 
                 autoFocus
                 placeholder="e.g. Paracetamol 500mg" 
@@ -786,6 +788,7 @@ export default function InventoryPage() {
                 <option value="Injection">Injection</option>
                 <option value="Spray">Spray</option>
                 <option value="Device">Device / Condoms</option>
+                <option value="Food">Food</option>
                 <option value="Other">Other / Pieces</option>
               </select>
             </div>
@@ -821,6 +824,16 @@ export default function InventoryPage() {
                 placeholder="e.g. BATCH123" 
                 value={form.batchNumber}
                 onChange={e => setForm({...form, batchNumber: e.target.value})}
+                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Purchase date</label>
+              <input 
+                type="date"
+                value={form.purchaseDate || ""}
+                onChange={e => setForm({...form, purchaseDate: e.target.value})}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
             </div>
@@ -1007,7 +1020,7 @@ export default function InventoryPage() {
         <select 
           value={filterCategory}
           onChange={e => setFilterCategory(e.target.value)}
-          className="px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 w-full sm:w-[140px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+          className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 dark:focus:ring-blue-900/40 text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors shadow-sm"
         >
            <option>All Categories</option>
            <option>Tablet</option>
@@ -1016,6 +1029,10 @@ export default function InventoryPage() {
            <option>Injection</option>
            <option>Drops</option>
            <option>Ointment</option>
+           <option>Spray</option>
+           <option>Food</option>
+           <option>Device</option>
+           <option>Other</option>
         </select>
         <select 
           value={filterCompany}
@@ -1045,7 +1062,7 @@ export default function InventoryPage() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] dark:group-focus-within:text-blue-400 transition-colors" size={18} strokeWidth={2.5} />
           <input 
             type="text" 
-            placeholder="Search medicine by name, composition, barcode..."
+            placeholder="Search product by name, composition, barcode..."
             className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 dark:focus:ring-blue-900/40 transition-all text-gray-800 dark:text-gray-100 placeholder:text-gray-400"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -1072,7 +1089,7 @@ export default function InventoryPage() {
               <tr>
 
                 <th className="px-2 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">#</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Medicine Details</th>
+                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Product Details</th>
                 <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Category</th>
                 <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Composition</th>
                 <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Batch No.</th>
@@ -1164,7 +1181,7 @@ export default function InventoryPage() {
                       <button 
                         onClick={(e) => { e.stopPropagation(); router.push(`/billing?add=${med._id}`); }}
                         className="flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 text-indigo-700 bg-indigo-50 rounded-lg hover:text-white hover:bg-indigo-600 transition-all text-xs font-bold shadow-sm"
-                        title="Instantly Bill Medicine"
+                        title="Instantly Bill Product"
                       >
                         <ShoppingCart size={14} strokeWidth={2.5} />
                         + Bill
@@ -1172,7 +1189,7 @@ export default function InventoryPage() {
                       <button 
                         onClick={(e) => { e.stopPropagation(); med._id && handleDelete(med._id); }}
                         className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all ml-1"
-                        title="Delete Medicine"
+                        title="Delete Product"
                       >
                         <Trash2 size={16} />
                       </button>

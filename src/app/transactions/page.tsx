@@ -219,7 +219,7 @@ export default function TransactionsPage() {
           itemizedData.push({
             'Invoice Date': format(new Date(t.createdAt), "dd-MM-yyyy"),
             'Invoice ID': t.invoiceNumber || t._id.slice(-8).toUpperCase(),
-            'Medicine Name': item.name || 'Unknown',
+            'Product Name': item.name || 'Unknown',
             'Batch': item.batchNumber || 'N/A',
             'Unit': item.unitType || 'N/A',
             'Qty': item.qty || 0,
