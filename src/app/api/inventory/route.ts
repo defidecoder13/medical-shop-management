@@ -26,7 +26,7 @@ export async function GET(req: Request) {
     const page = parseInt(pageParam || "1");
     const pageSize = parseInt(searchParams.get("limit") || "20");
     const category = searchParams.get("category");
-    const company = searchParams.get("company");
+    const supplier = searchParams.get("supplier");
     const status = searchParams.get("status");
 
     // --------------------------------------------------------------------------------
@@ -102,8 +102,8 @@ export async function GET(req: Request) {
         filteredBatches = filteredBatches.filter((b: any) => b.category === category);
       }
 
-      if (company && company !== "All Companies") {
-        filteredBatches = filteredBatches.filter((b: any) => b.brand === company);
+      if (supplier && supplier !== "All Suppliers") {
+        filteredBatches = filteredBatches.filter((b: any) => b.supplierName === supplier);
       }
 
       if (status && status !== "All Status") {

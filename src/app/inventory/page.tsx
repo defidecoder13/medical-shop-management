@@ -154,7 +154,7 @@ export default function InventoryPage() {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [filterCategory, setFilterCategory] = useState("All Categories");
-  const [filterCompany, setFilterCompany] = useState("All Companies");
+  const [filterSupplier, setFilterSupplier] = useState("All Suppliers");
   const [filterStatus, setFilterStatus] = useState("All Status");
   const [hideZeroStock, setHideZeroStock] = useState(true);
   const [page, setPage] = useState(1);
@@ -286,7 +286,7 @@ export default function InventoryPage() {
       const params = new URLSearchParams();
       params.append("limit", "10000"); // Load all items on one page
       if (filterCategory !== "All Categories") params.append("category", filterCategory);
-      if (filterCompany !== "All Companies") params.append("company", filterCompany);
+      if (filterSupplier !== "All Suppliers") params.append("supplier", filterSupplier);
       if (filterStatus !== "All Status") params.append("status", filterStatus);
       if (hideZeroStock) params.append("inStock", "true");
 
@@ -408,11 +408,11 @@ export default function InventoryPage() {
 
   useEffect(() => {
     fetchMedicines();
-  }, [page, filterCategory, filterCompany, filterStatus, hideZeroStock]);
+  }, [page, filterCategory, filterSupplier, filterStatus, hideZeroStock]);
 
   useEffect(() => {
     setPage(1);
-  }, [filterCategory, filterCompany, filterStatus, hideZeroStock]);
+  }, [filterCategory, filterSupplier, filterStatus, hideZeroStock]);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -618,7 +618,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     setPage(1);
-  }, [deferredSearch, filterCategory, filterCompany, filterStatus, hideZeroStock]);
+  }, [deferredSearch, filterCategory, filterSupplier, filterStatus, hideZeroStock]);
 
   const renderExpiry = (expiryDate: string) => {
     if (!expiryDate) return { date: "-", text: "", color: "text-gray-500" };
@@ -1035,13 +1035,13 @@ export default function InventoryPage() {
            <option>Other</option>
         </select>
         <select 
-          value={filterCompany}
-          onChange={e => setFilterCompany(e.target.value)}
+          value={filterSupplier}
+          onChange={e => setFilterSupplier(e.target.value)}
           className="px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 w-full sm:w-[150px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
         >
-           <option>All Companies</option>
-           {Array.from(new Set(medicines.map(m => m.brand).filter(Boolean))).map(brand => (
-             <option key={brand as string}>{brand}</option>
+           <option>All Suppliers</option>
+           {Array.from(new Set(medicines.map(m => m.supplierName).filter(Boolean))).map(supplier => (
+             <option key={supplier as string}>{supplier}</option>
            ))}
         </select>
         <select 
