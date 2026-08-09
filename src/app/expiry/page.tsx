@@ -122,47 +122,36 @@ export default function ExpiryPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-950 py-8">
-        <div className="max-w-[1400px] mx-auto px-6 space-y-8 animate-pulse">
-          <div className="h-10 bg-gray-100 dark:bg-slate-800 rounded-xl w-48"></div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="h-24 bg-gray-100 dark:bg-slate-800 rounded-[24px]"></div>
-            <div className="h-24 bg-gray-100 dark:bg-slate-800 rounded-[24px]"></div>
-            <div className="h-24 bg-gray-100 dark:bg-slate-800 rounded-[24px]"></div>
+      <div className="space-y-6 pb-10 max-w-[1400px] mx-auto">
+        <div className="flex items-center gap-3.5 mb-6">
+          <div className="skeleton w-11 h-11 rounded-2xl" />
+          <div className="space-y-2">
+            <div className="skeleton h-5 w-44" />
+            <div className="skeleton h-3.5 w-64" />
           </div>
-          <div className="h-96 bg-gray-100 dark:bg-slate-800 rounded-[40px]"></div>
         </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map(i => <div key={i} className="skeleton h-28 rounded-2xl" />)}
+        </div>
+        <div className="skeleton h-96 rounded-2xl" />
       </div>
     );
   }
 
   return (
     <div className="space-y-8 pb-10 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <Link 
-            href="/"
-            className="w-12 h-12 flex items-center justify-center bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 text-gray-400 dark:text-gray-300 hover:text-[#11327c] dark:hover:text-blue-400 hover:border-[#11327c]/20 transition-all shadow-sm group"
-          >
-            <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} />
-          </Link>
-          <div>
-            <h1 className="text-[28px] font-black text-[#11327c] dark:text-blue-400 tracking-tight">Expiry Tracker</h1>
-            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">Proactively manage products nearing end-of-life</p>
-          </div>
-        </div>
-
+      {/* Header Actions */}
+      <div className="flex justify-end mb-6">
         {/* Tab Switcher */}
-        <div className="flex bg-gray-100/50 dark:bg-slate-800/50 p-1.5 rounded-2xl border border-gray-200/50 dark:border-slate-700/50 shadow-inner">
+        <div className="flex bg-muted/70 p-1 rounded-xl border border-border">
           {(['expired', 'under30', 'under60'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
+              className={`px-5 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
                 activeTab === tab 
-                ? 'bg-[#11327c] text-white shadow-lg' 
-                : 'text-gray-400 dark:text-gray-300 hover:text-[#11327c] dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-800'
+                ? 'bg-card text-primary shadow-sm border border-border' 
+                : 'text-muted-foreground hover:text-foreground'
               }`}
             >
               {tab === 'expired' ? 'Expired' : tab === 'under30' ? '30 Days' : '60 Days'}
@@ -172,136 +161,136 @@ export default function ExpiryPage() {
       </div>
 
       {/* Summary Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <button 
           onClick={() => setActiveTab('expired')}
-          className={`p-6 rounded-[32px] border transition-all flex items-center gap-5 text-left group ${
+          className={`p-5 rounded-2xl border transition-all flex items-center gap-4 text-left group cursor-pointer ${
             activeTab === 'expired' 
-            ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-100 dark:border-rose-900/60 shadow-[0_15px_40px_-10px_rgba(225,29,72,0.1)]' 
-            : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900/60'
+            ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/60 shadow-card' 
+            : 'surface-card surface-hover hover:border-red-200 dark:hover:border-red-900/60'
           }`}
         >
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-            activeTab === 'expired' ? 'bg-rose-500 text-white' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400'
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shrink-0 ${
+            activeTab === 'expired' ? 'bg-gradient-to-br from-rose-500 to-red-400 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]' : 'bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400'
           }`}>
-             <AlertCircle size={28} strokeWidth={2.5} />
+             <AlertCircle size={23} strokeWidth={2.3} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-300 mb-1">Status: Expired</p>
-            <h2 className="text-2xl font-black text-[#11327c] dark:text-gray-100 tracking-tighter">{expiredItems.length} Products</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Status: Expired</p>
+            <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{expiredItems.length} Products</h2>
           </div>
         </button>
 
         <button 
           onClick={() => setActiveTab('under30')}
-          className={`p-6 rounded-[32px] border transition-all flex items-center gap-5 text-left group ${
+          className={`p-5 rounded-2xl border transition-all flex items-center gap-4 text-left group cursor-pointer ${
             activeTab === 'under30' 
-            ? 'bg-orange-50 dark:bg-orange-950/40 border-orange-100 dark:border-orange-900/60 shadow-[0_15px_40px_-10px_rgba(249,115,22,0.1)]' 
-            : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 hover:border-orange-200 dark:hover:border-orange-900/60'
+            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 shadow-card' 
+            : 'surface-card surface-hover hover:border-amber-200 dark:hover:border-amber-900/60'
           }`}
         >
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-            activeTab === 'under30' ? 'bg-orange-500 text-white' : 'bg-orange-50 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400'
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shrink-0 ${
+            activeTab === 'under30' ? 'bg-gradient-to-br from-amber-500 to-orange-400 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-500 dark:text-amber-400'
           }`}>
-             <Clock size={28} strokeWidth={2.5} />
+             <Clock size={23} strokeWidth={2.3} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-300 mb-1">Status: &lt; 30 Days</p>
-            <h2 className="text-2xl font-black text-[#11327c] dark:text-gray-100 tracking-tighter">{under30Items.length} Products</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Status: &lt; 30 Days</p>
+            <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{under30Items.length} Products</h2>
           </div>
         </button>
 
         <button 
           onClick={() => setActiveTab('under60')}
-          className={`p-6 rounded-[32px] border transition-all flex items-center gap-5 text-left group ${
+          className={`p-5 rounded-2xl border transition-all flex items-center gap-4 text-left group cursor-pointer ${
             activeTab === 'under60' 
-            ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-100 dark:border-blue-900/60 shadow-[0_15px_40px_-10px_rgba(30,58,138,0.1)]' 
-            : 'bg-white dark:bg-slate-900 border-gray-100 dark:border-slate-800 hover:border-blue-200 dark:hover:border-blue-900/60'
+            ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/60 shadow-card' 
+            : 'surface-card surface-hover hover:border-blue-200 dark:hover:border-blue-900/60'
           }`}
         >
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all ${
-            activeTab === 'under60' ? 'bg-[#11327c] text-white' : 'bg-blue-50 dark:bg-blue-950/40 text-[#11327c] dark:text-blue-400'
+          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shrink-0 ${
+            activeTab === 'under60' ? 'bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]' : 'bg-blue-50 dark:bg-blue-950/40 text-[#11327c] dark:text-blue-400'
           }`}>
-             <Calendar size={28} strokeWidth={2.5} />
+             <Calendar size={23} strokeWidth={2.3} />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 dark:text-gray-300 mb-1">Status: &lt; 60 Days</p>
-            <h2 className="text-2xl font-black text-[#11327c] dark:text-gray-100 tracking-tighter">{under60Items.length} Products</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Status: &lt; 60 Days</p>
+            <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{under60Items.length} Products</h2>
           </div>
         </button>
       </div>
 
       {/* Main List Table */}
-      <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-gray-100 dark:border-slate-800 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] overflow-hidden transition-colors">
+      <div className="surface-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-[#f8fafc] dark:bg-slate-800 border-b border-gray-100 dark:border-slate-700/60">
+          <table className="table-shell">
+            <thead className="bg-muted/40 border-b border-border">
               <tr>
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em] text-center w-12">
+                <th className="th text-center w-12">
                    <div 
                       onClick={() => handleSelectAll(filteredItems.map(m => m.batchNumber))}
-                      className="w-5 h-5 rounded border-2 border-gray-300 dark:border-slate-600 flex items-center justify-center cursor-pointer hover:border-[#11327c] transition-all bg-white dark:bg-slate-800 mx-auto"
+                      className="w-5 h-5 rounded border-2 border-input flex items-center justify-center cursor-pointer hover:border-primary transition-all bg-card mx-auto"
                    >
-                     {filteredItems.length > 0 && filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-2.5 bg-[#11327c] dark:bg-blue-400 rounded-sm" />}
-                     {filteredItems.length > 0 && !filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && filteredItems.some(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-0.5 bg-[#11327c] dark:bg-blue-400 rounded-sm" />}
+                     {filteredItems.length > 0 && filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-2.5 bg-primary rounded-sm" />}
+                     {filteredItems.length > 0 && !filteredItems.every(m => selectedBatches.includes(m.batchNumber)) && filteredItems.some(m => selectedBatches.includes(m.batchNumber)) && <div className="w-2.5 h-0.5 bg-primary rounded-sm" />}
                    </div>
                 </th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Product Name & Pack</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Category</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Company / Supplier</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Batch No.</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Expiry Date</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em] text-right">MRP (₹)</th>
-                <th className="px-4 py-4 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em] text-center">Physical Stock</th>
+                <th className="th">Product Name & Pack</th>
+                <th className="th">Category</th>
+                <th className="th">Company / Supplier</th>
+                <th className="th">Batch No.</th>
+                <th className="th">Expiry Date</th>
+                <th className="th text-right">MRP (₹)</th>
+                <th className="th text-center">Physical Stock</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
+            <tbody className="divide-y divide-border/60">
               {filteredItems.length > 0 ? (
                 filteredItems.map((med, idx) => {
                   const isExpired = new Date(med.expiryDate) < today;
                   return (
-                    <tr key={med._id} className={`transition-all group animate-in fade-in slide-in-from-bottom-1 duration-300 ${selectedBatches.includes(med.batchNumber) ? 'bg-blue-50/50 dark:bg-blue-950/30' : 'hover:bg-[#f8fafc]/50 dark:hover:bg-slate-800/50'}`} style={{ animationDelay: `${idx * 20}ms` }}>
-                      <td className="px-5 py-4 text-center">
+                    <tr key={med._id} className={`transition-all group ${selectedBatches.includes(med.batchNumber) ? 'bg-primary/5' : 'tbody-row'}`} style={{ animationDelay: `${idx * 20}ms` }}>
+                      <td className="td text-center">
                          <div 
                             onClick={() => handleToggleBatch(med.batchNumber)}
-                            className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all mx-auto ${selectedBatches.includes(med.batchNumber) ? 'border-[#11327c] dark:border-blue-500 bg-[#11327c] dark:bg-blue-500' : 'border-gray-300 dark:border-slate-600 bg-white dark:bg-slate-800 hover:border-[#11327c]'}`}
+                            className={`w-5 h-5 rounded border-2 flex items-center justify-center cursor-pointer transition-all mx-auto ${selectedBatches.includes(med.batchNumber) ? 'border-primary bg-primary' : 'border-input bg-card hover:border-primary'}`}
                          >
                            {selectedBatches.includes(med.batchNumber) && <CheckCircle2 size={14} className="text-white" strokeWidth={4} />}
                          </div>
                       </td>
-                      <td className="px-4 py-4">
-                         <div className="text-[13px] font-black text-[#11327c] dark:text-blue-400 uppercase tracking-tight mb-0.5 line-clamp-1">{med.name}</div>
-                         <div className="text-[11px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest">{med.pack || 'Unit'} • {med.barcode || 'NO BARCODE'}</div>
+                      <td className="td">
+                         <div className="text-[13px] font-extrabold text-foreground tracking-tight mb-0.5 line-clamp-1">{med.name}</div>
+                         <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">{med.pack || 'Unit'} • {med.barcode || 'NO BARCODE'}</div>
                       </td>
-                      <td className="px-4 py-4">
-                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest ${getCategoryStyles(med.category || 'Tablet')}`}>
+                      <td className="td">
+                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest ${getCategoryStyles(med.category || 'Tablet')}`}>
                            {med.category || 'Tablet'}
                          </span>
                       </td>
-                      <td className="px-4 py-4">
-                         <div className="text-[13px] font-bold text-gray-800 dark:text-gray-200 line-clamp-1">{med.brand || "Generics"}</div>
-                         <div className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-0.5 line-clamp-1">{med.supplierName || "Direct"}</div>
+                      <td className="td">
+                         <div className="text-[13px] font-bold text-foreground line-clamp-1">{med.brand || "Generics"}</div>
+                         <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mt-0.5 line-clamp-1">{med.supplierName || "Direct"}</div>
                       </td>
-                      <td className="px-4 py-4">
-                         <span className="text-[12px] font-black text-gray-600 dark:text-gray-300 font-mono tracking-wider bg-gray-50 dark:bg-slate-800 px-2 py-1 rounded border border-gray-100 dark:border-slate-700">
+                      <td className="td">
+                         <span className="text-[12px] font-bold text-foreground font-mono tracking-wider bg-muted px-2 py-1 rounded border border-border">
                            {med.batchNumber}
                          </span>
                       </td>
-                      <td className="px-4 py-4">
+                      <td className="td">
                          <div className="flex items-center gap-2">
                            <div className={`w-2 h-2 rounded-full ${isExpired ? 'bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-orange-500'}`} />
-                           <span className={`text-[13px] font-black tracking-tight ${isExpired ? 'text-rose-600 dark:text-rose-400' : 'text-gray-700 dark:text-gray-300'}`}>
+                           <span className={`text-[13px] font-bold tracking-tight ${isExpired ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
                              {format(new Date(med.expiryDate), "dd MMM, yyyy")}
                            </span>
                          </div>
                       </td>
-                      <td className="px-4 py-4 text-right">
-                         <div className="text-[13px] font-bold text-gray-800 dark:text-gray-200">{Number(med.sellingPrice || 0).toFixed(2)}</div>
+                      <td className="td text-right tabular-nums">
+                         <div className="text-[13px] font-bold text-foreground">{Number(med.sellingPrice || 0).toFixed(2)}</div>
                       </td>
-                      <td className="px-4 py-4 text-center">
-                         <div className="inline-flex flex-col items-center justify-center bg-gray-50 dark:bg-slate-800 border border-gray-100 dark:border-slate-700 px-3 py-1.5 rounded-xl">
-                           <span className="text-[14px] font-black text-[#11327c] dark:text-blue-400 tracking-tighter leading-none">{med.stock}</span>
-                           <span className="text-[8px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mt-1">Units</span>
+                      <td className="td text-center">
+                         <div className="inline-flex flex-col items-center justify-center bg-muted border border-border px-3 py-1.5 rounded-xl">
+                           <span className="font-display text-[14px] font-extrabold text-foreground tracking-tighter leading-none">{med.stock}</span>
+                           <span className="text-[8px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Units</span>
                          </div>
                       </td>
                     </tr>
@@ -309,12 +298,14 @@ export default function ExpiryPage() {
                 })
               ) : (
                 <tr>
-                  <td colSpan={8} className="px-8 py-32 text-center">
-                     <div className="flex flex-col items-center gap-4 opacity-20">
-                        <CheckCircle2 size={56} strokeWidth={1} className="text-emerald-500" />
+                  <td colSpan={8} className="px-8 py-24 text-center">
+                     <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-success/10 flex items-center justify-center">
+                          <CheckCircle2 size={30} strokeWidth={2} className="text-emerald-500" />
+                        </div>
                         <div className="space-y-1">
-                          <p className="text-[#11327c] dark:text-blue-400 font-black text-sm uppercase tracking-widest">Healthy Inventory</p>
-                          <p className="text-gray-400 dark:text-gray-300 font-medium text-xs">No items detected in this category</p>
+                          <p className="text-foreground font-bold text-sm tracking-wide">Healthy Inventory</p>
+                          <p className="text-muted-foreground font-medium text-xs">No items detected in this category</p>
                         </div>
                      </div>
                   </td>
@@ -327,7 +318,7 @@ export default function ExpiryPage() {
 
       {/* Floating Action Button for Debit Note */}
       {selectedBatches.length > 0 && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 bg-[#11327c] text-white px-8 py-4 rounded-full shadow-2xl shadow-[#11327c]/40 flex items-center gap-6 animate-in slide-in-from-bottom-10 fade-in duration-300 z-50 border border-white/10">
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3.5 rounded-full shadow-pop flex items-center gap-5 animate-fade-in z-50 bg-[linear-gradient(160deg,oklch(0.24_0.09_262)_0%,oklch(0.33_0.12_262)_50%,oklch(0.44_0.19_255)_115%)] text-white">
            <div className="flex items-center gap-2">
              <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-black">{selectedBatches.length}</span>
              <span className="text-sm font-bold uppercase tracking-widest text-blue-100">Batches Selected</span>

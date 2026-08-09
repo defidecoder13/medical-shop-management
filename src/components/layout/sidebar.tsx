@@ -3,32 +3,27 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { 
-  Home, 
-  Receipt, 
-  History, 
-  Package, 
-  CalendarClock, 
-  BarChart3, 
+import {
+  Home,
+  Receipt,
+  History,
+  Package,
+  CalendarClock,
+  BarChart3,
   Settings,
   Users,
-  ChevronLeft, 
-  ChevronRight, 
+  ChevronLeft,
+  ChevronRight,
   LogOut,
   AlertTriangle,
   Truck,
   Building2,
-  Landmark,
-  Plus,
-  X,
-  BookOpen,
-  ScrollText,
-  ArrowRightLeft,
   FileSpreadsheet,
-  Layers
+  X,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
 import { ThemeToggle } from "@/src/components/theme-toggle";
+import { BrandMark } from "@/src/components/ui/brand-mark";
 
 const navigationGroups = [
   {
@@ -37,22 +32,23 @@ const navigationGroups = [
       { label: "Dashboard", icon: Home, href: "/" },
       { label: "New Bill", icon: Receipt, href: "/billing" },
       { label: "Transactions", icon: History, href: "/transactions" },
-    ]
+    ],
   },
   {
     group: "INVENTORY",
     routes: [
       { label: "Stock Items", icon: Package, href: "/inventory" },
       { label: "Expiry Tracker", icon: CalendarClock, href: "/expiry" },
-    ]
+      { label: "Low Stock", icon: AlertTriangle, href: "/low-stock" },
+    ],
   },
   {
     group: "DISTRIBUTORS",
     routes: [
-      { label: "Suppliers List", icon: Building2, href: "/suppliers" },
-      { label: "Auto Purchase Import", icon: FileSpreadsheet, href: "/purchases/import" },
+      { label: "Suppliers", icon: Building2, href: "/suppliers" },
+      { label: "Purchase Import", icon: FileSpreadsheet, href: "/purchases/import" },
       { label: "Supplier Returns", icon: Truck, href: "/supplier-returns" },
-    ]
+    ],
   },
   {
     group: "BUSINESS",
@@ -60,7 +56,7 @@ const navigationGroups = [
       { label: "Patients CRM", icon: Users, href: "/patients" },
       { label: "Reports", icon: BarChart3, href: "/sales-report" },
       { label: "Settings", icon: Settings, href: "/settings" },
-    ]
+    ],
   },
 ];
 
@@ -90,49 +86,53 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
   const isSidebarCollapsed = collapsed && !isMobile;
 
   return (
-    <aside className={cn(
-      "transition-all duration-300 bg-white dark:bg-slate-900 border-r border-gray-100 dark:border-slate-800 flex flex-col z-20 h-screen shrink-0",
-      isSidebarCollapsed ? "w-20" : "w-[240px]"
-    )}>
+    <aside
+      className={cn(
+        "transition-all duration-300 ease-out bg-card border-r border-border flex flex-col z-20 h-screen shrink-0",
+        isSidebarCollapsed ? "w-[76px]" : "w-[248px]"
+      )}
+    >
       {/* App Branding */}
-      <div className="h-20 flex items-center justify-between px-5 shrink-0 overflow-hidden">
-        <div className="flex items-center gap-2">
-          <div className="shrink-0">
-             <Plus className="text-green-500 fill-green-500" size={28} strokeWidth={4} />
+      <div
+        className={cn(
+          "h-[68px] flex items-center gap-3 px-4 shrink-0 overflow-hidden border-b border-border/70",
+          isSidebarCollapsed && "justify-center px-0"
+        )}
+      >
+        <BrandMark size={isSidebarCollapsed ? 38 : 40} />
+        {!isSidebarCollapsed && (
+          <div className="flex flex-col leading-none min-w-0">
+            <span className="font-display font-extrabold text-[15px] tracking-tight text-warning">
+              MEDSATHI
+            </span>
+            <span className="font-display font-extrabold text-[13px] tracking-[0.08em] text-brand mt-0.5">
+              PHARMACY
+            </span>
           </div>
-          {!isSidebarCollapsed && (
-            <div className="flex flex-col ml-1">
-              <span className="font-black text-[16px] tracking-tight leading-none">
-                <span className="text-[#f97316]">MEDSATHI</span>
-              </span>
-              <span className="font-black text-[16px] tracking-tight leading-none text-[#11327c] dark:text-blue-400">
-                PHARMACY
-              </span>
-            </div>
-          )}
-        </div>
-        
+        )}
         {isMobile && onClose && (
-          <button 
-            onClick={onClose} 
-            className="p-1 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-50 transition-colors"
+          <button
+            onClick={onClose}
+            className="ml-auto p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent transition-colors"
+            aria-label="Close menu"
           >
-            <X size={20} strokeWidth={2.5} />
+            <X size={18} strokeWidth={2.5} />
           </button>
         )}
       </div>
 
       {/* Navigation Links */}
-      <nav className="flex-1 overflow-y-auto py-2 px-3 space-y-4 scrollbar-hide">
+      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
         {navigationGroups.map((section, sectionIdx) => (
           <div key={sectionIdx} className="space-y-1">
             {!isSidebarCollapsed && (
-              <div className="px-3 mb-2 text-[11px] font-bold tracking-wider text-[#11327c]/60 dark:text-blue-400/80">
+              <div className="px-3 mb-1.5 text-[10px] font-bold tracking-[0.16em] text-muted-foreground/70">
                 {section.group}
               </div>
             )}
             {section.routes.map((route) => {
-              const isActive = pathname === route.href;
+              const isActive =
+                pathname === route.href || pathname.startsWith(`${route.href}/`);
               return (
                 <Link
                   key={route.href}
@@ -141,24 +141,28 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
                     if (isMobile && onClose) onClose();
                   }}
                   className={cn(
-                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13.5px] font-bold transition-all group",
-                    isActive 
-                      ? "bg-[#0047ab] shadow-sm shadow-[#0047ab]/20 text-white" 
-                      : "text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 hover:text-[#11327c] dark:hover:text-blue-400"
+                    "relative w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold transition-all duration-200 group",
+                    isSidebarCollapsed ? "px-0 justify-center py-2.5" : "px-3 py-2.5",
+                    isActive
+                      ? "bg-gradient-to-r from-primary/12 to-primary/5 text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_22%,transparent)]"
+                      : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
                   )}
                   title={isSidebarCollapsed ? route.label : undefined}
                 >
-                  <route.icon 
-                    size={18} 
-                    strokeWidth={isActive ? 3 : 2.5}
+                  {isActive && (
+                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary" />
+                  )}
+                  <route.icon
+                    size={18}
+                    strokeWidth={isActive ? 2.6 : 2.2}
                     className={cn(
-                      "transition-colors",
-                      isActive 
-                        ? "text-white" 
-                        : "text-gray-400 dark:text-gray-500 group-hover:text-[#11327c] dark:group-hover:text-blue-400"
-                    )} 
+                      "transition-colors shrink-0",
+                      isActive
+                        ? "text-primary"
+                        : "text-muted-foreground/70 group-hover:text-foreground"
+                    )}
                   />
-                  {!isSidebarCollapsed && <span>{route.label}</span>}
+                  {!isSidebarCollapsed && <span className="truncate">{route.label}</span>}
                 </Link>
               );
             })}
@@ -167,22 +171,28 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
       </nav>
 
       {/* Bottom Actions */}
-      <div className="p-3 shrink-0 border-t border-gray-50 dark:border-slate-800 space-y-1">
+      <div className="p-3 shrink-0 border-t border-border/70 space-y-1">
         <ThemeToggle showLabel={!isSidebarCollapsed} />
         {!isMobile && (
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="w-full flex items-center gap-3 px-3 py-2 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg text-[13.5px] font-bold transition-colors"
+            className={cn(
+              "w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold transition-colors text-muted-foreground hover:bg-accent/70 hover:text-foreground",
+              isSidebarCollapsed ? "justify-center py-2.5" : "px-3 py-2.5"
+            )}
           >
             {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
             {!collapsed && <span>Collapse Sidebar</span>}
           </button>
         )}
-        <button 
+        <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-3 py-2 text-[#ef4444] hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg text-[13.5px] font-bold transition-colors"
+          className={cn(
+            "w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold transition-colors text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40",
+            isSidebarCollapsed ? "justify-center py-2.5" : "px-3 py-2.5"
+          )}
         >
-          <LogOut size={18} />
+          <LogOut size={18} strokeWidth={2.2} />
           {!isSidebarCollapsed && <span>Logout</span>}
         </button>
       </div>

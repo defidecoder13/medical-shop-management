@@ -660,68 +660,70 @@ export default function InventoryPage() {
   return (
     <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4 mb-2">
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
-           <div className="w-14 h-14 bg-[#f0f4ff] dark:bg-blue-950/40 rounded-xl flex items-center justify-center text-[#2563eb] dark:text-blue-400 shrink-0">
-             <Package size={26} strokeWidth={2} />
-           </div>
-           <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Total Items</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate">{stats ? stats.totalItems.toLocaleString() : "..."}</h3>
-             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">All products in stock</p>
-           </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#11327c] to-[#1e58b8] flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+            <Package size={22} strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-[12px] text-muted-foreground font-semibold truncate">Total Items</p>
+            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">{stats ? stats.totalItems.toLocaleString() : "..."}</h3>
+            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">All products in stock</p>
+          </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
-           <div className="w-14 h-14 bg-[#ecfdf5] dark:bg-emerald-950/40 rounded-xl flex items-center justify-center text-[#10b981] dark:text-emerald-400 shrink-0">
-             <TrendingUp size={26} strokeWidth={2} />
-           </div>
-           <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Total Stock Value</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate" title={stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : ""}>{stats ? `₹${stats.totalStockValue.toLocaleString(undefined, {minimumFractionDigits: 2})}` : "..."}</h3>
-             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">At purchase price</p>
-           </div>
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-400 flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+            <TrendingUp size={22} strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-[12px] text-muted-foreground font-semibold truncate">Total Stock Value</p>
+            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate" title={stats ? `₹${stats.totalStockValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : ""}>
+              {stats ? `₹${stats.totalStockValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "..."}
+            </h3>
+            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">At purchase price</p>
+          </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
-           <div className="w-14 h-14 bg-[#fff7ed] dark:bg-orange-950/40 rounded-xl flex items-center justify-center text-[#f97316] dark:text-orange-400 shrink-0">
-             <AlertTriangle size={26} strokeWidth={2} />
-           </div>
-           <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Low Stock Items</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate">{stats ? stats.lowStockItems : "..."}</h3>
-             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">Reorder soon</p>
-           </div>
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+            <AlertTriangle size={22} strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-[12px] text-muted-foreground font-semibold truncate">Low Stock Items</p>
+            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">{stats ? stats.lowStockItems : "..."}</h3>
+            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">Reorder soon</p>
+          </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
-           <div className="w-14 h-14 bg-[#fef2f2] dark:bg-rose-950/40 rounded-xl flex items-center justify-center text-[#ef4444] dark:text-rose-400 shrink-0">
-             <Clock size={26} strokeWidth={2} />
-           </div>
-           <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Expiring Soon</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate">{stats ? stats.expiringSoon : "..."}</h3>
-             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">Within 6 months</p>
-           </div>
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-red-400 flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+            <Clock size={22} strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-[12px] text-muted-foreground font-semibold truncate">Expiring Soon</p>
+            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">{stats ? stats.expiringSoon : "..."}</h3>
+            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">Within 6 months</p>
+          </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)] flex items-center gap-5 transition-colors">
-           <div className="w-14 h-14 bg-[#faf5ff] dark:bg-purple-950/40 rounded-xl flex items-center justify-center text-[#a855f7] dark:text-purple-400 shrink-0">
-             <LayoutGrid size={26} strokeWidth={2} />
-           </div>
-           <div className="flex-1 overflow-hidden">
-             <p className="text-[13px] text-gray-500 dark:text-gray-400 font-semibold mb-0.5 truncate">Out of Stock</p>
-             <h3 className="text-xl xl:text-2xl font-black text-[#0f172a] dark:text-gray-100 truncate">{stats ? stats.outOfStock : "..."}</h3>
-             <p className="text-[11px] text-gray-400 dark:text-gray-500 font-medium mt-1 truncate">Out of stock items</p>
-           </div>
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+            <LayoutGrid size={22} strokeWidth={2.2} />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <p className="text-[12px] text-muted-foreground font-semibold truncate">Out of Stock</p>
+            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">{stats ? stats.outOfStock : "..."}</h3>
+            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">Out of stock items</p>
+          </div>
         </div>
       </div>
 
       {message && (
-        <div className={`fixed top-10 right-10 z-[200] px-5 py-4 rounded-xl flex items-center gap-3 text-[14px] font-bold shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300 ${
-          message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border-2 border-emerald-200' : 'bg-rose-50 text-rose-700 border-2 border-rose-200'
+        <div className={`fixed top-20 right-6 z-[200] px-4 py-3 rounded-xl flex items-center gap-3 text-[13.5px] font-bold shadow-pop animate-fade-in ${
+          message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/80 dark:text-emerald-300 dark:border-emerald-900/60' : 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/80 dark:text-rose-300 dark:border-rose-900/60'
         }`}>
-          {message.type === 'success' ? <CheckCircle2 size={20} strokeWidth={2.5} /> : <AlertCircle size={20} strokeWidth={2.5} />}
+          {message.type === 'success' ? <CheckCircle2 size={19} strokeWidth={2.5} /> : <AlertCircle size={19} strokeWidth={2.5} />}
           {message.text}
         </div>
       )}
@@ -736,37 +738,37 @@ export default function InventoryPage() {
           className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[100] flex justify-center items-center p-4 overflow-y-auto"
           onClick={() => { setForm(emptyMedicine); setEditingId(null); setIsRestock(false); setShowForm(false); }}
         >
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white dark:bg-slate-900 p-8 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-2xl max-w-5xl w-full transition-colors"
+            className="bg-card p-7 md:p-8 rounded-3xl border border-border shadow-pop max-w-5xl w-full"
             onClick={(e) => e.stopPropagation()}
           >
-          <div className="flex items-center gap-4 mb-8">
-            <div className="w-12 h-12 bg-[#11327c]/5 dark:bg-blue-950/40 rounded-2xl flex items-center justify-center text-[#11327c] dark:text-blue-400">
-              <Edit3 size={24} strokeWidth={2.5} />
+          <div className="flex items-center gap-4 mb-7">
+            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+              <Edit3 size={24} strokeWidth={2.2} />
             </div>
             <div>
-              <h3 className="text-[18px] font-black text-[#11327c] dark:text-blue-400 tracking-tight">{editingId ? "Edit Product" : isRestock ? "Restock Product Batch" : "Add New Product"}</h3>
-              <p className="text-[11px] text-gray-400 font-black uppercase tracking-widest">Update your catalog information</p>
+              <h3 className="font-display text-[18px] font-extrabold text-foreground tracking-tight">{editingId ? "Edit Product" : isRestock ? "Restock Product Batch" : "Add New Product"}</h3>
+              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest">Update your catalog information</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="flex flex-col gap-2 relative">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Product Name</label>
+              <label className="label">Product Name</label>
               <input 
                 autoFocus
                 placeholder="e.g. Paracetamol 500mg" 
                 value={form.name}
                 onChange={e => setForm({...form, name: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 dark:focus:ring-blue-900/40 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Category</label>
+              <label className="label">Category</label>
               <select
                 value={form.category || "Tablet"}
                 onChange={e => {
@@ -778,7 +780,7 @@ export default function InventoryPage() {
                     tabletsPerStrip: isCatMulti ? "" : 1
                   });
                 }}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100 cursor-pointer"
+                className="select"
               >
                 <option value="Tablet">Tablet</option>
                 <option value="Capsule">Capsule</option>
@@ -794,7 +796,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.stock}</label>
+              <label className="label">{labels.stock}</label>
               <input 
                 type="number" 
                 placeholder="0" 
@@ -806,7 +808,7 @@ export default function InventoryPage() {
 
             {isMultiUnit && (
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.subUnit}</label>
+                <label className="label">{labels.subUnit}</label>
                 <input 
                   type="number" 
                   placeholder="0" 
@@ -818,7 +820,7 @@ export default function InventoryPage() {
             )}
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Batch Number</label>
+              <label className="label">Batch Number</label>
               <input 
                 ref={batchNumberInputRef}
                 placeholder="e.g. BATCH123" 
@@ -829,7 +831,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Purchase date</label>
+              <label className="label">Purchase date</label>
               <input 
                 type="date"
                 value={form.purchaseDate || ""}
@@ -839,7 +841,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Expiry Date</label>
+              <label className="label">Expiry Date</label>
               <input 
                 type="text"
                 placeholder="MM/YY (e.g. 12/28)"
@@ -857,7 +859,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.mrp}</label>
+              <label className="label">{labels.mrp}</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
                 <input 
@@ -865,13 +867,13 @@ export default function InventoryPage() {
                   placeholder="0.00" 
                   value={form.sellingPrice}
                   onChange={e => setForm({...form, sellingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                  className="input pl-8"
                 />
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{labels.cost}</label>
+              <label className="label">{labels.cost}</label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 font-bold text-[13px]">₹</span>
                 <input 
@@ -879,7 +881,7 @@ export default function InventoryPage() {
                   placeholder="0.00" 
                   value={form.buyingPrice}
                   onChange={e => setForm({...form, buyingPrice: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="w-full pl-8 pr-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                  className="input pl-8"
                 />
               </div>
             </div>
@@ -887,7 +889,7 @@ export default function InventoryPage() {
             <div className="lg:col-span-4 h-px bg-gray-100 dark:bg-slate-800 my-2"></div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Brand</label>
+              <label className="label">Brand</label>
               <input 
                 placeholder="e.g. Micro Labs" 
                 value={form.brand}
@@ -897,12 +899,12 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className={`text-[10px] font-black uppercase tracking-widest ml-1 ${!gstEnabled ? 'text-gray-300 dark:text-slate-600 line-through' : 'text-gray-400'}`}>GST Slab (%)</label>
+              <label className={`label ${!gstEnabled ? 'opacity-40 line-through' : ''}`}>GST Slab (%)</label>
               <select
                 disabled={!gstEnabled}
                 value={form.gstPercent}
                 onChange={e => setForm({...form, gstPercent: Number(e.target.value)})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100/50 dark:disabled:bg-slate-900/50"
+                className="select disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-100/50 dark:disabled:bg-slate-900/50"
               >
                 <option value="0">0% (Tax Free / Exempt)</option>
                 <option value="5">5% (Insulin / Life Saving)</option>
@@ -913,7 +915,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Barcode</label>
+              <label className="label">Barcode</label>
               <input 
                 placeholder="Scan barcode" 
                 value={form.barcode || ''}
@@ -923,7 +925,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Rack / Row</label>
+              <label className="label">Rack / Row</label>
               <input 
                 placeholder="e.g. A1" 
                 value={form.rackNumber}
@@ -933,7 +935,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Pack Label</label>
+              <label className="label">Pack Label</label>
               <input 
                 type="text" 
                 placeholder="e.g. 10 TAB" 
@@ -944,7 +946,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Default Discount (%)</label>
+              <label className="label">Default Discount (%)</label>
               <input 
                 type="number" 
                 placeholder="0" 
@@ -955,11 +957,11 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Supplier Name</label>
+              <label className="label">Supplier Name</label>
               <select
                 value={form.supplierName || "Direct Purchase"}
                 onChange={e => setForm({...form, supplierName: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100 cursor-pointer"
+                className="select"
               >
                 <option value="Direct Purchase">Direct Purchase</option>
                 {suppliers.map((sup) => (
@@ -971,7 +973,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Invoice Number</label>
+              <label className="label">Invoice Number</label>
               <input 
                 placeholder="e.g. INV-101" 
                 value={form.purchaseInvoiceNumber || ""}
@@ -981,7 +983,7 @@ export default function InventoryPage() {
             </div>
 
             <div className="flex flex-col gap-2 lg:col-span-3">
-              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Composition</label>
+              <label className="label">Composition</label>
               <input 
                 placeholder="e.g. Paracetamol 500mg" 
                 value={form.composition}
@@ -990,23 +992,23 @@ export default function InventoryPage() {
               />
             </div>
 
-            <div className="flex items-end lg:col-span-4 gap-3 mt-2">
-              <button 
+            <div className="flex items-end lg:col-span-4 gap-3 mt-3">
+              <button
                 onClick={() => {
                   setShowForm(false);
                   setEditingId(null);
                   setForm(emptyMedicine);
                 }}
-                className="w-1/3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-gray-300 hover:text-gray-700 dark:hover:text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 hover:bg-gray-100 dark:hover:bg-slate-700 transition-all shadow-sm"
+                className="btn-outline btn-lg w-1/3 uppercase tracking-[0.12em]"
               >
-                CANCEL
+                Cancel
               </button>
-              <button 
+              <button
                 onClick={handleSubmit}
                 disabled={isSaving}
-                className="w-2/3 bg-[#11327c] hover:bg-[#1e4db7] text-white font-black text-[12px] uppercase tracking-[0.15em] rounded-xl py-4 transition-all disabled:opacity-50 shadow-lg shadow-[#11327c]/20 focus:outline-none focus:ring-4 focus:ring-[#11327c]/40 focus:ring-offset-2"
+                className="btn-primary btn-lg w-2/3 uppercase tracking-[0.12em]"
               >
-                {isSaving ? "SAVING..." : "SAVE MEDICINE"}
+                {isSaving ? "Saving..." : "Save Medicine"}
               </button>
             </div>
           </div>
@@ -1020,7 +1022,7 @@ export default function InventoryPage() {
         <select 
           value={filterCategory}
           onChange={e => setFilterCategory(e.target.value)}
-          className="appearance-none w-full pl-10 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 dark:focus:ring-blue-900/40 text-gray-700 dark:text-gray-200 cursor-pointer hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors shadow-sm"
+          className="select w-full sm:w-auto"
         >
            <option>All Categories</option>
            <option>Tablet</option>
@@ -1037,7 +1039,7 @@ export default function InventoryPage() {
         <select 
           value={filterSupplier}
           onChange={e => setFilterSupplier(e.target.value)}
-          className="px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 w-full sm:w-[150px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+          className="select w-full sm:w-[170px] shrink-0 truncate"
         >
            <option>All Suppliers</option>
            {suppliers.map((supplier: any) => (
@@ -1047,15 +1049,15 @@ export default function InventoryPage() {
         <select 
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
-          className="px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 w-full sm:w-[130px] shrink-0 truncate focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 cursor-pointer"
+          className="select w-full sm:w-[140px] shrink-0 truncate"
         >
            <option>All Status</option>
            <option>In Stock</option>
            <option>Low Stock</option>
            <option>Out of Stock</option>
         </select>
-        <label className="flex items-center gap-2 px-3.5 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold text-gray-800 dark:text-gray-200 cursor-pointer shrink-0 hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors">
-           <input type="checkbox" checked={hideZeroStock} onChange={e => setHideZeroStock(e.target.checked)} className="w-4 h-4 rounded border-gray-300 dark:border-slate-700 text-[#11327c] focus:ring-[#11327c]" />
+        <label className="flex items-center gap-2.5 px-3.5 h-10 bg-card border border-border rounded-xl text-[13px] font-semibold text-foreground cursor-pointer shrink-0 hover:bg-accent/60 transition-colors select-none">
+           <input type="checkbox" checked={hideZeroStock} onChange={e => setHideZeroStock(e.target.checked)} className="w-4 h-4 rounded accent-primary" />
            Hide Dead Stock
         </label>
         <div className="relative flex-1 min-w-[280px] sm:min-w-[340px] group">
@@ -1063,7 +1065,7 @@ export default function InventoryPage() {
           <input 
             type="text" 
             placeholder="Search product by name, composition, barcode..."
-            className="w-full pl-11 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-semibold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 dark:focus:ring-blue-900/40 transition-all text-gray-800 dark:text-gray-100 placeholder:text-gray-400"
+            className="input pl-11"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -1075,31 +1077,31 @@ export default function InventoryPage() {
               setEditingId(null);
               setShowForm(!showForm);
            }}
-           className="flex items-center gap-2 bg-[#11327c] text-white px-5 py-2.5 rounded-xl text-[13px] font-bold shadow-md hover:bg-[#1e4db7] transition-all shrink-0"
+           className="btn-primary btn-md shrink-0"
         >
-           <Plus size={18} strokeWidth={2} /> Add New Item
+           <Plus size={17} strokeWidth={2.4} /> Add New Item
         </button>
       </div>
 
       {/* Data Table Container */}
-      <div className="bg-white dark:bg-slate-900 rounded-[24px] border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden transition-colors">
+      <div className="surface-card overflow-hidden">
         <div className="overflow-x-auto overflow-y-auto max-h-[60vh]">
-          <table className="w-full text-left border-collapse">
-            <thead className="sticky top-0 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 z-10">
+          <table className="table-shell">
+            <thead className="sticky top-0 bg-card border-b border-border z-10">
               <tr>
 
-                <th className="px-2 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">#</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Product Details</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Category</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Composition</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Batch No.</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200">Expiry Date</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-right">MRP (₹)</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-center">Stock</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-right">Purchase (₹)</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-right">Discount (%)</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-center">Status</th>
-                <th className="px-4 py-4 text-[12px] font-bold text-gray-800 dark:text-gray-200 text-center">Action</th>
+                <th className="th w-12">#</th>
+                <th className="th">Product Details</th>
+                <th className="th">Category</th>
+                <th className="th">Composition</th>
+                <th className="th">Batch No.</th>
+                <th className="th">Expiry Date</th>
+                <th className="th text-right">MRP (₹)</th>
+                <th className="th text-center">Stock</th>
+                <th className="th text-right">Purchase (₹)</th>
+                <th className="th text-right">Discount (%)</th>
+                <th className="th text-center">Status</th>
+                <th className="th text-center">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
@@ -1112,36 +1114,36 @@ export default function InventoryPage() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ delay: Math.min(index * 0.03, 0.5) }}
                   onClick={() => handleEdit(med)}
-                  className="hover:bg-[#f8fafc]/80 dark:hover:bg-slate-800/60 transition-colors group border-b border-gray-50 dark:border-slate-800/60 cursor-pointer"
+                  className="tbody-row group border-b border-border/60 cursor-pointer"
                 >
 
-                  <td className="px-2 py-4 text-[13px] font-bold text-gray-800 dark:text-gray-200">{index + 1}</td>
-                  <td className="px-4 py-4">
+                  <td className="td w-12 text-muted-foreground font-semibold">{index + 1}</td>
+                  <td className="td">
                      <div>
-                       <div className="font-bold text-[#2563eb] dark:text-blue-400 text-[13px] mb-0.5">{med.name}</div>
-                       <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium">
+                       <div className="font-bold text-foreground text-[13px] mb-0.5">{med.name}</div>
+                       <div className="text-[11px] text-muted-foreground font-medium">
                          {med.rackNumber ? `Rack: ${med.rackNumber}` : ""}
                        </div>
                      </div>
                   </td>
-                  <td className="px-4 py-4">
-                    <span className={`px-2 py-1 rounded text-[11px] font-semibold ${getCategoryStyles(med.category || "Tablet")}`}>
+                  <td className="td">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset ring-black/5 dark:ring-white/10 ${getCategoryStyles(med.category || "Tablet")}`}>
                       {med.category || "Tablet"}
                     </span>
                   </td>
-                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800 dark:text-gray-200 max-w-[180px] truncate" title={med.composition || "-"}>
+                  <td className="td text-[13px] font-medium text-foreground max-w-[180px] truncate" title={med.composition || "-"}>
                     {med.composition || "-"}
                   </td>
-                  <td className="px-4 py-4 text-[13px] font-medium text-gray-800 dark:text-gray-200">
+                  <td className="td font-mono text-[12.5px] font-medium text-foreground">
                     {med.batchNumber || "-"}
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="text-[13px] font-medium text-gray-800 dark:text-gray-200">{renderExpiry(med.expiryDate).date}</div>
+                  <td className="td">
+                    <div className="text-[13px] font-medium text-foreground">{renderExpiry(med.expiryDate).date}</div>
                     <div className={`text-[11px] font-semibold mt-0.5 ${renderExpiry(med.expiryDate).color}`}>
                       {renderExpiry(med.expiryDate).text}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800 dark:text-gray-200">
+                  <td className="td text-right tabular-nums">
                     {Number(med.sellingPrice).toFixed(2)}
                   </td>
                   <td className="px-4 py-4 text-center">
@@ -1165,22 +1167,22 @@ export default function InventoryPage() {
                       {med.pack || "Strip"} {Number(med.tabletsPerStrip) > 1 ? `(${med.tabletsPerStrip} Tabs/Strip)` : ""}
                     </div>
                   </td>
-                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800 dark:text-gray-200">
+                  <td className="td text-right tabular-nums">
                     {Number(med.buyingPrice).toFixed(2)}
                   </td>
-                  <td className="px-4 py-4 text-right text-[13px] font-medium text-gray-800 dark:text-gray-200">
+                  <td className="td text-right tabular-nums">
                     {med.discountPercent ? `${Number(med.discountPercent)}%` : "0%"}
                   </td>
-                  <td className="px-4 py-4 text-center">
-                    <span className={`px-2 py-1 rounded text-[11px] font-semibold ${getStatus(Number(med.stock)).bg}`}>
+                  <td className="td text-center">
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-bold ring-1 ring-inset ring-black/5 dark:ring-white/10 ${getStatus(Number(med.stock)).bg}`}>
                       {getStatus(Number(med.stock)).label}
                     </span>
                   </td>
-                  <td className="px-4 py-4">
-                    <div className="flex items-center justify-center gap-2">
+                  <td className="td">
+                    <div className="flex items-center justify-center gap-1.5">
                       <button 
                         onClick={(e) => { e.stopPropagation(); router.push(`/billing?add=${med._id}`); }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 border border-indigo-200 text-indigo-700 bg-indigo-50 rounded-lg hover:text-white hover:bg-indigo-600 transition-all text-xs font-bold shadow-sm"
+                        className="btn-outline btn-sm text-primary border-primary/25 bg-primary/5 hover:bg-primary hover:text-primary-foreground"
                         title="Instantly Bill Product"
                       >
                         <ShoppingCart size={14} strokeWidth={2.5} />
@@ -1188,7 +1190,7 @@ export default function InventoryPage() {
                       </button>
                       <button 
                         onClick={(e) => { e.stopPropagation(); med._id && handleDelete(med._id); }}
-                        className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all ml-1"
+                        className="btn-ghost btn-icon text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40"
                         title="Delete Product"
                       >
                         <Trash2 size={16} />
@@ -1200,12 +1202,14 @@ export default function InventoryPage() {
               </AnimatePresence>
               {filteredMeds.length === 0 && (
                 <tr>
-                   <td colSpan={8} className="px-7 py-24 text-center">
-                      <div className="flex flex-col items-center gap-3 opacity-20">
-                        <Search size={48} strokeWidth={1} className="text-gray-400" />
+                   <td colSpan={12} className="px-7 py-20 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+                          <Search size={28} strokeWidth={1.5} className="text-muted-foreground" />
+                        </div>
                         <div className="space-y-1">
-                          <p className="text-gray-600 font-black text-sm uppercase tracking-widest">No Products Found</p>
-                          <p className="text-gray-400 font-medium text-xs">Try adjusting your search or filters</p>
+                          <p className="text-foreground font-bold text-sm tracking-wide">No Products Found</p>
+                          <p className="text-muted-foreground font-medium text-xs">Try adjusting your search or filters</p>
                         </div>
                       </div>
                    </td>
@@ -1214,22 +1218,22 @@ export default function InventoryPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-4 bg-[#f8fafc]/50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
-          <p>Total Catalog Size: <span className="text-[#11327c] dark:text-blue-400 ml-1">{filteredMeds.length} Items</span></p>
+        <div className="p-4 bg-muted/40 border-t border-border flex flex-wrap items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+          <p>Total Catalog Size: <span className="text-primary ml-1">{filteredMeds.length} Items</span></p>
           
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50 hover:bg-white dark:hover:bg-slate-800 text-gray-600 dark:text-gray-300 transition-colors"
+              className="btn-outline btn-sm disabled:opacity-40"
             >
               Prev
             </button>
-            <span className="px-2 text-[#11327c] dark:text-blue-400">Page {page} of {totalFrontendPages}</span>
+            <span className="px-2 text-foreground font-bold">Page {page} of {totalFrontendPages}</span>
             <button 
               onClick={() => setPage(p => Math.min(totalFrontendPages, p + 1))}
               disabled={page === totalFrontendPages}
-              className="px-3 py-1.5 border border-gray-200 dark:border-slate-700 rounded-lg disabled:opacity-50 hover:bg-white dark:hover:bg-slate-800 text-gray-600 dark:text-gray-300 transition-colors"
+              className="btn-outline btn-sm disabled:opacity-40"
             >
               Next
             </button>

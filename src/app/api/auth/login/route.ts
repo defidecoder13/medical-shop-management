@@ -6,6 +6,10 @@ import User from "@/src/models/User";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key";
 
+// Demo account (matches the seed-data route and the login page hint).
+const DEMO_EMAIL = "medsaathi@admin.com";
+const DEMO_PASSWORD = "himadri@26";
+
 export async function POST(req: Request) {
   try {
     const { email, password } = await req.json();
@@ -14,16 +18,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
     }
 
-    await connectDB();
+    // Demo mode: when no database is configured, accept the demo account so the
+    // UI can be tested without MongoDB. Only active when MONGODB_URI is unset;
+    // the live app (which sets MONGODB_URI) always uses the database path below.
+    const demoMode = !process.env.MONGODB_URI;
+    let user: { _id: unknown; email: string };
 
-    const user = await User.findOne({ email });
-    if (!user) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-    }
+    if (demoMode) {
+      if (email !== DEMO_EMAIL || password !== DEMO_PASSWORD) {
+        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      }
+      user = { _id: "demo-admin", email: DEMO_EMAIL };
+    } else {
+      await connectDB();
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      const found = await User.findOne({ email });
+      if (!found) {
+        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      }
+
+      const isMatch = await bcrypt.compare(password, found.password);
+      if (!isMatch) {
+        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      }
+
+      user = { _id: found._id, email: found.email };
     }
 
     // Create JWT

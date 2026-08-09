@@ -114,25 +114,25 @@ export default function TransactionDetailsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center justify-center gap-4">
-        <div className="w-10 h-10 border-4 border-[#11327c]/10 border-t-[#11327c] rounded-full animate-spin" />
-        <p className="text-[13px] font-bold text-[#11327c] animate-pulse uppercase tracking-widest">Retrieving Invoice...</p>
+      <div className="min-h-[60vh] flex flex-col items-center justify-center gap-4">
+        <div className="w-10 h-10 border-4 border-primary/10 border-t-primary rounded-full animate-spin" />
+        <p className="text-[13px] font-bold text-foreground animate-pulse uppercase tracking-widest">Retrieving Invoice...</p>
       </div>
     );
   }
 
   if (!bill || bill.error) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 flex items-center justify-center p-4">
-         <div className="bg-white dark:bg-slate-900 p-10 rounded-[32px] shadow-[0_20px_50px_-15px_rgba(0,0,0,0.08)] text-center max-w-md w-full border border-gray-100 dark:border-slate-800">
-            <div className="w-20 h-20 bg-rose-50 dark:bg-rose-950/40 rounded-3xl flex items-center justify-center mx-auto mb-6">
-               <Receipt className="w-10 h-10 text-rose-500" strokeWidth={1.5} />
+      <div className="min-h-[60vh] flex items-center justify-center p-4">
+         <div className="surface-card p-10 rounded-3xl shadow-pop text-center max-w-md w-full">
+            <div className="w-20 h-20 bg-red-50 dark:bg-red-950/40 rounded-3xl flex items-center justify-center mx-auto mb-6">
+               <Receipt className="w-10 h-10 text-red-500" strokeWidth={1.5} />
             </div>
-            <h2 className="text-[22px] font-black text-[#11327c] dark:text-blue-400 mb-2 tracking-tight">Invoice Not Found</h2>
-            <p className="text-gray-500 dark:text-gray-400 font-medium text-sm mb-8">The requested transaction details could not be retrieved from our servers.</p>
+            <h2 className="font-display text-[22px] font-extrabold text-foreground mb-2 tracking-tight">Invoice Not Found</h2>
+            <p className="text-muted-foreground font-medium text-sm mb-8">The requested transaction details could not be retrieved from our servers.</p>
             <button
               onClick={() => router.push('/transactions')}
-              className="w-full py-4 bg-[#11327c] hover:bg-[#1e4db7] text-white rounded-2xl font-black text-[13px] uppercase tracking-widest transition-all shadow-lg shadow-[#11327c]/20"
+              className="btn-primary btn-lg w-full"
             >
               Return to Ledger
             </button>
@@ -142,8 +142,8 @@ export default function TransactionDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] dark:bg-slate-950 py-10 transition-colors">
-      <div className="max-w-4xl mx-auto px-6 space-y-8">
+    <div className="py-2">
+      <div className="max-w-4xl mx-auto space-y-6">
         
         {/* Header Actions */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
@@ -188,10 +188,10 @@ export default function TransactionDetailsPage() {
         </div>
 
         {/* Main Content Card */}
-        <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-gray-100 dark:border-slate-800 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] overflow-hidden animate-in fade-in slide-in-from-bottom-6 duration-700 transition-colors">
+        <div className="surface-card overflow-hidden animate-fade-in">
            
            {/* Invoice Header */}
-           <div className="p-10 border-b border-gray-50 dark:border-slate-800 bg-[#f8fafc]/50 dark:bg-slate-800/50">
+           <div className="p-6 md:p-8 border-b border-border bg-muted/40">
                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
                   <div className="flex items-center gap-5">
                      <div className={`w-16 h-16 rounded-[24px] flex items-center justify-center shadow-inner ${bill.isReturn ? 'bg-rose-100 dark:bg-rose-950/60' : 'bg-[#11327c]/5 dark:bg-blue-950/50'}`}>
@@ -228,7 +228,7 @@ export default function TransactionDetailsPage() {
            </div>
 
            {/* Items Section */}
-           <div className="p-10 bg-white dark:bg-slate-900">
+           <div className="p-6 md:p-8">
               <h3 className="text-[11px] font-black text-gray-400 uppercase tracking-[0.2em] mb-8 flex items-center gap-3">
                  <Layers className="w-4 h-4 text-[#11327c] dark:text-blue-400" strokeWidth={2.5} />
                  Order Details <span className="text-[#11327c]/20 dark:text-slate-700">/</span> <span className="text-[#11327c] dark:text-blue-400">{bill.items?.length || 0} Products</span>
@@ -237,53 +237,53 @@ export default function TransactionDetailsPage() {
               {(!bill.items || bill.items.length === 0) ? (
                  <div className="text-center py-20 text-gray-300 dark:text-gray-600 font-bold uppercase tracking-widest text-xs border-2 border-dashed border-gray-50 dark:border-slate-800 rounded-3xl">No items found</div>
               ) : (
-                 <div className="overflow-hidden rounded-3xl border border-gray-50 dark:border-slate-800">
-                    <table className="w-full text-left">
+                 <div className="overflow-hidden rounded-2xl border border-border">
+                    <table className="table-shell">
                        <thead>
-                          <tr className="bg-[#f8fafc] dark:bg-slate-800 border-b border-gray-50 dark:border-slate-800">
-                             <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">Product Information</th>
-                             <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center">Quantity</th>
-                             <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Unit Price</th>
-                             <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">Subtotal</th>
+                          <tr className="bg-muted/40 border-b border-border">
+                             <th className="th">Product Information</th>
+                             <th className="th text-center">Quantity</th>
+                             <th className="th text-right">Unit Price</th>
+                             <th className="th text-right">Subtotal</th>
                           </tr>
                        </thead>
-                       <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
+                       <tbody className="divide-y divide-border/60">
                           {bill.items.map((item: any, i: number) => (
-                             <tr key={i} className="group hover:bg-[#f8fafc]/50 dark:hover:bg-slate-800/50 transition-colors">
-                                 <td className="px-8 py-6">
+                             <tr key={i} className="tbody-row group">
+                                 <td className="td">
                                     <div className="flex items-center gap-4">
-                                       <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center text-[#11327c] dark:text-indigo-400 shadow-sm">
+                                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm">
                                           <Package className="w-5 h-5" strokeWidth={2} />
                                        </div>
                                        <div>
-                                          <div className="font-black text-[#11327c] dark:text-blue-300 uppercase text-[13px] tracking-tight mb-0.5">
+                                          <div className="font-extrabold text-foreground uppercase text-[13px] tracking-tight mb-0.5">
                                              {item.name}
                                           </div>
-                                          <div className="text-[10px] font-bold text-gray-400 tracking-wider uppercase">
-                                             Batch: <span className="text-gray-600 dark:text-gray-300">{item.batchNumber}</span>
+                                          <div className="text-[10px] font-bold text-muted-foreground tracking-wider uppercase">
+                                             Batch: <span className="text-foreground/80">{item.batchNumber}</span>
                                           </div>
                                        </div>
                                     </div>
                                  </td>
-                                <td className="px-8 py-6 text-center">
+                                <td className="td text-center">
                                    <div className="flex flex-col items-center">
-                                      <span className="font-black text-[#11327c] dark:text-blue-300 text-[14px]">
-                                         {item.qty} <span className="text-gray-400 text-[10px] font-black uppercase ml-1 tracking-tighter">{item.unitType}s</span>
+                                      <span className="font-extrabold text-foreground text-[14px]">
+                                         {item.qty} <span className="text-muted-foreground text-[10px] font-bold uppercase ml-1 tracking-tighter">{item.unitType}s</span>
                                       </span>
                                       {item.returnedQty > 0 && (
-                                         <span className="mt-1.5 text-[9px] font-black text-rose-500 dark:text-rose-400 bg-rose-50 dark:bg-rose-950/40 px-2 py-0.5 rounded-md uppercase tracking-wider border border-rose-100 dark:border-rose-800">
+                                         <span className="mt-1.5 badge-danger text-[9px] px-2 py-0.5 uppercase">
                                             {item.returnedQty} Returned
                                          </span>
                                       )}
                                    </div>
                                 </td>
-                                <td className="px-8 py-6 text-right">
-                                   <span className="font-bold text-gray-500 dark:text-gray-400 text-[13px]">
+                                <td className="td text-right tabular-nums">
+                                   <span className="font-bold text-muted-foreground text-[13px]">
                                       ₹{item.sellingPrice.toFixed(2)}
                                    </span>
                                 </td>
-                                <td className="px-8 py-6 text-right">
-                                   <span className="font-black text-[#11327c] dark:text-blue-300 text-[14px]">
+                                <td className="td text-right">
+                                   <span className="font-extrabold text-foreground text-[14px] tabular-nums">
                                       ₹{(item.total - (item.discountAmount || 0)).toFixed(2)}
                                    </span>
                                 </td>
@@ -296,7 +296,7 @@ export default function TransactionDetailsPage() {
            </div>
 
            {/* Financial Summary */}
-           <div className="bg-[#f8fafc] dark:bg-slate-800/50 p-10 flex flex-col sm:flex-row justify-between items-center gap-10 border-t border-gray-50 dark:border-slate-800">
+           <div className="bg-muted/40 p-6 md:p-8 flex flex-col sm:flex-row justify-between items-center gap-8 border-t border-border">
               <div className="flex-1 space-y-4">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 bg-white dark:bg-slate-900 rounded-2xl flex items-center justify-center shadow-sm border border-gray-100 dark:border-slate-800">
@@ -310,7 +310,7 @@ export default function TransactionDetailsPage() {
                 </div>
               </div>
               
-              <div className="w-full sm:w-80 space-y-4 bg-white dark:bg-slate-900 p-7 rounded-3xl shadow-[0_10px_30px_-10px_rgba(0,0,0,0.05)] border border-gray-50 dark:border-slate-800">
+              <div className="w-full sm:w-80 space-y-4 surface-card p-6 rounded-2xl">
                  <div className="flex justify-between items-center text-[13px] font-bold text-gray-500 dark:text-gray-400">
                     <span className="uppercase tracking-widest text-[10px] font-black">Subtotal</span>
                     <span className="text-[#11327c] dark:text-blue-300">₹{bill.subTotal.toFixed(2)}</span>
@@ -341,14 +341,14 @@ export default function TransactionDetailsPage() {
       {/* Return Modal */}
       <AnimatePresence>
         {showReturnModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#11327c]/20 dark:bg-slate-950/60 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
             <motion.div 
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-slate-900 rounded-[40px] shadow-[0_40px_100px_-20px_rgba(17,50,124,0.4)] w-full max-w-2xl overflow-hidden flex flex-col border border-gray-100 dark:border-slate-800"
+              className="bg-card rounded-3xl shadow-pop w-full max-w-2xl overflow-hidden flex flex-col border border-border"
             >
-              <div className="p-8 border-b border-gray-50 dark:border-slate-800 flex justify-between items-center bg-[#f8fafc]/50 dark:bg-slate-800/80">
+              <div className="p-6 border-b border-border flex justify-between items-center bg-muted/40">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 bg-rose-50 dark:bg-rose-950/40 flex items-center justify-center text-rose-600 dark:text-rose-400 rounded-2xl shadow-sm border border-rose-100 dark:border-rose-800">
                     <Undo2 className="w-6 h-6" strokeWidth={2.5} />
@@ -367,7 +367,7 @@ export default function TransactionDetailsPage() {
                 </button>
               </div>
 
-              <div className="p-8 overflow-y-auto max-h-[50vh] bg-white dark:bg-slate-900 space-y-4">
+              <div className="p-6 overflow-y-auto max-h-[50vh] space-y-4">
                 {returnError && (
                   <div className="mb-6 p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-100 dark:border-rose-800 flex items-start gap-4 text-rose-600 dark:text-rose-400 text-[13px] font-bold animate-in slide-in-from-top-2">
                     <AlertCircle className="w-5 h-5 shrink-0" strokeWidth={2.5} />
@@ -417,10 +417,10 @@ export default function TransactionDetailsPage() {
                 </div>
               </div>
 
-              <div className="p-8 border-t border-gray-50 dark:border-slate-800 bg-[#f8fafc] dark:bg-slate-800/80 flex justify-end gap-4">
+              <div className="p-6 border-t border-border bg-muted/40 flex justify-end gap-3">
                 <button
                   onClick={() => setShowReturnModal(false)}
-                  className="px-8 py-3.5 rounded-2xl font-black text-[12px] text-gray-400 uppercase tracking-[0.15em] hover:text-[#11327c] dark:hover:text-blue-400 hover:bg-white dark:hover:bg-slate-900 transition-all"
+                  className="btn-outline btn-md"
                   disabled={returnLoading}
                 >
                   Cancel
@@ -428,14 +428,14 @@ export default function TransactionDetailsPage() {
                 <button
                   onClick={handleReturnSubmit}
                   disabled={returnLoading}
-                  className="px-10 py-3.5 rounded-2xl font-black text-[12px] uppercase tracking-[0.15em] bg-[#11327c] hover:bg-[#1e4db7] text-white shadow-[0_15px_30px_-10px_rgba(17,50,124,0.3)] transition-all flex items-center gap-3 active:scale-95 disabled:opacity-50"
+                  className="btn-danger btn-md"
                 >
                   {returnLoading ? (
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                   ) : (
                     <CheckCircle2 size={18} strokeWidth={2.5} />
                   )}
-                  CONFIRM RETURN
+                  Confirm Return
                 </button>
               </div>
             </motion.div>

@@ -1,49 +1,94 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
-import { 
-  TrendingUp, 
-  ClipboardList, 
-  Package, 
+import {
   AlertOctagon,
-  IndianRupee,
-  Percent,
-  Calendar,
-  Users,
-  Pill,
-  Activity,
   Zap,
   FileText,
-  Plus,
-  ArrowRight,
-  Bell,
-  Clock,
-  ReceiptText
+  ReceiptText,
+  PackagePlus,
+  CalendarClock,
+  BarChart3,
 } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
-import { StatsCard } from "@/src/components/dashboard/stats-card";
 import { SalesChart } from "@/src/components/dashboard/sales-chart";
+import { PageSkeleton } from "@/src/components/ui/skeleton";
+
+const quickActions = [
+  {
+    label: "New Bill",
+    desc: "Create sale invoice",
+    href: "/billing",
+    icon: FileText,
+    tile: "from-blue-50 to-blue-100/40 dark:from-blue-950/40 dark:to-transparent",
+    chip: "from-[#11327c] to-[#1e58b8]",
+    hover: "hover:border-primary/25",
+  },
+  {
+    label: "Add Stock",
+    desc: "Record new inventory",
+    href: "/inventory",
+    icon: PackagePlus,
+    tile: "from-emerald-50 to-emerald-100/40 dark:from-emerald-950/40 dark:to-transparent",
+    chip: "from-emerald-500 to-emerald-400",
+    hover: "hover:border-success/25",
+  },
+  {
+    label: "Expiry Tracker",
+    desc: "Check expiring batches",
+    href: "/expiry",
+    icon: CalendarClock,
+    tile: "from-sky-50 to-sky-100/40 dark:from-sky-950/40 dark:to-transparent",
+    chip: "from-sky-500 to-cyan-400",
+    hover: "hover:border-sky-500/25",
+  },
+  {
+    label: "Transactions",
+    desc: "View sales history",
+    href: "/transactions",
+    icon: ReceiptText,
+    tile: "from-orange-50 to-amber-100/40 dark:from-orange-950/40 dark:to-transparent",
+    chip: "from-orange-500 to-amber-400",
+    hover: "hover:border-warning/30",
+  },
+  {
+    label: "Low Stock",
+    desc: "Critical shortages",
+    href: "/low-stock",
+    icon: AlertOctagon,
+    tile: "from-rose-50 to-red-100/40 dark:from-rose-950/40 dark:to-transparent",
+    chip: "from-rose-500 to-red-400",
+    hover: "hover:border-destructive/25",
+  },
+  {
+    label: "Reports",
+    desc: "Sales & business insights",
+    href: "/sales-report",
+    icon: BarChart3,
+    tile: "from-violet-50 to-violet-100/40 dark:from-violet-950/40 dark:to-transparent",
+    chip: "from-violet-500 to-purple-400",
+    hover: "hover:border-violet-500/25",
+  },
+];
 
 export default function Home() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [chartRange, setChartRange] = useState("7d");
   const [data, setData] = useState<any>({
-    stats: { sales: "₹0", orders: 0, lowStock: 0, expiring: 0 },
+    stats: { sales: "₹0", orders: 0, lowStock: 0, expiring: 0, customers: 0 },
     salesChart: [],
-    recentTransactions: []
   });
 
   useEffect(() => {
-    if (!document.cookie.includes('is_logged_in=1')) {
-      router.push('/login');
+    if (!document.cookie.includes("is_logged_in=1")) {
+      router.push("/login");
     }
   }, [router]);
-  
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
@@ -53,120 +98,70 @@ export default function Home() {
           (cachedData) => {
             if (cachedData) {
               setData(cachedData);
-              setLoading(false); // Instantly render cached data in 0ms!
+              setLoading(false);
             }
           }
         );
-        
+
         if (analytics) {
-          setData(analytics); // Update with fresh network data later
+          setData(analytics);
         }
       } catch (error) {
-        console.error('Error fetching dashboard stats:', error);
+        console.error("Error fetching dashboard stats:", error);
       } finally {
         setLoading(false);
       }
     };
-    
+
     fetchDashboardData();
   }, [chartRange]);
 
   if (loading) {
-    return <div className="p-8 text-center text-gray-500 font-bold" suppressHydrationWarning={true}>Loading dashboard...</div>;
+    return <PageSkeleton />;
   }
 
-  // Format sales number
-  const rawSales = data.stats.sales.replace(/[^0-9.]/g, '');
-  const salesVal = rawSales ? parseFloat(rawSales) : 0;
-  
   return (
-    <div className="space-y-6 max-w-[1600px] mx-auto pb-10 flex flex-col">
-      {/* Metrics Row */}
-      <div className="hidden md:grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-5 order-2 lg:order-1">
-        <StatsCard 
-          title="Total Revenue" 
-          value={`₹${salesVal >= 0 ? salesVal.toFixed(2) : "0.00"}`} 
-          trend="12.5" 
-          trendUp={true} 
-          icon={IndianRupee}
-          iconBgColor="bg-gradient-to-br from-[#11327c] to-[#1e58b8]"
-          iconColor="text-white"
-          chartColor="#11327c"
-        />
-        <StatsCard 
-          title="Total Orders" 
-          value={data.stats.orders ?? 0} 
-          trend="10.0" 
-          trendUp={true} 
-          icon={ClipboardList}
-          iconBgColor="bg-[#dcfce7]"
-          iconColor="text-[#16a34a]"
-          chartColor="#16a34a"
-        />
-        <StatsCard 
-          title="Low Stock" 
-          value={data.stats.lowStock ?? 0} 
-          trend="25.0"
-          trendUp={false} 
-          icon={Package}
-          iconBgColor="bg-[#ffedd5]"
-          iconColor="text-[#f97316]"
-          chartColor="#f97316"
-        />
-        <StatsCard 
-          title="Expiring Soon" 
-          value={data.stats.expiring ?? 0} 
-          trend="0"
-          trendUp={null} 
-          icon={Clock}
-          iconBgColor="bg-[#fee2e2]"
-          iconColor="text-[#ef4444]"
-          chartColor="#ef4444"
-        />
-        <StatsCard 
-          title="Gross Profit" 
-          value={salesVal > 0 ? "28.6%" : "0.0%"} 
-          trend="8.4"
-          trendUp={true} 
-          icon={Percent}
-          iconBgColor="bg-[#dcfce7]"
-          iconColor="text-[#16a34a]"
-          chartColor="#16a34a"
-        />
-      </div>
-
-      {/* Row 2: Sales Chart */}
-      <div className="order-1 lg:order-2">
-        <SalesChart data={data.salesChart} range={chartRange} onRangeChange={setChartRange} />
-      </div>
-
-      {/* Row 3: Quick Actions */}
-      <div className="order-3">
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] transition-colors">
-          <h3 className="text-[17px] font-extrabold text-[#11327c] dark:text-blue-400 mb-5 flex items-center gap-2">
-            <Zap className="w-5 h-5 text-[#11327c] dark:text-blue-400 fill-[#11327c] dark:fill-blue-400" strokeWidth={1} />
+    <div className="space-y-5 max-w-[1600px] mx-auto pb-10 pt-1">
+      {/* Quick Actions */}
+      <div className="surface-card p-4 md:p-5">
+        <div className="flex items-center gap-2.5 mb-3.5">
+          <span className="w-7 h-7 rounded-lg bg-warning/15 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <Zap className="w-[15px] h-[15px]" strokeWidth={2.4} />
+          </span>
+          <h3 className="font-display text-[15px] font-extrabold text-foreground">
             Quick Actions
           </h3>
-          <div className="grid grid-cols-2 gap-4">
-            <Link href="/billing" className="bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100/70 dark:hover:bg-blue-900/60 border border-blue-200/60 dark:border-blue-800/60 text-[#11327c] dark:text-blue-300 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-[#11327c] dark:text-blue-300 shadow-sm"><FileText size={22} strokeWidth={2.5} /></div>
-              <span className="text-[13px] font-extrabold tracking-wide">New Bill</span>
+          <span className="text-[11px] font-semibold text-muted-foreground/70 ml-auto hidden sm:block">
+            One-tap shortcuts to your daily work
+          </span>
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5">
+          {quickActions.map((action) => (
+            <Link
+              key={action.href}
+              href={action.href}
+              className={`group relative overflow-hidden rounded-xl border border-border bg-gradient-to-br ${action.tile} p-3.5 flex flex-col justify-between gap-2.5 min-h-[84px] transition-all duration-300 hover:shadow-lift hover:-translate-y-0.5 ${action.hover}`}
+            >
+              <div
+                className={`w-8 h-8 rounded-lg bg-gradient-to-br ${action.chip} text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform`}
+              >
+                <action.icon size={16} strokeWidth={2.4} />
+              </div>
+              <div className="min-w-0">
+                <div className="text-[12.5px] font-extrabold text-foreground leading-tight truncate">
+                  {action.label}
+                </div>
+                <div className="text-[10.5px] font-medium text-muted-foreground leading-tight truncate">
+                  {action.desc}
+                </div>
+              </div>
             </Link>
-            <Link href="/inventory" className="bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100/70 dark:hover:bg-emerald-900/60 border border-emerald-200/60 dark:border-emerald-800/60 text-emerald-800 dark:text-emerald-300 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-900 flex items-center justify-center text-emerald-600 dark:text-emerald-300 shadow-sm"><Plus size={22} strokeWidth={3} /></div>
-              <span className="text-[13px] font-extrabold tracking-wide">Add Medicine</span>
-            </Link>
-            <Link href="/transactions" className="bg-orange-50 dark:bg-orange-950/40 hover:bg-orange-100/70 dark:hover:bg-orange-900/60 border border-orange-200/60 dark:border-orange-800/60 text-orange-800 dark:text-orange-300 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-orange-100 dark:bg-orange-900 flex items-center justify-center text-orange-600 dark:text-orange-300 shadow-sm"><ReceiptText size={22} strokeWidth={2.5} /></div>
-              <span className="text-[13px] font-extrabold tracking-wide">Transactions History</span>
-            </Link>
-            <Link href="/low-stock" className="bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100/70 dark:hover:bg-indigo-900/60 border border-indigo-200/60 dark:border-indigo-800/60 text-indigo-800 dark:text-indigo-300 p-4 rounded-xl flex flex-col items-center justify-center gap-2 hover:-translate-y-1 transition-all shadow-sm h-[110px]">
-              <div className="w-10 h-10 rounded-full bg-indigo-100 dark:bg-indigo-900 flex items-center justify-center text-indigo-600 dark:text-indigo-300 shadow-sm"><AlertOctagon size={22} strokeWidth={2.5} /></div>
-              <span className="text-[13px] font-extrabold tracking-wide">Low Stock</span>
-            </Link>
-          </div>
+          ))}
         </div>
       </div>
+
+      {/* Sales Performance */}
+      <SalesChart data={data.salesChart} range={chartRange} onRangeChange={setChartRange} />
     </div>
   );
 }

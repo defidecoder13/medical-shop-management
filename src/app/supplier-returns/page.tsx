@@ -13,6 +13,7 @@ import {
   Package
 } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
+import { Badge } from "@/src/components/ui/badge";
 
 type SupplierReturn = {
   _id: string;
@@ -130,7 +131,7 @@ export default function SupplierReturnsPage() {
   if (loading) {
     return (
       <div className="h-full flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+        <div className="animate-spin rounded-full h-9 w-9 border-2 border-primary/25 border-t-primary"></div>
       </div>
     );
   }
@@ -138,85 +139,79 @@ export default function SupplierReturnsPage() {
   return (
     <div className="space-y-6 pb-10 max-w-[1400px] mx-auto">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h2 className="text-[26px] font-black text-[#11327c] tracking-tight">Supplier Returns</h2>
-          <p className="text-[13px] text-gray-500 font-medium">Manage debit notes and stock outflows.</p>
-        </div>
-
-        <div className="flex gap-3">
+      {/* Header Actions */}
+      <div className="flex flex-wrap justify-end gap-2.5 mb-6">
           <button
             onClick={() => router.push('/supplier-returns/new')}
-            className="flex items-center gap-2 px-5 py-3 bg-[#11327c] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:bg-[#1e4db7] shadow-lg shadow-[#11327c]/20 active:scale-95"
+            className="btn-primary btn-md"
           >
-            <Plus size={18} strokeWidth={3} />
+            <Plus size={17} strokeWidth={2.4} />
             Create Return Note
           </button>
           <button
             onClick={exportToExcel}
-            className="flex items-center gap-2 px-5 py-3 bg-white text-gray-600 border border-gray-200 rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:bg-gray-50 shadow-sm active:scale-95"
+            className="btn-outline btn-md"
           >
-            <FileSpreadsheet size={18} strokeWidth={2.5} />
+            <FileSpreadsheet size={17} strokeWidth={2.4} />
             Export Data
           </button>
-        </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
-             <FileSpreadsheet size={28} strokeWidth={2.5} />
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+             <FileSpreadsheet size={22} strokeWidth={2.3} />
            </div>
            <div>
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Returns</p>
-             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{returns.length} Notes</h2>
+             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Total Returns</p>
+             <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{returns.length} Notes</h2>
            </div>
         </div>
 
-        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 rounded-2xl bg-rose-50 text-rose-500 flex items-center justify-center shrink-0">
-             <IndianRupee size={28} strokeWidth={2.5} />
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-red-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+             <IndianRupee size={22} strokeWidth={2.3} />
            </div>
            <div>
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Refund Value</p>
-             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">₹{totalRefund.toFixed(2)}</h2>
+             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Total Refund Value</p>
+             <h2 className="font-display text-[22px] font-extrabold text-red-600 dark:text-red-400 tracking-tighter">₹{totalRefund.toFixed(2)}</h2>
            </div>
         </div>
 
-        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center shrink-0">
-             <Package size={28} strokeWidth={2.5} />
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+             <Package size={22} strokeWidth={2.3} />
            </div>
            <div>
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Items Returned</p>
-             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{totalItems} Batches</h2>
+             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Items Returned</p>
+             <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{totalItems} Batches</h2>
            </div>
         </div>
       </div>
 
       {/* Filter Bar */}
-      <div className="bg-white p-5 rounded-[32px] border border-gray-100 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={18} strokeWidth={2.5} />
+      <div className="surface-card p-4 flex flex-col md:flex-row gap-3 items-center">
+        <div className="relative flex-1 w-full group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} strokeWidth={2.4} />
           <input 
             type="text" 
             placeholder="Search by ID, Supplier, or Reason..."
-            className="w-full pl-12 pr-6 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-[13px] font-bold focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-gray-800 placeholder:text-gray-400"
+            className="input pl-11"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
         </div>
 
-        <div className="flex bg-gray-100/50 p-1.5 rounded-2xl border border-gray-200/50">
+        <div className="flex bg-muted/70 p-1 rounded-xl border border-border shrink-0">
           {(["1d", "7d", "1m"] as const).map((range) => (
             <button
               key={range}
               onClick={() => setDateFilter(range)}
-              className={`px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${
+              className={`px-4 py-2 text-[11px] font-bold uppercase tracking-wider rounded-lg transition-all cursor-pointer ${
                 dateFilter === range
-                  ? "bg-[#11327c] text-white shadow-md"
-                  : "text-gray-400 hover:text-[#11327c] hover:bg-white"
+                  ? "bg-card text-primary shadow-sm border border-border"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {range.toUpperCase()}
@@ -226,64 +221,66 @@ export default function SupplierReturnsPage() {
       </div>
 
       {/* Ledger Table Container */}
-      <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] overflow-hidden">
+      <div className="surface-card overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-[#f8fafc] border-b border-gray-100">
+          <table className="table-shell">
+            <thead className="bg-muted/40 border-b border-border">
               <tr>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Date & ID</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Supplier Context</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Itemized Return</th>
-                <th className="px-8 py-6 text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] text-right">Debit Total</th>
+                <th className="th">Date & ID</th>
+                <th className="th">Supplier Context</th>
+                <th className="th">Itemized Return</th>
+                <th className="th text-right">Debit Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-border/60">
               {filteredReturns.map((t, idx) => (
-                <tr key={t._id} className="hover:bg-[#f8fafc]/50 transition-all group animate-in fade-in slide-in-from-bottom-2 duration-300" style={{ animationDelay: `${idx * 30}ms` }}>
-                  <td className="px-8 py-6">
-                    <div className="text-[13px] font-black text-[#11327c] tracking-tight">
+                <tr key={t._id} className="tbody-row group" style={{ animationDelay: `${idx * 30}ms` }}>
+                  <td className="td">
+                    <div className="text-[13px] font-bold text-foreground tracking-tight">
                       {format(new Date(t.createdAt), "dd MMM, yyyy")}
                     </div>
-                    <div className="text-[10px] font-mono text-gray-400 flex items-center gap-1.5 mt-1">
-                      <span className="text-orange-600 font-black uppercase tracking-wider text-[8px] bg-orange-50 px-1.5 py-0.5 rounded border border-orange-100">DEBIT NOTE</span>
+                    <div className="text-[10px] font-mono text-muted-foreground flex items-center gap-1.5 mt-1">
+                      <Badge variant="warning" className="text-[8px] px-1.5 py-0.5 uppercase">Debit Note</Badge>
                       #{t._id.slice(-8).toUpperCase()}
                     </div>
                   </td>
-                  <td className="px-8 py-6">
-                    <div className="text-[14px] font-black text-[#11327c] uppercase tracking-tight">
+                  <td className="td">
+                    <div className="font-display text-[14px] font-extrabold text-foreground tracking-tight">
                       {t.supplierName}
                     </div>
-                    <div className="text-[10px] font-black text-gray-400 mt-1 uppercase tracking-widest flex items-center gap-2">
-                      REASON: <span className="text-[#11327c]/60">{t.reason}</span>
+                    <div className="text-[10px] font-bold text-muted-foreground mt-1 uppercase tracking-widest flex items-center gap-2">
+                      Reason: <span className="text-foreground/70 normal-case tracking-normal">{t.reason}</span>
                     </div>
                   </td>
-                  <td className="px-8 py-6">
-                    <div className="flex flex-col gap-1.5 max-h-32 overflow-y-auto pr-4 scrollbar-thin">
+                  <td className="td">
+                    <div className="flex flex-col gap-1.5 max-h-32 overflow-y-auto pr-3">
                       {t.items.map((item, index) => (
                         <div key={index} className="flex items-center gap-2 group/item">
-                          <div className="w-1.5 h-1.5 rounded-full bg-indigo-200 group-hover/item:bg-[#11327c] transition-colors" />
-                          <span className="text-[11px] font-bold text-gray-500 group-hover/item:text-[#11327c] transition-colors">{item.name}</span>
-                          <span className="text-[10px] font-black text-gray-300 uppercase">x{item.qty} {item.unitType}</span>
+                          <div className="w-1.5 h-1.5 rounded-full bg-primary/30 group-hover/item:bg-primary transition-colors" />
+                          <span className="text-[11px] font-bold text-foreground/80 group-hover/item:text-primary transition-colors">{item.name}</span>
+                          <span className="text-[10px] font-bold text-muted-foreground uppercase">x{item.qty} {item.unitType}</span>
                         </div>
                       ))}
                     </div>
                   </td>
-                  <td className="px-8 py-6 text-right">
-                    <div className="text-[18px] font-black text-[#11327c] tracking-tighter">
+                  <td className="td text-right">
+                    <div className="font-display text-[17px] font-extrabold text-foreground tracking-tighter tabular-nums">
                       ₹{t.totalRefundAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </div>
-                    <p className="text-[9px] font-black text-gray-300 uppercase tracking-widest mt-1">Confirmed</p>
+                    <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Confirmed</p>
                   </td>
                 </tr>
               ))}
               {filteredReturns.length === 0 && (
                 <tr>
-                   <td colSpan={4} className="px-8 py-24 text-center">
-                      <div className="flex flex-col items-center gap-4 opacity-20">
-                        <FileSpreadsheet size={48} strokeWidth={1} className="text-gray-400" />
+                   <td colSpan={4} className="px-8 py-20 text-center">
+                      <div className="flex flex-col items-center gap-4">
+                        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+                          <FileSpreadsheet size={26} strokeWidth={1.6} className="text-muted-foreground" />
+                        </div>
                         <div className="space-y-1">
-                          <p className="text-gray-600 font-black text-sm uppercase tracking-widest">No Return Records</p>
-                          <p className="text-gray-400 font-medium text-xs">Debit note ledger is currently empty</p>
+                          <p className="text-foreground font-bold text-sm tracking-wide">No Return Records</p>
+                          <p className="text-muted-foreground font-medium text-xs">Debit note ledger is currently empty</p>
                         </div>
                       </div>
                    </td>
@@ -292,23 +289,23 @@ export default function SupplierReturnsPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-6 bg-[#f8fafc]/50 border-t border-gray-100 flex items-center justify-between text-[11px] font-black uppercase tracking-[0.15em] text-gray-400">
-           <span>Showing <span className="text-[#11327c]">{filteredReturns.length}</span> documented returns</span>
+        <div className="p-5 bg-muted/40 border-t border-border flex items-center justify-between text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
+           <span>Showing <span className="text-primary">{filteredReturns.length}</span> documented returns</span>
            
            {totalPages > 1 && (
              <div className="flex gap-2 items-center">
-               <span className="mr-2 normal-case tracking-normal text-sm font-medium">Page {page} of {totalPages}</span>
+               <span className="mr-2 normal-case tracking-normal text-[13px] font-semibold">Page {page} of {totalPages}</span>
                <button 
                  onClick={() => setPage(p => Math.max(1, p - 1))}
                  disabled={page === 1}
-                 className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                 className="btn-outline btn-sm disabled:opacity-30"
                >
                  Prev
                </button>
                <button 
                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                  disabled={page === totalPages}
-                 className="px-4 py-2 bg-white border border-gray-200 rounded-xl shadow-sm disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                 className="btn-outline btn-sm disabled:opacity-30"
                >
                  Next
                </button>

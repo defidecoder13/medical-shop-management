@@ -64,16 +64,14 @@ export default function LowStockPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50/50 dark:bg-slate-950/50 py-8">
-        <div className="max-w-6xl mx-auto px-4 space-y-8">
-          <div className="animate-pulse space-y-8">
-            <div className="h-10 bg-gray-200 dark:bg-slate-800 rounded-xl w-48"></div>
-            <div className="h-32 bg-gray-200 dark:bg-slate-800 rounded-3xl w-full"></div>
-            <div className="space-y-4">
-               {[...Array(5)].map((_, i) => (
-                 <div key={i} className="h-16 bg-gray-200 dark:bg-slate-800 rounded-2xl w-full"></div>
-               ))}
-            </div>
+      <div className="min-h-screen py-8">
+        <div className="max-w-6xl mx-auto px-4 space-y-6">
+          <div className="skeleton h-10 rounded-xl w-48" />
+          <div className="skeleton h-28 rounded-2xl w-full" />
+          <div className="space-y-3">
+             {[...Array(5)].map((_, i) => (
+               <div key={i} className="skeleton h-14 rounded-xl w-full" />
+             ))}
           </div>
         </div>
       </div>
@@ -82,27 +80,12 @@ export default function LowStockPage() {
 
   return (
     <div className="space-y-8 pb-10 max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <Link 
-            href="/"
-            className="w-12 h-12 flex items-center justify-center bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 text-gray-400 dark:text-gray-300 hover:text-[#11327c] dark:hover:text-blue-400 hover:border-[#11327c]/20 transition-all shadow-sm group"
-          >
-            <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} />
-          </Link>
-          <div>
-            <h1 className="text-[28px] font-black text-[#11327c] dark:text-blue-400 tracking-tight">
-              Stock Alerts
-            </h1>
-            <p className="text-[13px] text-gray-500 dark:text-gray-400 font-medium">Monitor items nearing depletion</p>
-          </div>
-        </div>
-        
+      {/* Header Actions */}
+      <div className="flex justify-end mb-6">
         <div className="flex gap-3">
            <Link 
              href="/inventory"
-             className="flex items-center gap-2 px-6 py-3 bg-[#11327c] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:bg-[#1e4db7] shadow-lg shadow-[#11327c]/20"
+             className="btn-primary btn-md"
            >
               <Layers className="w-4 h-4" strokeWidth={2.5} />
               Inventory Manager
@@ -111,24 +94,24 @@ export default function LowStockPage() {
       </div>
 
       {/* Minimal Status Banner */}
-      <div className="relative p-8 rounded-[32px] border border-gray-100 dark:border-slate-800 shadow-[0_15px_45px_-15px_rgba(17,50,124,0.1)] overflow-hidden bg-white dark:bg-slate-900 transition-colors">
-        <div className="absolute -right-6 -top-6 opacity-[0.03] pointer-events-none text-[#11327c] dark:text-blue-400">
-          {lowStockMedicines.length > 0 ? <AlertTriangle className="w-48 h-48" /> : <CheckCircle2 className="w-48 h-48" />}
+      <div className={`relative p-6 md:p-7 rounded-3xl overflow-hidden shadow-card transition-colors ${lowStockMedicines.length > 0 ? 'bg-amber-50/70 dark:bg-amber-950/25 ring-1 ring-inset ring-amber-200/60 dark:ring-amber-900/40' : 'bg-success/8 ring-1 ring-inset ring-success/20'}`}>
+        <div className="absolute -right-6 -top-6 opacity-[0.05] pointer-events-none text-foreground">
+          {lowStockMedicines.length > 0 ? <AlertTriangle className="w-44 h-44" /> : <CheckCircle2 className="w-44 h-44" />}
         </div>
         
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="flex items-center gap-6">
-            <div className={`w-16 h-16 rounded-2xl flex items-center justify-center ${lowStockMedicines.length > 0 ? 'bg-orange-50 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400' : 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500 dark:text-emerald-400'}`}>
-              {lowStockMedicines.length > 0 ? <AlertTriangle className="w-8 h-8" strokeWidth={2.5} /> : <CheckCircle2 className="w-8 h-8" strokeWidth={2.5} />}
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
+          <div className="flex items-center gap-5">
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${lowStockMedicines.length > 0 ? 'bg-gradient-to-br from-amber-500 to-orange-400 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]' : 'bg-gradient-to-br from-emerald-500 to-emerald-400 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]'}`}>
+              {lowStockMedicines.length > 0 ? <AlertTriangle className="w-7 h-7" strokeWidth={2.4} /> : <CheckCircle2 className="w-7 h-7" strokeWidth={2.4} />}
             </div>
             <div>
-               <h2 className="text-3xl font-black text-[#11327c] dark:text-gray-100 tracking-tight">
+               <h2 className="font-display text-2xl md:text-[26px] font-extrabold text-foreground tracking-tight">
                  {lowStockMedicines.length > 0 
                   ? `${lowStockMedicines.length} Critical Stock Alerts` 
                   : "Inventory Healthy"}
                </h2>
-               <p className="text-[13px] text-gray-400 dark:text-gray-500 font-bold uppercase tracking-widest mt-1">
-                 System Status: <span className={lowStockMedicines.length > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-emerald-500 dark:text-emerald-400'}>
+               <p className="text-[12px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
+                 System Status: <span className={lowStockMedicines.length > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'}>
                    {lowStockMedicines.length > 0 ? 'Restock Required' : 'Optimal'}
                  </span>
                </p>
@@ -136,9 +119,9 @@ export default function LowStockPage() {
           </div>
           
           {lowStockMedicines.length > 0 && (
-            <div className="flex items-center gap-3 px-6 py-3 bg-[#f8fafc] dark:bg-slate-800 rounded-2xl border border-gray-100 dark:border-slate-700">
-               <div className="text-[10px] font-black uppercase tracking-wider text-gray-400 dark:text-gray-300">Priority:</div>
-               <div className="text-sm font-black text-orange-600 dark:text-orange-400 uppercase">High</div>
+            <div className="flex items-center gap-3 px-5 py-2.5 bg-card/70 backdrop-blur rounded-xl border border-border shrink-0">
+               <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Priority:</div>
+               <div className="text-sm font-extrabold text-orange-600 dark:text-orange-400 uppercase">High</div>
             </div>
           )}
         </div>
@@ -146,88 +129,84 @@ export default function LowStockPage() {
 
       {/* List Section */}
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-2">
-           <h2 className="text-[16px] sm:text-[18px] font-black text-[#11327c] dark:text-blue-400 uppercase tracking-widest flex items-center gap-3">
-              <AlertCircle className="text-orange-500 w-5 h-5 shrink-0" strokeWidth={3} />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1">
+           <h2 className="font-display text-[15px] sm:text-[16px] font-extrabold text-foreground tracking-wide flex items-center gap-2.5">
+              <AlertCircle className="text-amber-500 w-5 h-5 shrink-0" strokeWidth={2.6} />
               Critical Shortage List
            </h2>
            <div className="relative group w-full sm:w-auto">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-[#11327c] dark:group-focus-within:text-blue-400 transition-colors" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <input 
                 placeholder="Filter alerts..."
-                className="pl-12 pr-6 py-3 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl text-[13px] font-bold text-gray-800 dark:text-gray-100 focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 dark:focus:ring-blue-900/40 focus:border-[#11327c]/20 transition-all w-full sm:w-64 shadow-sm"
+                className="input pl-10 w-full sm:w-64"
               />
            </div>
         </div>
 
         {lowStockMedicines.length > 0 ? (
-          <div className="bg-white dark:bg-slate-900 rounded-[40px] border border-gray-100 dark:border-slate-800 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.05)] overflow-hidden transition-colors">
+          <div className="surface-card overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full text-left border-collapse">
+              <table className="table-shell">
                 <thead>
-                  <tr className="bg-[#f8fafc] dark:bg-slate-800 border-b border-gray-50 dark:border-slate-700/60">
-                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Medicine & Batch</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em]">Manufacturer</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em] text-center">Status</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em] text-right">Available</th>
-                    <th className="px-8 py-6 text-[10px] font-black text-gray-400 dark:text-gray-300 uppercase tracking-[0.2em] text-right">Actions</th>
+                  <tr className="bg-muted/40 border-b border-border">
+                    <th className="th">Medicine & Batch</th>
+                    <th className="th">Manufacturer</th>
+                    <th className="th text-center">Status</th>
+                    <th className="th text-right">Available</th>
+                    <th className="th text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
-                  {lowStockMedicines.map((med, idx) => (
+                <tbody className="divide-y divide-border/60">
+                  {lowStockMedicines.map((med) => (
                     <tr 
                       key={med._id} 
-                      className="hover:bg-[#f8fafc]/50 dark:hover:bg-slate-800/50 transition-all group"
+                      className="tbody-row group"
                     >
-                      <td className="px-8 py-6">
-                        <div className="flex items-center gap-5">
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all shadow-sm ${
-                            med.stock <= 5 ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400' : 'bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400'
+                      <td className="td">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-11 h-11 rounded-xl flex items-center justify-center transition-all shadow-sm ${
+                            med.stock <= 5 ? 'bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400'
                           }`}>
-                            <Package className="w-6 h-6" strokeWidth={2} />
+                            <Package className="w-5.5 h-5.5" strokeWidth={2} />
                           </div>
                           <div>
-                             <div className="font-black text-[#11327c] dark:text-blue-400 uppercase text-[13px] tracking-tight">{med.name}</div>
-                             <div className="text-[10px] font-black text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-2">
+                             <div className="font-extrabold text-foreground uppercase text-[13px] tracking-tight">{med.name}</div>
+                             <div className="text-[10px] font-bold text-muted-foreground mt-1 flex items-center gap-2">
                                <Hash className="w-3 h-3" strokeWidth={2.5} />
-                               BATCH: <span className="text-gray-500 dark:text-gray-300 font-mono">{med.batchNumber}</span>
+                               Batch: <span className="text-foreground font-mono">{med.batchNumber}</span>
                              </div>
                           </div>
                         </div>
                       </td>
-                      <td className="px-8 py-6">
+                      <td className="td">
                          <div className="flex flex-col">
-                            <span className="text-[13px] font-black text-[#11327c]/70 dark:text-blue-300 uppercase">{med.brand || "Generics"}</span>
-                            <span className="text-[10px] font-bold text-gray-400 dark:text-gray-500 flex items-center gap-2 mt-1.5 uppercase tracking-wider">
+                            <span className="text-[13px] font-bold text-foreground uppercase">{med.brand || "Generics"}</span>
+                            <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-2 mt-1.5 uppercase tracking-wider">
                               <Calendar className="w-3.5 h-3.5" />
                               Exp: {format(new Date(med.expiryDate), "MMM dd, yyyy")}
                             </span>
                          </div>
                       </td>
-                      <td className="px-8 py-6 text-center">
-                         <div className={`inline-flex items-center px-3 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border ${
-                           med.stock <= 5 
-                           ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border-rose-100 dark:border-rose-900/40' 
-                           : 'bg-orange-50 dark:bg-orange-950/40 text-orange-700 dark:text-orange-300 border-orange-100 dark:border-orange-900/40'
-                         }`}>
+                      <td className="td text-center">
+                         <span className={med.stock <= 5 ? "badge-danger" : "badge-warning"}>
                            {med.stock <= 5 ? "Critical" : "Warning"}
-                         </div>
+                         </span>
                       </td>
-                      <td className="px-8 py-6 text-right">
+                      <td className="td text-right">
                          <div className="flex flex-col items-end">
-                            <span className={`text-2xl font-black tracking-tighter leading-none ${med.stock <= 5 ? 'text-rose-600 dark:text-rose-400' : 'text-orange-600 dark:text-orange-400'}`}>
+                            <span className={`font-display text-2xl font-extrabold tracking-tighter leading-none ${med.stock <= 5 ? 'text-red-600 dark:text-red-400' : 'text-orange-600 dark:text-orange-400'}`}>
                               {med.stock}
                             </span>
-                            <span className="text-[9px] font-black text-gray-300 dark:text-gray-500 uppercase mt-1 tracking-widest">Strips</span>
+                            <span className="text-[9px] font-bold text-muted-foreground uppercase mt-1 tracking-widest">Strips</span>
                          </div>
                       </td>
-                      <td className="px-8 py-6 text-right">
+                      <td className="td text-right">
                          <Link 
                            href={`/billing?add=${med._id}`}
-                           className="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-600 hover:text-white transition-all shadow-sm active:scale-95"
+                           className="btn-outline btn-sm text-primary border-primary/25 bg-primary/5 hover:bg-primary hover:text-primary-foreground"
                          >
                            + Bill
-                           <ArrowRight className="w-3.5 h-3.5" strokeWidth={3} />
+                           <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.6} />
                          </Link>
                       </td>
                     </tr>
@@ -237,15 +216,15 @@ export default function LowStockPage() {
             </div>
           </div>
         ) : (
-          <div className="bg-white dark:bg-slate-900 rounded-[40px] p-24 text-center border border-gray-100 dark:border-slate-800 shadow-[0_20px_60px_-20px_rgba(0,0,0,0.05)] flex flex-col items-center transition-colors">
-             <div className="w-24 h-24 bg-emerald-50 dark:bg-emerald-950/40 rounded-[32px] flex items-center justify-center mb-8 shadow-sm">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500 dark:text-emerald-400" strokeWidth={2.5} />
+          <div className="surface-card p-16 text-center flex flex-col items-center">
+             <div className="w-20 h-20 bg-success/10 rounded-3xl flex items-center justify-center mb-6">
+                <CheckCircle2 className="w-10 h-10 text-emerald-500" strokeWidth={2.4} />
              </div>
-             <h3 className="text-2xl font-black text-[#11327c] dark:text-blue-400 uppercase tracking-tight">Catalog Optimized</h3>
-             <p className="text-gray-400 dark:text-gray-300 font-medium text-sm max-w-sm mt-3 leading-relaxed">Great news! All medicines are currently maintaining inventory levels above the warning threshold.</p>
+             <h3 className="font-display text-xl font-extrabold text-foreground tracking-tight">Catalog Optimized</h3>
+             <p className="text-muted-foreground font-medium text-sm max-w-sm mt-3 leading-relaxed">Great news! All medicines are currently maintaining inventory levels above the warning threshold.</p>
              <Link 
                href="/inventory"
-               className="mt-10 px-10 py-4 bg-[#11327c] hover:bg-[#1e4db7] text-white rounded-2xl font-black text-[11px] uppercase tracking-[0.2em] shadow-lg shadow-[#11327c]/20 hover:scale-105 active:scale-95 transition-all"
+               className="btn-primary btn-lg mt-8"
              >
                View All Products
              </Link>
@@ -254,10 +233,10 @@ export default function LowStockPage() {
       </div>
 
       {/* Footer Info */}
-      <div className="flex justify-center pt-10 pb-6">
-         <div className="px-5 py-2.5 bg-[#f8fafc] dark:bg-slate-800 rounded-xl border border-gray-100 dark:border-slate-700 text-[11px] text-gray-400 dark:text-gray-300 font-bold flex items-center gap-3 uppercase tracking-wider">
-           <AlertCircle className="w-4 h-4 text-orange-400" />
-           Threshold: <span className="text-[#11327c] dark:text-blue-400">10 Units</span> <span className="opacity-20">/</span> Smart Alerts <span className="text-emerald-500 dark:text-emerald-400">Active</span>
+      <div className="flex justify-center pt-6 pb-4">
+         <div className="px-5 py-2.5 bg-muted/60 rounded-xl border border-border text-[11px] text-muted-foreground font-bold flex items-center gap-3 uppercase tracking-wider">
+           <AlertCircle className="w-4 h-4 text-amber-400" />
+           Threshold: <span className="text-foreground">10 Units</span> <span className="opacity-30">/</span> Smart Alerts <span className="text-emerald-500 dark:text-emerald-400">Active</span>
          </div>
       </div>
     </div>

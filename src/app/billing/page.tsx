@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Separator } from "@/src/components/ui/separator";
+import { Badge } from "@/src/components/ui/badge";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
@@ -98,8 +99,8 @@ function BillingSearchInput({ onSearch, onBarcodeScan, clearTrigger }: any) {
   return (
     <div className="relative">
       <input
-        className="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 shadow-sm pl-12 pr-4 py-3.5 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-gray-800 dark:text-gray-100 placeholder:text-gray-400 font-medium"
-        placeholder="Scan Barcode or Search by name, brand, batch..."
+        className="input h-12 pl-12 text-[13.5px]"
+        placeholder="Scan barcode or search by name, brand, batch..."
         value={localSearch}
         onChange={(e) => setLocalSearch(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -637,66 +638,63 @@ function BillingContent() {
 
   return (
     <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-[26px] font-bold text-[#11327c] tracking-tight">New Bill</h2>
-          <p className="text-[13px] text-gray-500 font-medium">Create and manage customer invoices.</p>
+      {/* Toast messages */}
+      {message && (
+        <div className={`px-4 py-2.5 rounded-xl flex items-center gap-2 text-[13px] font-bold shadow-card animate-fade-in w-fit ml-auto ${
+          message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50' : message.type === 'info' ? 'bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-900/50' : 'bg-rose-50 text-rose-700 border border-rose-100 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900/50'
+        }`}>
+          {message.type === 'success' ? <CheckCircle2 size={16} strokeWidth={2.5} /> : message.type === 'info' ? <Info size={16} strokeWidth={2.5} /> : <XCircle size={16} strokeWidth={2.5} />}
+          {message.text}
         </div>
-        
-        {message && (
-          <div className={`px-4 py-2.5 rounded-xl flex items-center gap-2 text-[13px] font-bold shadow-sm animate-in fade-in slide-in-from-top-2 duration-300 ${
-            message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-rose-50 text-rose-700 border border-rose-100'
-          }`}>
-            {message.type === 'success' ? <CheckCircle2 size={16} strokeWidth={2.5} /> : <XCircle size={16} strokeWidth={2.5} />}
-            {message.text}
-          </div>
-        )}
-      </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         {/* Left Column: Customer Details, Search & Cart */}
         <div className="lg:col-span-8 space-y-6">
           
-          {/* Patient Details Card (Moved to top) */}
-          <div className="bg-white dark:bg-slate-900 p-7 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] transition-colors">
-            <h3 className="text-[15px] font-extrabold text-[#11327c] dark:text-blue-400 mb-5 flex items-center gap-2">
-              <Users size={18} strokeWidth={2.5} className="text-[#11327c] dark:text-blue-400" />
-              Customer Details
-            </h3>
+          {/* Patient Details Card */}
+          <div className="surface-card p-6">
+            <div className="flex items-center gap-2.5 mb-5">
+              <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <Users size={17} strokeWidth={2.4} />
+              </span>
+              <h3 className="font-display text-[15px] font-extrabold text-foreground">
+                Customer Details
+              </h3>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Name</label>
+              <div>
+                <label className="label">Patient Name</label>
                 <input
-                  className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900 dark:text-gray-100"
+                  className="input"
                   placeholder="Full Name"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Doctor Name</label>
+              <div>
+                <label className="label">Doctor Name</label>
                 <input
-                  className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900 dark:text-gray-100"
+                  className="input"
                   placeholder="Dr. Name"
                   value={doctorName}
                   onChange={(e) => setDoctorName(e.target.value)}
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Phone Number</label>
+              <div>
+                <label className="label">Phone Number</label>
                 <input
-                  className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900 dark:text-gray-100"
+                  className="input"
                   placeholder="10-digit number"
                   value={patientPhone}
                   onChange={(e) => setPatientPhone(e.target.value)}
                 />
               </div>
-              <div className="space-y-1.5">
-                <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Patient Address</label>
+              <div>
+                <label className="label">Patient Address</label>
                 <input
-                  className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 shadow-sm px-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] transition-all text-[13px] font-bold text-gray-900 dark:text-gray-100"
+                  className="input"
                   placeholder="Patient Address"
                   value={patientAddress}
                   onChange={(e) => setPatientAddress(e.target.value)}
@@ -704,37 +702,44 @@ function BillingContent() {
               </div>
             </div>
             {regularMedicines.length > 0 && (
-                 <button 
-                   onClick={loadRegularMedicines}
-                   disabled={loading}
-                   className="w-full mt-4 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-100 py-3 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-2 shadow-sm"
-                 >
-                    <Package size={16} strokeWidth={2.5} />
-                    Active Prescriptions ({regularMedicines.length})
-                 </button>
-              )}
+              <button
+                onClick={loadRegularMedicines}
+                disabled={loading}
+                className="btn-outline btn-md w-full mt-4 text-primary border-primary/25 bg-primary/5 hover:bg-primary/10"
+              >
+                <Package size={16} strokeWidth={2.4} />
+                Load Active Prescriptions ({regularMedicines.length})
+              </button>
+            )}
           </div>
 
           {/* Search Box */}
-          <div className="bg-white dark:bg-slate-900 p-7 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] relative group transition-colors">
-            <h2 className="text-[15px] font-extrabold text-[#11327c] dark:text-blue-400 mb-4 flex items-center gap-2">
-              <Search size={18} className="text-[#11327c] dark:text-blue-400" strokeWidth={2.5} />
-              Add Medicines
-            </h2>
-            <BillingSearchInput 
+          <div className="surface-card p-6 relative group">
+            <div className="flex items-center gap-2.5 mb-4">
+              <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <Search size={17} strokeWidth={2.4} />
+              </span>
+              <h2 className="font-display text-[15px] font-extrabold text-foreground">
+                Add Medicines
+              </h2>
+            </div>
+            <BillingSearchInput
               onSearch={setDebouncedSearch}
               onBarcodeScan={handleBarcodeScan}
               clearTrigger={clearTrigger}
             />
+            <p className="text-[11px] font-semibold text-muted-foreground mt-2.5 ml-1">
+              Press <kbd className="px-1.5 py-0.5 rounded bg-muted border border-border text-[10px] font-bold">Enter</kbd> to scan a barcode directly
+            </p>
 
             {/* Results Dropdown */}
             <AnimatePresence>
               {medicines.length > 0 && (
-                <motion.div 
+                <motion.div
                   initial={{ opacity: 0, y: 5, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 5, scale: 0.98 }}
-                  className="absolute top-full left-0 right-0 mt-3 bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl shadow-[0_15px_40px_-10px_rgba(0,0,0,0.15)] z-20 max-h-80 overflow-y-auto p-2"
+                  className="absolute top-full left-0 right-0 mt-3 bg-card border border-border rounded-2xl shadow-pop z-20 max-h-80 overflow-y-auto p-2"
                 >
                   {medicines.slice(0, 50).map((med, index) => (
                     <motion.button
@@ -743,21 +748,23 @@ function BillingContent() {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
                       onClick={() => addToCart(med)}
-                      className="w-full flex items-center gap-4 p-4 hover:bg-[#f8fafc] dark:hover:bg-slate-800 text-left transition-colors border-b border-gray-200 dark:border-slate-800 last:border-b-0 group/item"
+                      className="w-full flex items-center gap-4 p-4 hover:bg-accent/70 text-left transition-colors border-b border-border/60 last:border-b-0 group/item cursor-pointer"
                     >
-                      <div className="w-11 h-11 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/40 flex items-center justify-center text-indigo-400 dark:text-indigo-300 group-hover/item:bg-indigo-600 group-hover/item:text-white transition-all shadow-sm shrink-0 border border-indigo-100/50 dark:border-indigo-800/40 group-hover/item:border-indigo-600">
-                         <Pill size={20} strokeWidth={2} />
+                      <div className="w-11 h-11 rounded-xl bg-primary/8 text-primary flex items-center justify-center shrink-0 border border-primary/15 transition-all group-hover/item:bg-primary group-hover/item:text-primary-foreground group-hover/item:border-primary">
+                        <Pill size={20} strokeWidth={2} />
                       </div>
-                      <div className="flex-1">
-                        <div className="font-extrabold text-[#11327c] dark:text-blue-300 text-[15px] group-hover/item:text-indigo-700 dark:group-hover/item:text-indigo-400 transition-colors tracking-tight">{med.name}</div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-extrabold text-foreground text-[15px] tracking-tight truncate">{med.name}</div>
                         {med.composition && (
-                          <div className="text-[11px] text-gray-500 dark:text-gray-400 font-medium truncate max-w-sm mt-0.5">{med.composition}</div>
+                          <div className="text-[11px] text-muted-foreground font-medium truncate max-w-sm mt-0.5">{med.composition}</div>
                         )}
-                        <div className="text-[10px] text-gray-500 font-black flex flex-wrap gap-2 mt-2 uppercase tracking-widest">
-                          {med.rackNumber && <span className="bg-gray-100 border border-gray-200 px-2 py-0.5 rounded-md text-gray-600 shadow-sm">Rack: {med.rackNumber}</span>}
-                          <span className={`px-2 py-0.5 rounded-md shadow-sm border ${med.stock < 10 ? 'text-rose-600 bg-rose-50 border-rose-100' : 'text-emerald-600 bg-emerald-50 border-emerald-100'}`}>
-                            Stock: {
-                              med.tabletsPerStrip > 1 
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {med.rackNumber && (
+                            <Badge variant="neutral" className="font-semibold">Rack: {med.rackNumber}</Badge>
+                          )}
+                          <Badge variant={med.stock < 10 ? "danger" : "success"} className="font-semibold">
+                            Stock:{" "}
+                            {med.tabletsPerStrip > 1
                               ? (() => {
                                   const totalTabs = Math.round((med.stock || 0) * med.tabletsPerStrip);
                                   const strips = Math.floor(totalTabs / med.tabletsPerStrip);
@@ -767,15 +774,23 @@ function BillingContent() {
                                   if (tabs > 0) return `${tabs} Tabs`;
                                   return `0 Strips`;
                                 })()
-                              : `${Math.round(med.stock || 0)} Units`
-                            }
-                          </span>
-                          <span className="bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md text-blue-600 shadow-sm">Batch: {med.batchNumber || 'N/A'}</span>
-                          <span className="bg-purple-50 border border-purple-100 px-2 py-0.5 rounded-md text-purple-700 shadow-sm">Exp: {med.expiryDate ? new Date(med.expiryDate).toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }) : 'N/A'}</span>
-                          <span className="bg-amber-50 border border-amber-100 px-2 py-0.5 rounded-md text-amber-700 shadow-sm">MRP: ₹{(med.sellingPricePerStrip || 0).toFixed(2)}</span>
+                              : `${Math.round(med.stock || 0)} Units`}
+                          </Badge>
+                          <Badge variant="info" className="font-mono font-semibold">
+                            Batch: {med.batchNumber || "N/A"}
+                          </Badge>
+                          <Badge variant="warning" className="font-semibold">
+                            Exp:{" "}
+                            {med.expiryDate
+                              ? new Date(med.expiryDate).toLocaleDateString("en-GB", { month: "short", year: "2-digit" })
+                              : "N/A"}
+                          </Badge>
+                          <Badge variant="brand" className="font-semibold">
+                            MRP: ₹{(med.sellingPricePerStrip || 0).toFixed(2)}
+                          </Badge>
                         </div>
                       </div>
-                      <div className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-400 rounded-xl group-hover/item:bg-[#10b981] group-hover/item:text-white transition-all shadow-sm shrink-0">
+                      <div className="w-10 h-10 flex items-center justify-center bg-muted text-muted-foreground rounded-xl group-hover/item:bg-success group-hover/item:text-success-foreground transition-all shadow-sm shrink-0">
                         <Plus size={20} strokeWidth={2.5} />
                       </div>
                     </motion.button>
@@ -786,30 +801,32 @@ function BillingContent() {
           </div>
 
           {/* Cart Table View */}
-          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden transition-colors">
-            <div className="p-6 border-b border-gray-50 dark:border-slate-800 bg-[#f8fafc]/50 dark:bg-slate-800/50 flex items-center justify-between">
-              <h3 className="text-[15px] font-extrabold text-[#11327c] dark:text-blue-400 flex items-center gap-2">
-                <ShoppingCart size={18} strokeWidth={2.5} />
+          <div className="surface-card overflow-hidden">
+            <div className="p-5 border-b border-border bg-muted/40 flex flex-wrap items-center justify-between gap-3">
+              <h3 className="font-display text-[15px] font-extrabold text-foreground flex items-center gap-2">
+                <ShoppingCart size={18} strokeWidth={2.4} className="text-primary" />
                 Selected Medicines
-                <span className="ml-2 bg-[#11327c]/10 dark:bg-blue-900/40 text-[#11327c] dark:text-blue-300 text-[11px] font-black px-2 py-0.5 rounded-full">{cart.length} items</span>
+                <span className="ml-1 bg-primary/10 text-primary text-[11px] font-bold px-2 py-0.5 rounded-full">{cart.length} items</span>
               </h3>
               {cart.length > 0 && (
-                <button 
+                <button
                   onClick={() => { setCart([]); localStorage.removeItem('medishop_cart'); }}
-                  className="text-[11px] text-rose-500 hover:text-rose-600 font-black uppercase tracking-wider flex items-center gap-1.5 transition-colors"
+                  className="text-[11px] text-red-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <Trash2 size={14} strokeWidth={2.5} />
                   Clear Cart
                 </button>
               )}
             </div>
-            
-            <div className="p-5 space-y-4">
+
+            <div className="p-4 space-y-3.5">
               {cart.length === 0 ? (
-                <div className="py-20 flex flex-col items-center justify-center text-center opacity-30">
-                  <ShoppingCart size={48} strokeWidth={1} className="text-gray-400 mb-3" />
-                  <p className="text-gray-500 font-bold text-sm tracking-tight">Your cart is empty</p>
-                  <p className="text-[11px] text-gray-400 font-medium">Search items to start billing</p>
+                <div className="py-16 flex flex-col items-center justify-center text-center">
+                  <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
+                    <ShoppingCart size={28} strokeWidth={1.5} className="text-muted-foreground" />
+                  </div>
+                  <p className="text-foreground font-bold text-sm tracking-tight">Your cart is empty</p>
+                  <p className="text-[12px] text-muted-foreground font-medium mt-1">Search medicines above to start billing</p>
                 </div>
               ) : (
                 <AnimatePresence>
@@ -822,27 +839,27 @@ function BillingContent() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="group relative p-3.5 rounded-xl border border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-[#11327c]/20 dark:hover:border-blue-500/30 transition-all shadow-sm flex flex-col md:flex-row items-center gap-3"
+                        className="group relative p-3.5 rounded-xl border border-border bg-card hover:border-primary/25 transition-all shadow-sm flex flex-col md:flex-row items-center gap-3"
                       >
                          {/* LEFT: Info */}
                          <div className="flex-1 min-w-0 flex flex-col justify-center w-full">
-                            <div className="font-black text-[#11327c] dark:text-blue-300 text-[14px] truncate flex items-center gap-2 mb-1">
+                            <div className="font-display font-extrabold text-foreground text-[14px] truncate flex items-center gap-2 mb-1.5">
                               {item.name}
-                              {item.stock < 10 && <span className="px-1.5 py-0.5 rounded text-rose-500 bg-rose-50 border border-rose-100 text-[9px] font-black uppercase tracking-wider">Low Stock</span>}
+                              {item.stock < 10 && <Badge variant="danger" className="text-[9px] px-1.5 py-0.5 uppercase">Low Stock</Badge>}
                             </div>
-                            <div className="flex flex-wrap items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-gray-400">
-                                <span>Batch: <span className="text-gray-700">{item.batchNumber || '-'}</span></span>
+                            <div className="flex flex-wrap items-center gap-2 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">
+                                <span>Batch: <span className="text-foreground">{item.batchNumber || '-'}</span></span>
                                 <span className="opacity-30">•</span>
-                                <span>Exp: <span className="text-gray-700">{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) : "-"}</span></span>
+                                <span>Exp: <span className="text-foreground">{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) : "-"}</span></span>
                                 <span className="opacity-30">•</span>
-                                <span>Stock: <span className={item.stock < 10 ? "text-rose-500" : "text-gray-700"}>
+                                <span>Stock: <span className={item.stock < 10 ? "text-red-500" : "text-foreground"}>
                                   {Math.round(item.stock || 0)}
                                 </span></span>
                             </div>
                          </div>
 
                          {/* MIDDLE: Inputs */}
-                         <div className="flex items-center gap-3 w-full md:w-auto shrink-0 bg-[#f8fafc] dark:bg-slate-800/60 px-3 py-2 rounded-lg border border-gray-100/80 dark:border-slate-700/80">
+                         <div className="flex items-center gap-3 w-full md:w-auto shrink-0 bg-muted/50 px-3 py-2 rounded-lg border border-border/70">
                              {/* STRIP */}
                              <div className="flex flex-col items-center">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{isMulti ? "Strips" : "Qty"} <span className="text-[#11327c]/70 dark:text-blue-400/70 ml-0.5">(₹{item.stripSellingPrice})</span></span>
@@ -894,7 +911,7 @@ function BillingContent() {
 
                             <div className="flex flex-col items-end w-20">
                                 <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</span>
-                                <span className="text-[14px] font-black text-[#11327c] dark:text-blue-300">
+                                <span className="font-display text-[14px] font-extrabold text-foreground">
                                    ₹{(((item.stripQty || 0) * (Number(item.stripSellingPrice) || 0) + (item.tabletQty || 0) * (Number(item.tabletSellingPrice) || 0)) * (1 - (Number(item.discountPercent) || 0) / 100)).toFixed(2)}
                                 </span>
                             </div>
@@ -917,83 +934,131 @@ function BillingContent() {
 
 
           {/* Bill Summary Card */}
-          <div className="bg-[#052b82] p-5 rounded-2xl shadow-[0_20px_50px_-15px_rgba(5,43,130,0.4)] text-white relative flex flex-col justify-between">
-            <div>
-              <h3 className="text-[15px] font-black tracking-wide mb-4 flex items-center gap-2">
-                <Receipt size={18} strokeWidth={2.5} />
-                Invoice Summary
-              </h3>
-              
-              <div className="space-y-3">
-                <div className="flex justify-between text-[13px] font-bold opacity-90">
+          <div className="relative p-5 rounded-2xl shadow-pop text-white overflow-hidden flex flex-col justify-between bg-[linear-gradient(165deg,oklch(0.24_0.09_262)_0%,oklch(0.33_0.12_262)_45%,oklch(0.44_0.19_255)_110%)]">
+            <div
+              className="absolute inset-0 opacity-[0.06] pointer-events-none"
+              style={{
+                backgroundImage:
+                  "linear-gradient(rgb(255 255 255 / 0.6) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.6) 1px, transparent 1px)",
+                backgroundSize: "28px 28px",
+              }}
+            />
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-display text-[15px] font-extrabold tracking-wide flex items-center gap-2">
+                  <Receipt size={18} strokeWidth={2.4} />
+                  Invoice Summary
+                </h3>
+                {cart.length > 0 && (
+                  <span className="text-[10px] font-bold uppercase tracking-widest bg-white/10 ring-1 ring-white/20 rounded-full px-2.5 py-1">
+                    {cart.length} {cart.length === 1 ? "item" : "items"}
+                  </span>
+                )}
+              </div>
+
+              <div className="space-y-2.5">
+                <div className="flex justify-between text-[13px] font-semibold opacity-90">
                   <span>Sub Total</span>
-                  <span>₹{subTotal.toFixed(2)}</span>
+                  <span className="tabular-nums">₹{subTotal.toFixed(2)}</span>
                 </div>
 
-                <div className="flex justify-between items-center text-[13px] font-bold opacity-90">
-                  <span>Weighted Discount (%)</span>
+                <div className="flex justify-between items-center text-[13px] font-semibold opacity-90">
+                  <span>Weighted Discount</span>
                   <span className="tabular-nums">{(subTotal > 0 ? (discountAmount / subTotal) * 100 : 0).toFixed(1)}%</span>
                 </div>
-                
+
                 {discountAmount > 0 && (
                   <div className="flex justify-between text-[13px] font-bold text-rose-300">
                     <span>Discount Savings</span>
                     <span>-₹{discountAmount.toFixed(2)}</span>
                   </div>
                 )}
-                
-                <div className="h-px w-full border-b border-dashed border-white/20 my-3" />
+
+                <div className="h-px w-full border-b border-dashed border-white/25 my-2" />
 
                 {/* GST Section */}
-                <div className="flex justify-between items-center pb-2">
-                   <div className="flex items-center gap-2">
-                      <label className="text-[13px] font-bold opacity-90 cursor-pointer select-none" htmlFor="gstToggle">Apply GST (Item-wise)</label>
-                      <Info size={14} className="opacity-60" strokeWidth={2.5} />
-                   </div>
-                   <div 
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <label className="text-[13px] font-semibold opacity-90 cursor-pointer select-none" htmlFor="gstToggle">
+                      Apply GST (Item-wise)
+                    </label>
+                    <Info size={14} className="opacity-50" strokeWidth={2.5} />
+                  </div>
+                  <button
+                    type="button"
                     onClick={() => setGstEnabled(!gstEnabled)}
-                    className={`w-11 h-6 rounded-full transition-all relative cursor-pointer flex items-center p-1 ${gstEnabled ? 'bg-emerald-500' : 'bg-white/20'}`}
-                   >
-                      <div className={`w-4 h-4 bg-white rounded-full transition-all shadow-sm ${gstEnabled ? 'translate-x-5' : 'translate-x-0'}`} />
-                   </div>
+                    aria-pressed={gstEnabled}
+                    className={`w-11 h-6 rounded-full transition-all relative cursor-pointer flex items-center p-1 ${gstEnabled ? "bg-emerald-500" : "bg-white/20"}`}
+                  >
+                    <span className={`w-4 h-4 bg-white rounded-full transition-all shadow-sm ${gstEnabled ? "translate-x-5" : "translate-x-0"}`} />
+                  </button>
                 </div>
 
                 {gstEnabled && (
-                  <div className="flex justify-between text-[13px] font-bold text-emerald-300 pb-2">
-                      <span>GST Amount</span>
-                      <span>+₹{gstAmount.toFixed(2)}</span>
+                  <div className="flex justify-between text-[13px] font-bold text-emerald-300">
+                    <span>GST Amount</span>
+                    <span>+₹{gstAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {roundingAdjustment !== 0 && (
-                  <div className={`flex justify-between text-[13px] font-bold pb-2 ${roundingAdjustment < 0 ? 'text-rose-300' : 'text-emerald-300'}`}>
-                      <span>Rounding</span>
-                      <span>{roundingAdjustment < 0 ? '-' : '+'}₹{Math.abs(roundingAdjustment).toFixed(2)}</span>
+                  <div className={`flex justify-between text-[13px] font-bold ${roundingAdjustment < 0 ? "text-rose-300" : "text-emerald-300"}`}>
+                    <span>Rounding</span>
+                    <span>{roundingAdjustment < 0 ? "-" : "+"}₹{Math.abs(roundingAdjustment).toFixed(2)}</span>
                   </div>
                 )}
 
+                {/* Payment method */}
+                <div className="pt-3">
+                  <div className="text-[11px] font-bold uppercase tracking-widest opacity-70 mb-2">
+                    Payment Method
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(["Cash", "UPI", "Card"] as const).map((method) => {
+                      const Icon = method === "Cash" ? Banknote : method === "UPI" ? Send : CreditCard;
+                      const active = paymentMethod === method;
+                      return (
+                        <button
+                          key={method}
+                          type="button"
+                          onClick={() => setPaymentMethod(method)}
+                          className={`flex flex-col items-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold transition-all cursor-pointer ring-1 ${
+                            active
+                              ? "bg-white/15 ring-white/40"
+                              : "bg-white/5 ring-white/10 hover:bg-white/10"
+                          }`}
+                        >
+                          <Icon size={17} strokeWidth={2.2} />
+                          {method}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="mt-4 pt-4 border-t border-white/10">
+            <div className="relative mt-4 pt-4 border-t border-white/15">
               <div className="flex justify-between items-end mb-4">
-                <span className="text-[12px] font-black tracking-widest opacity-80 uppercase">Grand Total</span>
-                <span className="text-3xl font-black tracking-tighter">₹{grandTotal.toFixed(2)}</span>
+                <span className="text-[11px] font-bold tracking-[0.14em] opacity-75 uppercase">Grand Total</span>
+                <span className="font-display text-[30px] font-extrabold tracking-tighter tabular-nums">₹{grandTotal.toFixed(2)}</span>
               </div>
               <button
                 disabled={loading || cart.length === 0}
                 onClick={submitBill}
-                className="w-full bg-[#10b981] text-white py-3 rounded-xl font-black text-[13px] hover:bg-[#059669] transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-b from-emerald-400 to-emerald-600 text-white py-3.5 rounded-xl font-extrabold text-[13px] hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_10px_24px_-8px_rgb(16_185_129/0.6)]"
               >
-                {loading ? "GENERATING..." : (
+                {loading ? (
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
                   <>
                     <FileText size={16} strokeWidth={2.5} />
                     FINALIZE BILL
                   </>
                 )}
               </button>
-              
+
               {cart.length > 0 && (
-                <div className="mt-4 flex gap-1.5 text-[9px] font-black uppercase tracking-widest text-white/40 justify-center">
+                <div className="mt-3.5 flex gap-1.5 text-[9.5px] font-bold uppercase tracking-widest text-white/45 justify-center">
                   <AlertCircle size={12} strokeWidth={3} />
                   Stock will be deducted on submit
                 </div>
@@ -1007,38 +1072,40 @@ function BillingContent() {
       {/* Success Modal */}
       <AnimatePresence>
         {showSuccessModal && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-[#11327c]/20 backdrop-blur-sm">
-            <motion.div 
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+            <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-3xl shadow-[0_30px_70px_-15px_rgba(17,50,124,0.3)] w-full max-w-[400px] overflow-hidden transition-colors"
+              className="bg-card border border-border rounded-3xl shadow-pop w-full max-w-[400px] overflow-hidden"
             >
               <div className="p-8 text-center">
-                <div className="w-20 h-20 bg-emerald-50 dark:bg-emerald-950/40 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-100 dark:border-emerald-800/60 shadow-sm">
-                  <CheckCircle2 size={40} className="text-emerald-500" strokeWidth={2.5} />
+                <div className="w-20 h-20 bg-success/12 rounded-full flex items-center justify-center mx-auto mb-6 ring-8 ring-success/5">
+                  <CheckCircle2 size={40} className="text-emerald-500" strokeWidth={2.4} />
                 </div>
-                <h3 className="text-[22px] font-black text-[#11327c] dark:text-blue-400 mb-2 tracking-tight">Success!</h3>
-                <p className="text-gray-500 font-bold text-[14px] mb-8">
+                <h3 className="font-display text-[22px] font-extrabold text-foreground mb-2 tracking-tight">
+                  Bill Generated!
+                </h3>
+                <p className="text-muted-foreground font-semibold text-[14px] mb-8">
                   Your bill has been generated successfully and saved to your records.
                 </p>
                 <div className="flex flex-col gap-3">
-                  <button 
+                  <button
                     onClick={() => {
                       if (generatedBillId) {
-                        window.open(`/print/${generatedBillId}`, '_blank');
+                        window.open(`/print/${generatedBillId}`, "_blank");
                       }
                     }}
-                    className="w-full bg-[#11327c] text-white py-4 rounded-2xl font-black text-[14px] shadow-lg shadow-[#11327c]/20 hover:bg-[#1e4db7] transition-all flex items-center justify-center gap-2"
+                    className="btn-primary btn-lg w-full"
                   >
                     <Printer size={18} strokeWidth={2.5} />
-                    PRINT INVOICE
+                    Print Invoice
                   </button>
-                  <button 
+                  <button
                     onClick={() => setShowSuccessModal(false)}
-                    className="w-full bg-gray-50 text-gray-500 py-4 rounded-2xl font-black text-[14px] hover:bg-gray-100 transition-all"
+                    className="btn-outline btn-lg w-full"
                   >
-                    OK, GOT IT
+                    OK, Got It
                   </button>
                 </div>
               </div>

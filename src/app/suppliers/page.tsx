@@ -181,74 +181,86 @@ export default function SuppliersPage() {
 
   return (
     <div className="space-y-8 pb-10 max-w-[1400px] mx-auto">
-      {/* Header Area */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h2 className="text-[28px] font-black text-[#11327c] tracking-tight">Supplier Directory</h2>
-          <p className="text-[13px] text-gray-500 font-medium">Manage wholesale distributors, procurement invoices, and GSTIN credentials.</p>
-        </div>
-        <div className="flex items-center gap-4">
+      {/* Header Actions */}
+      <div className="flex flex-wrap items-center justify-end gap-3 mb-6">
           <AnimatePresence>
             {message && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className={`px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-black uppercase tracking-wider border ${
-                  message.type === "success" 
-                    ? "bg-emerald-50 text-emerald-700 border-emerald-100" 
-                    : "bg-rose-50 text-rose-700 border-rose-100"
+                className={`px-4 py-2.5 rounded-xl flex items-center gap-2.5 text-xs font-bold uppercase tracking-wider border animate-fade-in ${
+                  message.type === "success"
+                    ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50"
+                    : "bg-rose-50 text-rose-700 border-rose-100 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900/50"
                 }`}
               >
-                {message.type === "success" ? <CheckCircle2 size={16} strokeWidth={3} /> : <AlertCircle size={16} strokeWidth={3} />}
+                {message.type === "success" ? <CheckCircle2 size={16} strokeWidth={2.6} /> : <AlertCircle size={16} strokeWidth={2.6} />}
                 {message.text}
               </motion.div>
             )}
           </AnimatePresence>
-          <button 
+          <button
             onClick={handleOpenAddModal}
-            className="flex items-center gap-3 px-6 py-3.5 bg-[#11327c] text-white rounded-2xl font-black text-[11px] uppercase tracking-widest transition-all hover:bg-[#1e4db7] shadow-lg shadow-[#11327c]/20 active:scale-95 shrink-0"
+            className="btn-primary btn-md shrink-0"
           >
-            <Plus size={18} strokeWidth={3} />
+            <Plus size={17} strokeWidth={2.4} />
             Register Supplier
           </button>
-        </div>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 max-w-sm gap-6">
-        <div className="bg-white p-6 rounded-[32px] border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)] flex items-center gap-5">
-           <div className="w-14 h-14 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center shrink-0">
-             <Building2 size={28} strokeWidth={2.5} />
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+             <Building2 size={22} strokeWidth={2.3} />
            </div>
            <div>
-             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-1">Total Distributors</p>
-             <h2 className="text-2xl font-black text-[#11327c] tracking-tighter">{suppliers.length} Active</h2>
+             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Total Distributors</p>
+             <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{suppliers.length} Active</h2>
+           </div>
+        </div>
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-red-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+             <IndianRupee size={22} strokeWidth={2.3} />
+           </div>
+           <div>
+             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Outstanding Dues</p>
+             <h2 className="font-display text-[22px] font-extrabold text-red-600 dark:text-red-400 tracking-tighter">₹{totalOutstanding.toLocaleString()}</h2>
+           </div>
+        </div>
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+             <CreditCard size={22} strokeWidth={2.3} />
+           </div>
+           <div>
+             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">With Outstanding Balance</p>
+             <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{suppliersWithDue} Suppliers</h2>
            </div>
         </div>
       </div>
 
       {/* Main Content Area */}
-      <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] p-8">
+      <div className="surface-card p-6 md:p-8">
         {/* Search Bar */}
-        <div className="relative mb-10 group max-w-2xl">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] transition-colors" size={20} strokeWidth={2.5} />
+        <div className="relative mb-6 group max-w-2xl">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} strokeWidth={2.4} />
           <input
             type="text"
             placeholder="Search by distributor name, contact person, or phone..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-14 pr-6 py-4 bg-gray-50 border border-gray-100 rounded-2xl text-[14px] font-bold focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-gray-800 placeholder:text-gray-400"
+            className="input pl-12 h-12"
           />
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-24 opacity-20">
-            <Loader2 className="animate-spin text-[#11327c] mb-4" size={48} strokeWidth={1.5} />
-            <p className="text-[10px] font-black uppercase tracking-widest">Retrieving distributors...</p>
+          <div className="flex flex-col items-center justify-center py-24">
+            <Loader2 className="animate-spin text-primary mb-4" size={40} strokeWidth={1.5} />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Retrieving distributors...</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <AnimatePresence>
               {suppliers.map((supplier, idx) => (
                 <motion.div
@@ -256,45 +268,45 @@ export default function SuppliersPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.05 }}
-                  className="group relative p-6 rounded-[32px] border border-gray-100 bg-white hover:border-[#11327c]/20 hover:shadow-[0_20px_50px_-15px_rgba(17,50,124,0.1)] transition-all text-left flex flex-col justify-between gap-5"
+                  className="group relative p-5 rounded-2xl border border-border bg-card hover:border-primary/25 hover:shadow-lift transition-all text-left flex flex-col justify-between gap-4"
                 >
                   <div>
                     {/* Top row */}
                     <div className="flex justify-between items-start gap-4">
-                      <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-[#11327c]/30 group-hover:bg-[#11327c] group-hover:text-white transition-all shrink-0">
-                        <Building2 size={24} strokeWidth={2.5} />
+                      <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
+                        <Building2 size={23} strokeWidth={2.3} />
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <button 
                           onClick={() => handleOpenEditModal(supplier)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-[#11327c] hover:bg-gray-100 transition-colors"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-primary hover:bg-accent transition-colors cursor-pointer"
                           title="Edit Supplier"
                         >
-                          <Edit size={16} strokeWidth={2.5} />
+                          <Edit size={16} strokeWidth={2.4} />
                         </button>
                         <button 
                           onClick={() => handleDeleteSupplier(supplier._id, supplier.name)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/60 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
                           title="Delete Supplier"
                         >
-                          <Trash2 size={16} strokeWidth={2.5} />
+                          <Trash2 size={16} strokeWidth={2.4} />
                         </button>
                       </div>
                     </div>
 
                     {/* Name & Contact */}
                     <div className="mt-4">
-                      <h3 className="text-[16px] font-black text-[#11327c] uppercase tracking-tight line-clamp-1">{supplier.name}</h3>
+                      <h3 className="font-display text-[15px] font-extrabold text-foreground tracking-tight line-clamp-1">{supplier.name}</h3>
                       {supplier.contactPerson && (
-                        <div className="flex items-center gap-2 text-[10px] text-gray-400 font-bold mt-1 uppercase tracking-wider">
-                          <Contact size={12} className="text-orange-500 shrink-0" />
+                        <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-bold mt-1 uppercase tracking-wider">
+                          <Contact size={12} className="text-amber-500 shrink-0" />
                           <span>POC: {supplier.contactPerson}</span>
                         </div>
                       )}
                     </div>
 
                     {/* Details list */}
-                    <div className="mt-4 pt-4 border-t border-gray-50 space-y-2 text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                    <div className="mt-4 pt-4 border-t border-border/70 space-y-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                       {supplier.phone && (
                         <div className="flex items-center gap-2.5">
                           <Phone size={12} className="text-indigo-400 shrink-0" />
@@ -310,7 +322,7 @@ export default function SuppliersPage() {
                       {supplier.gstin && (
                         <div className="flex items-center gap-2.5">
                           <FileText size={12} className="text-emerald-400 shrink-0" />
-                          <span className="text-emerald-600 font-mono text-[10px] font-black">{supplier.gstin}</span>
+                          <span className="text-emerald-600 dark:text-emerald-400 font-mono text-[10px] font-bold">{supplier.gstin}</span>
                         </div>
                       )}
                       {supplier.address && (
@@ -320,18 +332,35 @@ export default function SuppliersPage() {
                         </div>
                       )}
                     </div>
-                    
-
                   </div>
+
+                  {/* Outstanding balance + pay */}
+                  {(supplier.outstandingBalance || 0) > 0 && (
+                    <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-red-50/70 dark:bg-red-950/30 ring-1 ring-inset ring-red-100 dark:ring-red-900/40">
+                      <div>
+                        <div className="text-[9px] font-bold uppercase tracking-widest text-red-500/80">Outstanding</div>
+                        <div className="font-display text-[15px] font-extrabold text-red-600 dark:text-red-400">₹{(supplier.outstandingBalance || 0).toLocaleString()}</div>
+                      </div>
+                      <button
+                        onClick={() => handleOpenPaymentModal(supplier)}
+                        className="btn-danger btn-sm"
+                      >
+                        <CreditCard size={14} strokeWidth={2.4} />
+                        Pay
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
             {suppliers.length === 0 && (
-              <div className="col-span-full flex flex-col items-center justify-center py-32 opacity-20">
-                <Building2 size={64} strokeWidth={1} className="text-gray-400 mb-6" />
+              <div className="col-span-full flex flex-col items-center justify-center py-24">
+                <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-5">
+                  <Building2 size={28} strokeWidth={1.5} className="text-muted-foreground" />
+                </div>
                 <div className="text-center">
-                  <p className="text-[#11327c] font-black text-sm uppercase tracking-widest">No Suppliers Found</p>
-                  <p className="text-gray-400 font-medium text-xs mt-2">Add a new supplier profile to start categorizing inventory batches.</p>
+                  <p className="text-foreground font-bold text-sm tracking-wide">No Suppliers Found</p>
+                  <p className="text-muted-foreground font-medium text-xs mt-2">Add a new supplier profile to start categorizing inventory batches.</p>
                 </div>
               </div>
             )}
@@ -372,111 +401,111 @@ export default function SuppliersPage() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-white w-full max-w-xl rounded-[40px] shadow-2xl border border-white/20 overflow-hidden"
+              className="bg-card w-full max-w-xl rounded-3xl shadow-pop border border-border overflow-hidden"
             >
               {/* Modal Header */}
-              <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-[#f8fafc]">
+              <div className="p-6 border-b border-border flex justify-between items-center bg-muted/40">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-orange-500 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-orange-500/20">
-                    <Building2 size={24} strokeWidth={2.5}/>
+                  <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-400 text-white rounded-xl flex items-center justify-center shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+                    <Building2 size={23} strokeWidth={2.3}/>
                   </div>
-                  <h2 className="text-xl font-black text-[#11327c] uppercase tracking-tight">
+                  <h2 className="font-display text-xl font-extrabold text-foreground uppercase tracking-tight">
                     {editingSupplier ? "Edit Distributor" : "Distributor Registration"}
                   </h2>
                 </div>
                 <button 
                   onClick={() => setIsModalOpen(false)} 
-                  className="w-10 h-10 flex items-center justify-center bg-gray-100 text-gray-400 hover:bg-rose-50 hover:text-rose-500 rounded-2xl transition-all"
+                  className="w-10 h-10 flex items-center justify-center bg-muted text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40 rounded-xl transition-all cursor-pointer"
                 >
-                  <X size={20} strokeWidth={3}/>
+                  <X size={20} strokeWidth={2.6}/>
                 </button>
               </div>
               
               {/* Modal Form */}
-              <form onSubmit={handleSubmit} className="p-8 space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Distributor / Agency Name *</label>
+              <form onSubmit={handleSubmit} className="p-7 space-y-5">
+                <div>
+                  <label className="label">Distributor / Agency Name *</label>
                   <input 
                     type="text" 
                     required
                     placeholder="e.g. Apex Distributors Pvt. Ltd."
                     value={supplierForm.name}
                     onChange={e => setSupplierForm({...supplierForm, name: e.target.value})}
-                    className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all placeholder:text-gray-300" 
+                    className="input" 
                   />
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Contact Person</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="label">Contact Person</label>
                     <input 
                       type="text" 
                       placeholder="POC Name (e.g. John Doe)"
                       value={supplierForm.contactPerson}
                       onChange={e => setSupplierForm({...supplierForm, contactPerson: e.target.value})}
-                      className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all placeholder:text-gray-300" 
+                      className="input" 
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Contact Number</label>
+                  <div>
+                    <label className="label">Contact Number</label>
                     <input 
                       type="tel" 
                       placeholder="10-digit mobile"
                       value={supplierForm.phone}
                       onChange={e => setSupplierForm({...supplierForm, phone: e.target.value})}
-                      className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all placeholder:text-gray-300" 
+                      className="input" 
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Email Address</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <label className="label">Email Address</label>
                     <input 
                       type="email" 
                       placeholder="agency@example.com"
                       value={supplierForm.email}
                       onChange={e => setSupplierForm({...supplierForm, email: e.target.value})}
-                      className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all placeholder:text-gray-300" 
+                      className="input" 
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">GSTIN</label>
+                  <div>
+                    <label className="label">GSTIN</label>
                     <input 
                       type="text" 
                       placeholder="15-character GSTIN"
                       value={supplierForm.gstin}
                       onChange={e => setSupplierForm({...supplierForm, gstin: e.target.value.toUpperCase()})}
-                      className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all placeholder:text-gray-300 font-mono" 
+                      className="input font-mono" 
                     />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-[11px] font-black text-[#11327c] uppercase tracking-widest ml-1">Address</label>
+                <div>
+                  <label className="label">Address</label>
                   <textarea 
                     placeholder="Agency office address..."
                     rows={3}
                     value={supplierForm.address}
                     onChange={e => setSupplierForm({...supplierForm, address: e.target.value})}
-                    className="w-full bg-gray-50 border border-gray-100 px-5 py-4 rounded-2xl text-[14px] font-bold text-[#11327c] outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 transition-all placeholder:text-gray-300 resize-none" 
+                    className="input h-auto py-3 resize-none" 
                   />
                 </div>
 
-                <div className="pt-6 flex gap-4">
+                <div className="pt-4 flex gap-3">
                   <button 
                     type="button" 
                     onClick={() => setIsModalOpen(false)}
-                    className="flex-1 px-6 py-4 rounded-2xl border border-gray-100 text-gray-400 font-black text-[11px] uppercase tracking-widest hover:bg-gray-50 transition-all active:scale-95"
+                    className="btn-outline btn-lg flex-1 uppercase tracking-widest"
                   >
                     Dismiss
                   </button>
                   <button 
                     type="submit" 
                     disabled={isSubmitting}
-                    className="flex-[2] px-6 py-4 rounded-2xl bg-[#11327c] text-white font-black text-[11px] uppercase tracking-widest shadow-lg shadow-[#11327c]/20 hover:bg-[#1e4db7] transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-3"
+                    className="btn-primary btn-lg flex-[2] uppercase tracking-widest"
                   >
-                    {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : <CheckCircle2 size={18} strokeWidth={3}/>}
+                    {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : <CheckCircle2 size={18} strokeWidth={2.6}/>}
                     {editingSupplier ? "Save Changes" : "Register Distributor"}
                   </button>
                 </div>
@@ -486,6 +515,100 @@ export default function SuppliersPage() {
         )}
       </AnimatePresence>
 
+      {/* Record Payment Modal */}
+      <AnimatePresence>
+        {isPaymentModalOpen && selectedSupplierForPayment && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-card w-full max-w-md rounded-3xl shadow-pop border border-border overflow-hidden"
+            >
+              <div className="p-6 border-b border-border flex justify-between items-center bg-muted/40">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-red-400 text-white rounded-xl flex items-center justify-center shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+                    <CreditCard size={22} strokeWidth={2.3}/>
+                  </div>
+                  <div>
+                    <h2 className="font-display text-lg font-extrabold text-foreground tracking-tight">Record Payment</h2>
+                    <p className="text-[12px] text-muted-foreground font-semibold mt-0.5">{selectedSupplierForPayment.name}</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setIsPaymentModalOpen(false)} 
+                  className="w-10 h-10 flex items-center justify-center bg-muted text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40 rounded-xl transition-all cursor-pointer"
+                >
+                  <X size={20} strokeWidth={2.6}/>
+                </button>
+              </div>
+
+              <form onSubmit={handlePaymentSubmit} className="p-6 space-y-4">
+                <div className="p-4 rounded-2xl bg-red-50/70 dark:bg-red-950/30 ring-1 ring-inset ring-red-100 dark:ring-red-900/40 flex items-center justify-between">
+                  <span className="text-[12px] font-bold uppercase tracking-widest text-red-500/80">Outstanding Balance</span>
+                  <span className="font-display text-[20px] font-extrabold text-red-600 dark:text-red-400">₹{(selectedSupplierForPayment.outstandingBalance || 0).toLocaleString()}</span>
+                </div>
+
+                <div>
+                  <label className="label">Payment Amount (₹)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    placeholder="0.00"
+                    value={paymentForm.amount}
+                    onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})}
+                    className="input"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">Payment Method</label>
+                  <select
+                    value={paymentForm.method}
+                    onChange={e => setPaymentForm({...paymentForm, method: e.target.value})}
+                    className="select"
+                  >
+                    <option>Bank Transfer</option>
+                    <option>Cash</option>
+                    <option>UPI</option>
+                    <option>Cheque</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="label">Reference / Remarks</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. UTR no., cheque no."
+                    value={paymentForm.reference}
+                    onChange={e => setPaymentForm({...paymentForm, reference: e.target.value})}
+                    className="input"
+                  />
+                </div>
+
+                <div className="pt-3 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setIsPaymentModalOpen(false)}
+                    className="btn-outline btn-lg flex-1"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="btn-danger btn-lg flex-[2]"
+                  >
+                    {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : <CheckCircle2 size={18} strokeWidth={2.6}/>}
+                    Confirm Payment
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );

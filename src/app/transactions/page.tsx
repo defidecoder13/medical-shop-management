@@ -27,9 +27,11 @@ import {
   Copy,
   MoreVertical,
   Banknote,
-  CreditCard
+  CreditCard,
+  Send
 } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
+import { Badge } from "@/src/components/ui/badge";
 
 type Transaction = {
   _id: string;
@@ -261,74 +263,66 @@ export default function TransactionsPage() {
   
   return (
     <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <Receipt size={32} strokeWidth={2.5} className="text-[#11327c]" />
-          <div>
-            <h2 className="text-[28px] font-extrabold text-[#11327c] tracking-tight leading-tight">Transaction History</h2>
-            <p className="text-[14px] text-gray-500 font-medium">View and manage all past sales transactions.</p>
-          </div>
-        </div>
-
+      {/* Header Actions */}
+      <div className="flex justify-end mb-6">
         <button
           onClick={exportToExcel}
-          className="flex items-center gap-2 px-6 py-3 bg-[#10b981] text-white rounded-lg font-bold text-[13px] uppercase tracking-wider hover:bg-[#059669] transition-all shadow-md active:scale-95"
+          className="btn-success btn-md"
         >
-          <FileSpreadsheet size={18} strokeWidth={2.5} />
+          <FileSpreadsheet size={17} strokeWidth={2.4} />
           Export to Excel
         </button>
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Sales */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5 transition-colors">
-          <div className="w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-            <ShoppingCart size={28} strokeWidth={2.5} />
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+            <ShoppingCart size={22} strokeWidth={2.3} />
           </div>
           <div>
-            <div className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mb-1">Total Sales</div>
-            <div className="text-[24px] font-black text-[#11327c] dark:text-blue-400 tracking-tight leading-none mb-2">₹{summary.totalSales.toFixed(2)}</div>
-            <div className="text-[13px] font-black text-gray-400 dark:text-gray-500">{summary.totalSalesCount} Bills</div>
+            <div className="text-[12px] text-muted-foreground font-semibold mb-1">Total Sales</div>
+            <div className="font-display text-[22px] font-extrabold text-foreground tracking-tight leading-none mb-1.5">₹{summary.totalSales.toFixed(2)}</div>
+            <div className="text-[12px] font-bold text-muted-foreground/70">{summary.totalSalesCount} Bills</div>
           </div>
         </div>
         
         {/* Total Items Sold */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5 transition-colors">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <TrendingUp size={28} strokeWidth={2.5} />
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+            <TrendingUp size={22} strokeWidth={2.3} />
           </div>
           <div>
-            <div className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mb-1">Total Items Sold</div>
-            <div className="text-[24px] font-black text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mb-2">{summary.totalItemsSold}</div>
-            <div className="text-[13px] font-black text-gray-400 dark:text-gray-500">Selected Period</div>
+            <div className="text-[12px] text-muted-foreground font-semibold mb-1">Total Items Sold</div>
+            <div className="font-display text-[22px] font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mb-1.5">{summary.totalItemsSold}</div>
+            <div className="text-[12px] font-bold text-muted-foreground/70">Selected Period</div>
           </div>
         </div>
         
         {/* Total Refunds */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5 transition-colors">
-          <div className="w-14 h-14 rounded-2xl bg-orange-50 dark:bg-orange-950/40 text-orange-500 dark:text-orange-400 flex items-center justify-center shrink-0">
-            <Undo size={28} strokeWidth={2.5} />
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+            <Undo size={22} strokeWidth={2.3} />
           </div>
           <div>
-            <div className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mb-1">Total Refunds</div>
-            <div className="text-[24px] font-black text-orange-500 dark:text-orange-400 tracking-tight leading-none mb-2">₹{summary.totalRefunds.toFixed(2)}</div>
-            <div className="text-[13px] font-black text-gray-400 dark:text-gray-500">{summary.totalRefundsCount} Refunds</div>
+            <div className="text-[12px] text-muted-foreground font-semibold mb-1">Total Refunds</div>
+            <div className="font-display text-[22px] font-extrabold text-orange-500 dark:text-orange-400 tracking-tight leading-none mb-1.5">₹{summary.totalRefunds.toFixed(2)}</div>
+            <div className="text-[12px] font-bold text-muted-foreground/70">{summary.totalRefundsCount} Refunds</div>
           </div>
         </div>
 
         {/* Avg. Bill Value */}
-        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.04)] flex items-center gap-5 transition-colors">
-          <div className="w-14 h-14 rounded-2xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-            <Receipt size={28} strokeWidth={2.5} />
+        <div className="surface-card surface-hover p-5 flex items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+            <Receipt size={22} strokeWidth={2.3} />
           </div>
           <div>
-            <div className="text-[13px] text-gray-500 dark:text-gray-400 font-bold mb-1">Avg. Bill Value</div>
-            <div className="text-[24px] font-black text-purple-600 dark:text-purple-400 tracking-tight leading-none mb-2">
+            <div className="text-[12px] text-muted-foreground font-semibold mb-1">Avg. Bill Value</div>
+            <div className="font-display text-[22px] font-extrabold text-violet-600 dark:text-violet-400 tracking-tight leading-none mb-1.5">
               ₹{summary.totalSalesCount > 0 ? (summary.totalSales / summary.totalSalesCount).toFixed(2) : "0.00"}
             </div>
-            <div className="text-[13px] font-black text-gray-400 dark:text-gray-500">Selected Period</div>
+            <div className="text-[12px] font-bold text-muted-foreground/70">Selected Period</div>
           </div>
         </div>
       </div>
@@ -340,7 +334,7 @@ export default function TransactionsPage() {
           <input 
             type="text" 
             placeholder="Search by customer name, phone, or invoice no..."
-            className="w-full pl-11 pr-4 py-3.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[14px] font-medium focus:outline-none focus:ring-2 focus:ring-blue-100 dark:focus:ring-blue-900/40 focus:border-blue-500 transition-all text-gray-800 dark:text-gray-100 placeholder:text-gray-400 shadow-sm"
+            className="input pl-11"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
@@ -348,7 +342,7 @@ export default function TransactionsPage() {
 
         <div className="flex items-center gap-3 w-full xl:w-auto overflow-x-auto pb-2 xl:pb-0">
           <select 
-            className="px-4 py-3.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-100 min-w-[170px] shadow-sm appearance-none cursor-pointer"
+            className="select min-w-[170px]"
             value={paymentMethod}
             onChange={(e) => setPaymentMethod(e.target.value)}
           >
@@ -359,7 +353,7 @@ export default function TransactionsPage() {
           </select>
 
           <select 
-            className="px-4 py-3.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-blue-100 min-w-[130px] shadow-sm appearance-none cursor-pointer"
+            className="select min-w-[130px]"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
           >
@@ -368,15 +362,15 @@ export default function TransactionsPage() {
             <option value="refunded">Refunded</option>
           </select>
 
-          <div className="flex bg-white dark:bg-slate-900 p-1 rounded-xl border border-gray-200 dark:border-slate-700 shrink-0 shadow-sm">
+          <div className="flex bg-muted/70 p-1 rounded-xl border border-border shrink-0">
             {(["1d", "7d", "1m", "all"] as const).map((range) => (
               <button
                 key={range}
                 onClick={() => setDateFilter(range)}
-                className={`px-4 py-2.5 text-[12px] font-bold rounded-lg transition-all ${
+                className={`px-3.5 py-2 text-[12px] font-bold rounded-lg transition-all cursor-pointer ${
                   dateFilter === range
-                    ? "bg-blue-600 text-white shadow-sm"
-                    : "text-gray-500 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-slate-800"
+                    ? "bg-card text-primary shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 {range === "all" ? "ALL TIME" : range.toUpperCase()}
@@ -387,124 +381,114 @@ export default function TransactionsPage() {
       </div>
 
       {/* Transactions Table Container */}
-      <div className={`bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.06)] overflow-hidden transition-all duration-200 ${loading ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
+      <div className={`surface-card overflow-hidden transition-all duration-200 ${loading ? 'opacity-60 pointer-events-none' : 'opacity-100'}`}>
         <div className="overflow-x-auto relative">
           {loading && (
-             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/20 dark:bg-slate-900/20 backdrop-blur-[1px]">
-               <Loader2 className="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
+             <div className="absolute inset-0 z-10 flex items-center justify-center bg-background/40 backdrop-blur-[1px]">
+               <Loader2 className="w-8 h-8 text-primary animate-spin" />
              </div>
           )}
-          <table className="w-full text-left border-collapse">
+          <table className="table-shell">
             <thead>
-              <tr className="bg-[#f8fafc] dark:bg-slate-800/80 border-b border-gray-100 dark:border-slate-800">
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Date & Time</th>
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Transaction ID</th>
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Customer</th>
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Items</th>
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Amount</th>
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Payment</th>
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Status</th>
-                <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-center">Actions</th>
+              <tr className="border-b border-border bg-muted/40">
+                <th className="th">Date & Time</th>
+                <th className="th">Transaction ID</th>
+                <th className="th">Customer</th>
+                <th className="th">Items</th>
+                <th className="th">Amount</th>
+                <th className="th">Payment</th>
+                <th className="th">Status</th>
+                <th className="th text-center">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
+            <tbody className="divide-y divide-border/60">
               {filteredTransactions.map((t) => (
                 <Fragment key={t._id}>
-                <tr className="hover:bg-[#f8fafc] dark:hover:bg-slate-800/50 transition-colors group bg-white dark:bg-slate-900">
-                  <td className="px-5 py-5">
+                <tr className="tbody-row group">
+                  <td className="td">
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${t.isReturn ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-500 dark:text-rose-400' : 'bg-primary/10 text-primary'}`}>
                         {t.isReturn ? <Undo size={14} strokeWidth={2.5} /> : <FileText size={14} strokeWidth={2.5} />}
                       </div>
                       <div className="flex flex-col">
-                        <div className="text-[13px] font-black text-[#11327c] dark:text-blue-300">
+                        <div className="text-[13px] font-bold text-foreground">
                           {format(new Date(t.createdAt), "dd MMM, yyyy")}
                         </div>
-                        <div className="text-[11px] font-bold text-gray-400">
+                        <div className="text-[11px] font-semibold text-muted-foreground">
                           {format(new Date(t.createdAt), "hh:mm a")}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[13px] font-black text-blue-600 dark:text-blue-400">
+                  <td className="td">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-mono text-[12.5px] font-bold text-primary">
                         #{t.invoiceNumber || t._id.slice(-8).toUpperCase()}
                       </span>
-                      <button className="text-gray-300 hover:text-gray-500 dark:hover:text-gray-300" onClick={() => navigator.clipboard.writeText(t.invoiceNumber || t._id.slice(-8).toUpperCase())}>
+                      <button className="text-muted-foreground/50 hover:text-foreground transition-colors cursor-pointer" aria-label="Copy invoice number" onClick={() => navigator.clipboard.writeText(t.invoiceNumber || t._id.slice(-8).toUpperCase())}>
                         <Copy size={12} strokeWidth={2.5} />
                       </button>
                     </div>
                   </td>
-                  <td className="px-5 py-5">
+                  <td className="td">
                     <div className="flex flex-col">
-                      <div className="text-[13px] font-bold text-gray-800 dark:text-gray-200">
+                      <div className="text-[13px] font-bold text-foreground">
                          {t.patientName || "Walk-in Customer"}
                       </div>
-                      <div className="text-[11px] font-medium text-gray-500 dark:text-gray-400 mt-0.5">
+                      <div className="text-[11px] font-medium text-muted-foreground mt-0.5">
                          {t.patientPhone ? `+91 ${t.patientPhone}` : "-"}
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-5">
+                  <td className="td">
                     <div className="flex flex-col gap-1 items-start">
                       {t.items.slice(0, 1).map((item, index) => (
                         <div key={index} className="flex items-center gap-2">
-                          <span className="text-[13px] font-bold text-gray-800 dark:text-gray-200">{item.name}</span>
-                          <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 text-[10px] font-black px-1.5 py-0.5 rounded">× {item.qty}</span>
+                          <span className="text-[13px] font-bold text-foreground">{item.name}</span>
+                          <span className="bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded">× {item.qty}</span>
                         </div>
                       ))}
-                      <div className="text-[11px] text-gray-400 font-medium">
+                      <div className="text-[11px] text-muted-foreground font-medium">
                         {t.items.length} {t.items.length === 1 ? 'Item' : 'Items'}
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-5">
+                  <td className="td">
                     <div className="flex flex-col">
-                      <div className="text-[14px] font-black text-blue-600 dark:text-blue-400">
+                      <div className="font-display text-[14px] font-extrabold text-foreground">
                         ₹{Math.abs(t.grandTotal).toFixed(2)}
                       </div>
-                      <div className="text-[11px] font-medium text-gray-400 mt-0.5">
+                      <div className="text-[11px] font-medium text-muted-foreground mt-0.5">
                         Tax: ₹{Math.abs(t.gstAmount).toFixed(2)}
                       </div>
                     </div>
                   </td>
-                  <td className="px-5 py-5">
+                  <td className="td">
                     <div className="flex items-center gap-1.5">
-                      {t.paymentMethod === 'Card' ? <CreditCard size={14} className="text-emerald-600 dark:text-emerald-400" /> : <Banknote size={14} className="text-emerald-600 dark:text-emerald-400" />}
-                      <span className="text-[12px] font-bold text-gray-700 dark:text-gray-300">{t.paymentMethod || 'Cash'}</span>
+                      {t.paymentMethod === 'Card' ? <CreditCard size={14} className="text-emerald-600 dark:text-emerald-400" /> : t.paymentMethod === 'UPI' ? <Send size={14} className="text-emerald-600 dark:text-emerald-400" /> : <Banknote size={14} className="text-emerald-600 dark:text-emerald-400" />}
+                      <span className="text-[12px] font-bold text-foreground">{t.paymentMethod || 'Cash'}</span>
                     </div>
                   </td>
-                  <td className="px-5 py-5">
+                  <td className="td">
                     {t.isReturn ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-rose-50 text-rose-600 text-[11px] font-black">
-                        <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                        Refunded
-                      </span>
+                      <Badge variant="danger">Refunded</Badge>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-600 text-[11px] font-black">
-                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                        Completed
-                      </span>
+                      <Badge variant="success">Completed</Badge>
                     )}
                   </td>
-                  <td className="px-5 py-5 text-center">
-                    <div className="flex items-center justify-center gap-2">
+                  <td className="td text-center">
+                    <div className="flex items-center justify-center gap-1.5">
                       <Link
                         href={`/transactions/${t._id}`}
-                        className="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                        className="btn-ghost btn-icon text-primary bg-primary/8 hover:bg-primary/15"
                         title="View Details"
                       >
-                        <Eye size={14} strokeWidth={2.5} />
+                        <Eye size={15} strokeWidth={2.5} />
                       </Link>
                       {!t.isReturn && (
                         <button
                           onClick={() => handleToggleReturn(t._id)}
-                          className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors ${
-                            expandedBillId === t._id 
-                              ? 'text-rose-600 bg-rose-50' 
-                              : 'text-gray-400 hover:text-rose-600 hover:bg-rose-50'
-                          }`}
+                          className={`btn-ghost btn-icon ${expandedBillId === t._id ? 'text-red-500 bg-red-50 dark:bg-red-950/40' : 'text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40'}`}
                           title="Process Return"
                         >
                           <RotateCcw size={16} strokeWidth={2.5} />
@@ -516,20 +500,18 @@ export default function TransactionsPage() {
 
                 </Fragment>
               ))}
-              {filteredTransactions.length === 0 && (
+              {filteredTransactions.length === 0 && !loading && (
                 <tr>
-                   <td colSpan={8} className="px-7 py-24 text-center">
-                      <div className="flex flex-col items-center gap-3 opacity-20">
-                        {transactions.length === 0 && !loading && (
-                          <div className="p-12 text-center text-gray-500">
-                            <FileText className="mx-auto h-12 w-12 text-gray-300 mb-3" />
-                            <p className="text-lg font-medium text-gray-900">No transactions found</p>
-                            <p className="text-sm">Try adjusting your filters or search query.</p>
-                          </div>
-                        )}
+                   <td colSpan={8} className="px-7 py-16 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+                          <FileText className="h-8 w-8 text-muted-foreground" strokeWidth={1.6} />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-foreground font-bold text-[15px]">No transactions found</p>
+                          <p className="text-muted-foreground text-[13px] font-medium">Try adjusting your filters or search query.</p>
+                        </div>
                       </div>
-                      
-
                    </td>
                 </tr>
               )}
@@ -538,22 +520,22 @@ export default function TransactionsPage() {
           
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="p-4 border-t border-gray-100 dark:border-slate-800 flex items-center justify-between bg-gray-50 dark:bg-slate-800/60 rounded-b-xl">
-              <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+            <div className="p-4 border-t border-border flex items-center justify-between bg-muted/40 rounded-b-xl">
+              <span className="text-[13px] text-muted-foreground font-semibold">
                 Page {page} of {totalPages}
               </span>
               <div className="flex gap-2">
                 <button
                   disabled={page === 1}
                   onClick={() => setPage(p => Math.max(1, p - 1))}
-                  className="px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="btn-outline btn-sm disabled:opacity-40"
                 >
                   Previous
                 </button>
                 <button
                   disabled={page === totalPages}
                   onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  className="px-4 py-2 border border-gray-200 dark:border-slate-700 rounded-lg text-sm font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-900 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="btn-outline btn-sm disabled:opacity-40"
                 >
                   Next
                 </button>
@@ -561,9 +543,9 @@ export default function TransactionsPage() {
             </div>
           )}
         </div>
-        <div className="p-6 bg-[#f8fafc]/50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-slate-800 text-[11px] font-black uppercase tracking-[0.15em] text-gray-400 flex justify-between items-center">
-           <span>Sales: <span className="text-[#11327c] dark:text-blue-400 ml-1">{filteredTransactions.filter(t => !t.isReturn).length}</span></span>
-           <span>Refunds: <span className="text-rose-500 ml-1">{filteredTransactions.filter(t => t.isReturn).length}</span></span>
+        <div className="p-5 bg-muted/40 border-t border-border text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground flex justify-between items-center">
+           <span>Sales: <span className="text-primary ml-1">{filteredTransactions.filter(t => !t.isReturn).length}</span></span>
+           <span>Refunds: <span className="text-red-500 ml-1">{filteredTransactions.filter(t => t.isReturn).length}</span></span>
         </div>
       </div>
 
@@ -572,44 +554,44 @@ export default function TransactionsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-gray-900/40 backdrop-blur-[2px]" onClick={() => setExpandedBillId(null)} />
           
-          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] w-full max-w-4xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-100 dark:border-slate-800 transition-colors">
+          <div className="relative bg-card rounded-3xl shadow-pop w-full max-w-4xl overflow-hidden border border-border">
              <div className="p-6">
-                <button onClick={() => setExpandedBillId(null)} className="absolute top-6 right-6 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors">
+                <button onClick={() => setExpandedBillId(null)} className="absolute top-6 right-6 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" aria-label="Close">
                   <X size={20} strokeWidth={2.5} />
                 </button>
                 
-                <h3 className="text-[17px] font-black text-[#e11d48] dark:text-rose-400 tracking-tight flex items-center gap-2 mb-6">
-                  <RotateCcw size={20} className="text-[#e11d48] dark:text-rose-400" strokeWidth={2.5} />
+                <h3 className="font-display text-[17px] font-extrabold text-red-600 dark:text-red-400 tracking-tight flex items-center gap-2 mb-6">
+                  <RotateCcw size={20} strokeWidth={2.5} />
                   Process Return for Invoice #{expandedBill.invoiceNumber || expandedBill._id.slice(-8).toUpperCase()}
                 </h3>
                 
-                <div className="border border-gray-100 dark:border-slate-800 rounded-xl overflow-hidden mb-6 shadow-sm">
-                   <table className="w-full text-left">
-                      <thead className="bg-[#f8fafc] dark:bg-slate-800 border-b border-gray-100 dark:border-slate-800">
+                <div className="border border-border rounded-xl overflow-hidden mb-6 shadow-card">
+                   <table className="table-shell">
+                      <thead className="bg-muted/40 border-b border-border">
                          <tr>
-                            <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em]">Item</th>
-                            <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-center">Purchased Qty</th>
-                            <th className="px-5 py-4 text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] text-right">Return Qty</th>
+                            <th className="th">Item</th>
+                            <th className="th text-center">Purchased Qty</th>
+                            <th className="th text-right">Return Qty</th>
                          </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
+                      <tbody className="divide-y divide-border/60">
                          {expandedBill.items.map((item, idx) => {
                             const maxQty = item.qty;
                             return (
-                               <tr key={idx} className="bg-white dark:bg-slate-900">
-                                  <td className="px-5 py-4">
-                                     <div className="font-bold text-gray-800 dark:text-gray-200 text-[14px]">{item.name}</div>
-                                     <div className="text-[11px] text-gray-400 font-mono mt-0.5">Batch: {item.batchNumber}</div>
+                               <tr key={idx} className="tbody-row">
+                                  <td className="td">
+                                     <div className="font-bold text-foreground text-[14px]">{item.name}</div>
+                                     <div className="text-[11px] text-muted-foreground font-mono mt-0.5">Batch: {item.batchNumber}</div>
                                   </td>
-                                  <td className="px-5 py-4 text-center font-black text-gray-600 dark:text-gray-300 text-[15px]">{maxQty}</td>
-                                  <td className="px-5 py-4 text-right">
+                                  <td className="td text-center font-bold text-foreground text-[15px]">{maxQty}</td>
+                                  <td className="td text-right">
                                      <input
                                         type="number"
                                         min="0"
                                         max={maxQty}
                                         value={returnItems[idx] || ""}
                                         onChange={(e) => handleReturnQtyChange(idx, e.target.value, maxQty)}
-                                        className="w-24 px-3 py-2 text-center border border-gray-200 dark:border-slate-700 rounded-lg focus:outline-none focus:border-[#e11d48] focus:ring-2 focus:ring-[#e11d48]/20 font-black text-[#e11d48] dark:text-rose-400 text-[15px] transition-all bg-gray-50 dark:bg-slate-800 focus:bg-white dark:focus:bg-slate-900 mx-auto block mr-0"
+                                        className="w-24 px-3 py-2 text-center border border-input rounded-lg focus:outline-none focus:border-red-500 focus:ring-2 focus:ring-red-500/20 font-bold text-red-600 dark:text-red-400 text-[15px] transition-all bg-muted/50 focus:bg-card mx-auto block"
                                         placeholder="0"
                                      />
                                   </td>
@@ -622,7 +604,7 @@ export default function TransactionsPage() {
 
                 {message && (
                    <div className={`p-4 mb-6 rounded-xl flex items-center gap-3 border ${
-                     message.type === 'error' ? 'bg-rose-50 text-rose-800 border-rose-200' : 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                     message.type === 'error' ? 'bg-red-50 text-red-800 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-900/50' : 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50'
                    }`}>
                       {message.type === 'error' ? <AlertCircle size={20} /> : <CheckCircle2 size={20} />}
                       <p className="text-[13px] font-bold">{message.text}</p>
@@ -632,14 +614,14 @@ export default function TransactionsPage() {
                 <div className="flex justify-end gap-3 mt-8">
                    <button
                       onClick={() => setExpandedBillId(null)}
-                      className="px-6 py-2.5 text-[13px] font-bold text-gray-600 hover:text-gray-900 bg-[#f1f5f9] hover:bg-[#e2e8f0] rounded-xl transition-colors"
+                      className="btn-outline btn-md"
                    >
                       Cancel
                    </button>
                    <button
                       onClick={() => handleSubmitReturn(expandedBill)}
                       disabled={submittingReturn}
-                      className="px-6 py-2.5 bg-[#e11d48] text-white text-[13px] font-bold rounded-xl shadow-md hover:bg-[#be123c] transition-colors disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="btn-danger btn-md"
                    >
                       {submittingReturn && <Loader2 size={16} className="animate-spin" />}
                       Confirm Refund

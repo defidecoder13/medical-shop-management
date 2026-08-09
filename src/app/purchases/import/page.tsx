@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-import { UploadCloud, CheckCircle2, AlertCircle, FileSpreadsheet, ArrowRight, Save, FileText, Loader2 } from "lucide-react";
+import { UploadCloud, CheckCircle2, AlertCircle, ArrowRight, Save, FileText, Loader2 } from "lucide-react";
 import { apiClient } from "@/src/lib/apiClient";
 
 export default function ImportPurchasePage() {
@@ -201,33 +201,29 @@ export default function ImportPurchasePage() {
 
   return (
     <div className="space-y-8 pb-10 max-w-[1400px] mx-auto animate-in fade-in duration-500">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <h1 className="text-[28px] font-black text-[#11327c] tracking-tight">Auto-Purchase Import</h1>
-          <p className="text-[13px] text-gray-500 font-medium">Dynamically map and load supplier invoices</p>
-        </div>
-        
+      {/* Header Actions */}
+      <div className="flex justify-end mb-6">
         {/* Labeled Stepper */}
-        <div className="flex items-center gap-4 bg-white p-3 rounded-2xl border border-gray-100 shadow-[0_15px_40px_-10px_rgba(17,50,124,0.05)]">
+        <div className="flex items-center gap-4 surface-card p-3 rounded-2xl">
            <div className={`flex items-center gap-2 ${step >= 1 ? 'opacity-100' : 'opacity-40 grayscale'}`}>
-             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black ${step === 1 ? 'bg-[#11327c] text-white shadow-md shadow-[#11327c]/30' : 'bg-[#11327c]/10 text-[#11327c]'}`}>1</div>
-             <span className="text-[11px] font-black uppercase tracking-widest text-[#11327c] hidden sm:block">Upload</span>
+             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-bold ${step === 1 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30' : 'bg-primary/10 text-primary'}`}>1</div>
+             <span className="text-[11px] font-bold uppercase tracking-widest text-foreground hidden sm:block">Upload</span>
            </div>
-           <div className="w-8 h-0.5 bg-gray-100" />
+           <div className="w-8 h-0.5 bg-border" />
            <div className={`flex items-center gap-2 ${step >= 2 ? 'opacity-100' : 'opacity-40 grayscale'}`}>
-             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black ${step === 2 ? 'bg-[#11327c] text-white shadow-md shadow-[#11327c]/30' : 'bg-[#11327c]/10 text-[#11327c]'}`}>2</div>
-             <span className="text-[11px] font-black uppercase tracking-widest text-[#11327c] hidden sm:block">Map Data</span>
+             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-bold ${step === 2 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30' : 'bg-primary/10 text-primary'}`}>2</div>
+             <span className="text-[11px] font-bold uppercase tracking-widest text-foreground hidden sm:block">Map Data</span>
            </div>
-           <div className="w-8 h-0.5 bg-gray-100" />
+           <div className="w-8 h-0.5 bg-border" />
            <div className={`flex items-center gap-2 ${step >= 3 ? 'opacity-100' : 'opacity-40 grayscale'}`}>
-             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-black ${step === 3 ? 'bg-[#11327c] text-white shadow-md shadow-[#11327c]/30' : 'bg-[#11327c]/10 text-[#11327c]'}`}>3</div>
-             <span className="text-[11px] font-black uppercase tracking-widest text-[#11327c] hidden sm:block">Finalize</span>
+             <div className={`w-8 h-8 rounded-xl flex items-center justify-center text-[12px] font-bold ${step === 3 ? 'bg-primary text-primary-foreground shadow-md shadow-primary/30' : 'bg-primary/10 text-primary'}`}>3</div>
+             <span className="text-[11px] font-bold uppercase tracking-widest text-foreground hidden sm:block">Finalize</span>
            </div>
         </div>
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold">
+        <div className="bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-900/50 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl flex items-center gap-2 text-sm font-bold animate-fade-in">
           <AlertCircle size={18} />
           {error}
         </div>
@@ -235,59 +231,59 @@ export default function ImportPurchasePage() {
 
       {/* STEP 1: UPLOAD */}
       {step === 1 && (
-        <div className="bg-white p-8 rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] space-y-8">
-          <div className="flex items-center gap-4 border-b border-gray-100 pb-5">
-             <div className="w-12 h-12 rounded-2xl bg-blue-50 text-[#11327c] flex items-center justify-center">
-               <UploadCloud size={24} strokeWidth={2.5} />
+        <div className="surface-card p-6 md:p-8 space-y-7 animate-fade-in">
+          <div className="flex items-center gap-4 border-b border-border pb-5">
+             <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+               <UploadCloud size={23} strokeWidth={2.3} />
              </div>
              <div>
-                <h2 className="text-xl font-black text-[#11327c] tracking-tight">Invoice Details & File Upload</h2>
-                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest mt-1">Provide invoice meta data and upload the distributor invoice (PDF or Excel)</p>
+                <h2 className="font-display text-lg font-extrabold text-foreground tracking-tight">Invoice Details & File Upload</h2>
+                <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Provide invoice meta data and upload the distributor invoice (PDF or Excel)</p>
              </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Supplier</label>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div>
+              <label className="label">Supplier</label>
               <select 
                 value={supplierId} 
                 onChange={e => setSupplierId(e.target.value)}
-                className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-[#0047ab] focus:ring-2 focus:ring-[#0047ab]/20 transition-all text-gray-900"
+                className="select"
               >
                 <option value="">Select Supplier</option>
                 {suppliers.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
               </select>
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Invoice Number (Optional)</label>
+            <div>
+              <label className="label">Invoice Number (Optional)</label>
               <input 
                 type="text" 
                 value={invoiceNumber} 
                 onChange={e => setInvoiceNumber(e.target.value)}
-                className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-[#0047ab] focus:ring-2 focus:ring-[#0047ab]/20 transition-all text-gray-900 placeholder:text-gray-400"
+                className="input"
                 placeholder="e.g. INV-2026-001"
               />
             </div>
-            <div className="space-y-1.5">
-              <label className="text-[11px] font-black text-gray-400 uppercase tracking-widest ml-1">Invoice Date</label>
+            <div>
+              <label className="label">Invoice Date</label>
               <input 
                 type="date" 
                 value={invoiceDate} 
                 onChange={e => setInvoiceDate(e.target.value)}
-                className="w-full bg-white border border-gray-300 shadow-sm px-4 py-3 rounded-xl text-sm font-bold focus:outline-none focus:border-[#0047ab] focus:ring-2 focus:ring-[#0047ab]/20 transition-all text-gray-900"
+                className="input"
               />
             </div>
           </div>
 
-          <div className="border-2 border-dashed border-gray-200 rounded-2xl p-10 flex flex-col items-center justify-center bg-gray-50/50 hover:bg-gray-50 transition-colors relative">
-             {loading ? <Loader2 size={40} className="text-[#0047ab] animate-spin mb-3" /> : <FileText size={40} className="text-gray-400 mb-3" />}
-             <p className="text-gray-600 font-medium mb-4">Upload Supplier PDF, CSV or Excel file</p>
-             <label className="bg-[#0047ab] text-white px-6 py-2.5 rounded-xl font-bold cursor-pointer hover:bg-[#003580] transition-colors">
+          <div className="border-2 border-dashed border-border rounded-2xl p-10 flex flex-col items-center justify-center bg-muted/40 hover:bg-muted/60 transition-colors relative">
+             {loading ? <Loader2 size={40} className="text-primary animate-spin mb-3" /> : <FileText size={40} className="text-muted-foreground mb-3" strokeWidth={1.5} />}
+             <p className="text-foreground font-semibold mb-4">Upload Supplier PDF, CSV or Excel file</p>
+             <label className="btn-primary btn-md cursor-pointer">
                 Browse File
                 <input type="file" accept=".pdf, .csv, .xlsx, .xls" className="hidden" onChange={handleFileUpload} />
              </label>
              {headers.length > 0 && (
-                <div className="mt-4 flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg text-sm font-bold">
+                <div className="mt-4 flex items-center gap-2 text-emerald-700 dark:text-emerald-300 bg-success/12 px-3 py-1.5 rounded-lg text-sm font-bold">
                    <CheckCircle2 size={16} /> File Loaded: {fileData.length} rows found
                 </div>
              )}
@@ -296,9 +292,9 @@ export default function ImportPurchasePage() {
           <div className="flex justify-end">
              <button 
                 onClick={handleProceedToMapping}
-                className="bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center gap-2"
+                className="btn-primary btn-md"
              >
-                Next: Map Columns <ArrowRight size={18} />
+                Next: Map Columns <ArrowRight size={17} />
              </button>
           </div>
         </div>

@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
-  Settings, 
   ChevronLeft, 
   Store, 
   MapPin, 
@@ -77,9 +76,9 @@ export default function SettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center h-[60vh] opacity-20">
-        <Loader2 className="animate-spin text-[#11327c] mb-4" size={48} strokeWidth={1.5} />
-        <p className="text-[10px] font-black uppercase tracking-widest text-[#11327c]">Loading Registry...</p>
+      <div className="flex flex-col items-center justify-center h-[60vh]">
+        <Loader2 className="animate-spin text-primary mb-4" size={40} strokeWidth={1.5} />
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Loading Registry...</p>
       </div>
     );
   }
@@ -89,34 +88,22 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8 pb-12 max-w-[1000px] mx-auto animate-in fade-in duration-500">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-center gap-5">
-          <Link 
-            href="/"
-            className="w-12 h-12 flex items-center justify-center bg-white rounded-2xl border border-gray-100 text-gray-400 hover:text-[#11327c] transition-all shadow-sm group"
-          >
-            <ChevronLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" strokeWidth={2.5} />
-          </Link>
-          <div>
-            <h1 className="text-[28px] font-black text-[#11327c] tracking-tight uppercase">Control Center</h1>
-            <p className="text-[13px] text-gray-500 font-medium">Configure core registry parameters and medical establishment identity.</p>
-          </div>
-        </div>
-        
+      {/* Header Actions */}
+      <div className="flex justify-end mb-6">
         <AnimatePresence>
           {message && (
              <motion.div 
                initial={{ opacity: 0, x: 20 }}
                animate={{ opacity: 1, x: 0 }}
                exit={{ opacity: 0, x: 20 }}
-               className={`px-5 py-3 rounded-2xl flex items-center gap-3 border shadow-lg ${
+               className={`px-5 py-3 rounded-xl flex items-center gap-3 border shadow-card animate-fade-in ${
                  message.type === 'success' 
-                   ? 'bg-emerald-50 text-emerald-800 border-emerald-100' 
-                   : 'bg-rose-50 text-rose-800 border-rose-100'
+                   ? 'bg-emerald-50 text-emerald-800 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-900/50' 
+                   : 'bg-rose-50 text-rose-800 border-rose-200 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-900/50'
                }`}
              >
-               {message.type === 'success' ? <CheckCircle2 size={16} strokeWidth={3} /> : <AlertCircle size={16} strokeWidth={3} />}
-               <span className="text-[10px] font-black uppercase tracking-widest">{message.text}</span>
+               {message.type === 'success' ? <CheckCircle2 size={16} strokeWidth={2.6} /> : <AlertCircle size={16} strokeWidth={2.6} />}
+               <span className="text-[10px] font-bold uppercase tracking-widest">{message.text}</span>
              </motion.div>
           )}
         </AnimatePresence>
@@ -126,25 +113,25 @@ export default function SettingsPage() {
       <div className="grid grid-cols-1 gap-8">
          
          {/* Establishment Section */}
-         <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] p-10 relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform duration-700">
-               <Store size={240} strokeWidth={1} />
+         <div className="surface-card p-6 md:p-8 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none group-hover:scale-110 transition-transform duration-700">
+               <Store size={220} strokeWidth={1} />
             </div>
             
-            <div className="flex items-center gap-4 mb-10 border-b border-gray-50 pb-6 relative z-10">
-               <div className="w-12 h-12 bg-gray-50 rounded-2xl flex items-center justify-center text-[#11327c]">
-                  <Store size={24} strokeWidth={2.5} />
+            <div className="flex items-center gap-4 mb-7 border-b border-border pb-6 relative z-10">
+               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                  <Store size={23} strokeWidth={2.3} />
                </div>
-               <h2 className="text-[18px] font-black text-[#11327c] uppercase tracking-widest">Medical Establishment</h2>
+               <h2 className="font-display text-[17px] font-extrabold text-foreground uppercase tracking-widest">Medical Establishment</h2>
             </div>
 
             <div className="space-y-8 max-w-2xl relative z-10">
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Pharmacy Name</label>
+                  <label className="label">Pharmacy Name</label>
                   <div className="relative group">
                      <Store className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
                      <input
-                        className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-black text-[#11327c] placeholder:text-gray-300"
+                        className="input pl-11"
                         value={settings.shopName}
                         onChange={(e) => setSettings({ ...settings, shopName: e.target.value })}
                      />
@@ -152,12 +139,12 @@ export default function SettingsPage() {
                </div>
 
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Physical Location</label>
+                  <label className="label">Physical Location</label>
                   <div className="relative group">
                      <MapPin className="absolute left-5 top-5 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
                      <textarea
                         rows={3}
-                        className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-bold text-[#11327c] placeholder:text-gray-300 resize-none"
+                        className="input h-auto py-3 pl-11 resize-none"
                         value={settings.address || ""}
                         onChange={(e) => setSettings({ ...settings, address: e.target.value })}
                      />
@@ -166,24 +153,24 @@ export default function SettingsPage() {
 
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Contact Phone</label>
+                     <label className="label">Contact Phone</label>
                      <div className="relative group">
                         <Store className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
                         <input
                            placeholder="Phone Number"
-                           className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-black text-[#11327c] placeholder:text-gray-300"
+                           className="input pl-11"
                            value={settings.phone || ""}
                            onChange={(e) => setSettings({ ...settings, phone: e.target.value })}
                         />
                      </div>
                   </div>
                   <div className="space-y-2">
-                     <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Email Address</label>
+                     <label className="label">Email Address</label>
                      <div className="relative group">
                         <Globe className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
                         <input
                            placeholder="lowercase@email.com"
-                           className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-black text-[#11327c] lowercase placeholder:text-gray-300"
+                           className="input pl-11 lowercase"
                            value={settings.email || ""}
                            onChange={(e) => setSettings({ ...settings, email: e.target.value })}
                         />
@@ -193,24 +180,24 @@ export default function SettingsPage() {
 
                <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Drug License (DL.NO)</label>
+                      <label className="label">Drug License (DL.NO)</label>
                       <div className="relative group">
                          <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
                          <input
                             placeholder="D.L. Number"
-                            className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-black text-[#11327c] uppercase tracking-widest placeholder:text-gray-300"
+                            className="input pl-11 uppercase"
                             value={settings.dlNumber || ""}
                             onChange={(e) => setSettings({ ...settings, dlNumber: e.target.value })}
                          />
                       </div>
                    </div>
                    <div className="space-y-2">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Reg. Pharmacist</label>
+                      <label className="label">Reg. Pharmacist</label>
                       <div className="relative group">
                          <Info className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
                          <input
                             placeholder="Full Name"
-                            className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-black text-[#11327c] placeholder:text-gray-300"
+                            className="input pl-11"
                             value={settings.pharmacistName || ""}
                             onChange={(e) => setSettings({ ...settings, pharmacistName: e.target.value })}
                          />
@@ -221,17 +208,15 @@ export default function SettingsPage() {
          </div>
 
          {/* Fiscal Section */}
-         <div className="bg-white rounded-[40px] border border-gray-100 shadow-[0_30px_80px_-20px_rgba(17,50,124,0.12)] p-10 relative overflow-hidden group">
+         <div className="surface-card p-6 md:p-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform duration-700">
                <Receipt size={240} strokeWidth={1} />
-            </div>
-
-            <div className="flex items-center justify-between mb-10 border-b border-gray-50 pb-6 relative z-10">
+            </div>               <div className="flex items-center justify-between mb-7 border-b border-border pb-6 relative z-10">
                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-orange-50 rounded-2xl flex items-center justify-center text-orange-500">
-                     <Receipt size={24} strokeWidth={2.5} />
+                  <div className="w-12 h-12 bg-amber-500/12 rounded-xl flex items-center justify-center text-amber-500">
+                     <Receipt size={23} strokeWidth={2.3} />
                   </div>
-                  <h2 className="text-[18px] font-black text-[#11327c] uppercase tracking-widest">Fiscal Protocol</h2>
+                  <h2 className="font-display text-[17px] font-extrabold text-foreground uppercase tracking-widest">Fiscal Protocol</h2>
                </div>
                
                <label className="relative inline-flex items-center cursor-pointer">
@@ -248,12 +233,12 @@ export default function SettingsPage() {
 
             <div className={`grid grid-cols-1 sm:grid-cols-2 gap-8 max-w-2xl relative z-10 transition-all duration-500 ${settings.gstEnabled ? 'opacity-100' : 'opacity-30 pointer-events-none'}`}>
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">GSTIN Identification</label>
+                  <label className="label">GSTIN Identification</label>
                   <div className="relative group">
                      <ShieldCheck className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
                      <input
                         placeholder="TRX Registry Code"
-                        className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-mono font-black text-[#11327c] uppercase tracking-widest placeholder:text-gray-300"
+                        className="input pl-11 font-mono uppercase"
                         value={settings.gstNumber || ""}
                         onChange={(e) => setSettings({ ...settings, gstNumber: e.target.value })}
                      />
@@ -261,12 +246,12 @@ export default function SettingsPage() {
                </div>
 
                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Default Tax Slab (%)</label>
+                  <label className="label">Default Tax Slab (%)</label>
                   <div className="relative group">
                      <Percent className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 group-focus-within:text-[#11327c] transition-colors" />
                      <input
                         type="number"
-                        className="w-full bg-gray-50 border border-gray-100 pl-14 pr-6 py-4 rounded-[20px] focus:outline-none focus:ring-4 focus:ring-[#11327c]/5 focus:border-[#11327c]/20 focus:bg-white transition-all text-[14px] font-black text-[#11327c] placeholder:text-gray-300"
+                        className="input pl-11"
                         value={settings.defaultGstPercent}
                         onChange={(e) => setSettings({ ...settings, defaultGstPercent: Number(e.target.value) })}
                      />
@@ -274,16 +259,16 @@ export default function SettingsPage() {
                </div>
                
                {!settings.gstEnabled && (
-                  <div className="col-span-full flex items-center gap-4 p-5 bg-orange-50 rounded-[20px] border border-orange-100">
-                     <Lock className="w-5 h-5 text-orange-500" strokeWidth={2.5} />
-                     <p className="text-[11px] text-orange-800 font-bold uppercase tracking-tight">Fiscal parameters are locked. Activate GST Protocol to modify these fields.</p>
+                  <div className="col-span-full flex items-center gap-4 p-5 bg-amber-50 dark:bg-amber-950/40 rounded-2xl border border-amber-100 dark:border-amber-900/40">
+                     <Lock className="w-5 h-5 text-amber-500" strokeWidth={2.5} />
+                     <p className="text-[11px] text-amber-800 dark:text-amber-300 font-bold uppercase tracking-tight">Fiscal parameters are locked. Activate GST Protocol to modify these fields.</p>
                   </div>
                )}
             </div>
          </div>
 
          {/* Commit Action Bar */}
-         <div className="bg-[#11327c] p-6 rounded-[32px] shadow-2xl shadow-[#11327c]/30 flex items-center justify-between">
+         <div className="p-6 rounded-2xl shadow-pop flex items-center justify-between text-white bg-[linear-gradient(160deg,oklch(0.24_0.09_262)_0%,oklch(0.33_0.12_262)_50%,oklch(0.44_0.19_255)_115%)]">
             <div className="hidden md:flex items-center gap-5 text-white/50">
                <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center text-white/80">
                  <Database size={20} strokeWidth={2.5} />

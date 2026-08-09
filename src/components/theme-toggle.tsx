@@ -2,27 +2,29 @@
 
 import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/src/components/theme-provider';
-
-import { Button } from './ui/button';
+import { cn } from '@/src/lib/utils';
 
 export function ThemeToggle({ showLabel = false }: { showLabel?: boolean }) {
   const { theme, toggleTheme } = useTheme();
+  const isDark = theme === 'dark';
 
   return (
     <button
       onClick={toggleTheme}
-      aria-label="Toggle theme"
-      className={showLabel 
-        ? "w-full flex items-center gap-3 px-3 py-2 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-lg text-[13.5px] font-bold transition-colors"
-        : "p-2 text-gray-500 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 rounded-xl transition-colors shrink-0 border border-gray-200 dark:border-slate-700 flex items-center justify-center"
-      }
-    >
-      {theme === 'dark' ? (
-        <Sun className="h-4 w-4 text-yellow-400 shrink-0" strokeWidth={2.5} />
-      ) : (
-        <Moon className="h-4 w-4 text-gray-600 dark:text-gray-400 shrink-0" strokeWidth={2.5} />
+      aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+      className={cn(
+        'transition-all duration-200 cursor-pointer',
+        showLabel
+          ? 'w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold text-muted-foreground hover:bg-accent/70 hover:text-foreground px-3 py-2.5'
+          : 'p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl border border-border flex items-center justify-center'
       )}
-      {showLabel && <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>}
+    >
+      {isDark ? (
+        <Sun className="h-4 w-4 text-amber-400 shrink-0" strokeWidth={2.4} />
+      ) : (
+        <Moon className="h-4 w-4 shrink-0" strokeWidth={2.4} />
+      )}
+      {showLabel && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
     </button>
   );
 }

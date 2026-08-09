@@ -2,7 +2,36 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, Plus } from "lucide-react";
+import {
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  ArrowRight,
+  ReceiptText,
+  PackageSearch,
+  BarChart3,
+} from "lucide-react";
+import { BrandMark } from "@/src/components/ui/brand-mark";
+
+const features = [
+  {
+    icon: ReceiptText,
+    title: "Lightning Billing",
+    desc: "GST-ready invoicing with autocomplete in seconds",
+  },
+  {
+    icon: PackageSearch,
+    title: "Smart Inventory",
+    desc: "Batch & expiry tracking with low-stock alerts",
+  },
+  {
+    icon: BarChart3,
+    title: "Sales Analytics",
+    desc: "Revenue, profit and report insights in real time",
+  },
+];
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -41,132 +70,212 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#eef2f6] to-[#d9e2f0] p-4 relative overflow-hidden">
-      
-      {/* Background decorations if any, but keeping it clean like the mockup */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-         <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-blue-100/50 blur-[100px]" />
-         <div className="absolute top-[60%] -right-[10%] w-[40%] h-[60%] rounded-full bg-indigo-100/50 blur-[100px]" />
+    <div className="min-h-screen flex bg-background">
+      {/* ---------- Brand panel (desktop) ---------- */}
+      <div className="hidden lg:flex w-[46%] xl:w-[44%] relative flex-col justify-between p-12 overflow-hidden bg-[linear-gradient(160deg,oklch(0.24_0.09_262)_0%,oklch(0.3_0.105_262)_40%,oklch(0.42_0.19_255)_100%)] text-white">
+        {/* decorative cross grid */}
+        <div
+          className="absolute inset-0 opacity-[0.07] pointer-events-none"
+          style={{
+            backgroundImage:
+              "linear-gradient(rgb(255 255 255 / 0.5) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.5) 1px, transparent 1px)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        <div className="absolute -bottom-40 -right-32 w-[480px] h-[480px] rounded-full bg-white/10 blur-[110px]" />
+        <div className="absolute top-24 -left-24 w-[360px] h-[360px] rounded-full bg-success/25 blur-[100px]" />
+
+        <div className="relative">
+          <div className="flex items-center gap-3.5">
+            <BrandMark size={48} />
+            <div className="leading-none">
+              <div className="font-display font-extrabold text-[20px] tracking-tight text-warning">
+                MEDSATHI
+              </div>
+              <div className="font-display font-extrabold text-[15px] tracking-[0.12em] text-white/90 mt-1">
+                PHARMACY
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="relative max-w-md">
+          <h2 className="font-display text-[34px] font-extrabold leading-[1.15] tracking-tight">
+            Your pharmacy,
+            <br />
+            fully in control.
+          </h2>
+          <p className="mt-4 text-[15px] font-medium text-white/70 leading-relaxed">
+            Everything your medical shop needs — billing, inventory, expiry
+            tracking, patient care and sales reports — in one fast, reliable
+            dashboard.
+          </p>
+
+          <div className="mt-10 space-y-5">
+            {features.map((f) => (
+              <div key={f.title} className="flex items-start gap-4">
+                <div className="w-11 h-11 rounded-xl bg-white/10 backdrop-blur-sm ring-1 ring-white/15 flex items-center justify-center shrink-0">
+                  <f.icon size={20} strokeWidth={2.2} className="text-white/90" />
+                </div>
+                <div>
+                  <div className="text-[15px] font-bold">{f.title}</div>
+                  <div className="text-[13px] font-medium text-white/60 mt-0.5">
+                    {f.desc}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="relative text-[12px] font-semibold text-white/45">
+          © {new Date().getFullYear()} Medsathi Pharmacy · Pharmacy Management System
+        </div>
       </div>
 
-      <div className="max-w-[420px] w-full p-10 bg-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(0,0,0,0.05)] relative z-10 border border-white/60">
-        
-        {/* Branding Section */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="w-[52px] h-[52px] rounded-2xl flex items-center justify-center border-green-50  mb-4">
-            <Plus className="w-8 h-8 text-green-500" strokeWidth={4} />
+      {/* ---------- Form panel ---------- */}
+      <div className="flex-1 flex items-center justify-center p-6 sm:p-10 relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
+          <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[100px]" />
+          <div className="absolute bottom-[-10%] -right-[10%] w-[45%] h-[55%] rounded-full bg-success/10 blur-[110px]" />
+        </div>
+
+        <div className="w-full max-w-[440px] relative">
+          {/* Mobile brand */}
+          <div className="lg:hidden flex flex-col items-center mb-8">
+            <BrandMark size={56} withGlow />
+            <div className="text-center mt-4">
+              <h1 className="font-display text-[24px] font-black tracking-tight leading-tight">
+                <span className="text-warning">MEDSATHI</span>
+                <br />
+                <span className="text-brand">PHARMACY</span>
+              </h1>
+              <p className="text-[13px] font-medium text-muted-foreground mt-2">
+                Sign in to manage your pharmacy
+              </p>
+            </div>
           </div>
-          <div className="flex flex-col items-center text-center">
-            <h1 className="text-[26px] font-black leading-[1.05] tracking-tight">
-              <span className="text-[#f97316]">MEDSATHI</span>
-              <br />
-              <span className="text-[#11327c]">PHARMACY</span>
+
+          {/* Desktop greeting */}
+          <div className="hidden lg:block mb-8 animate-fade-in">
+            <h1 className="font-display text-[28px] font-extrabold tracking-tight text-foreground">
+              Welcome back 👋
             </h1>
+            <p className="text-[14px] font-medium text-muted-foreground mt-1.5">
+              Sign in to your pharmacy dashboard to continue.
+            </p>
           </div>
-        </div>
-        
-        {/* Form Section */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          {error && (
-            <div className="bg-red-50 border border-red-100 text-red-600 px-4 py-3 rounded-xl text-sm flex items-center gap-2">
-               <div className="w-1.5 h-1.5 rounded-full bg-red-500 shrink-0" />
-               {error}
-            </div>
-          )}
-          
-          <div className="space-y-5">
-            <div className="space-y-2">
-              <label htmlFor="email" className="text-[11px] font-extrabold text-[#11327c] uppercase tracking-wider ml-0.5">
-                Email Address
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Mail className="h-[18px] w-[18px] text-gray-500" strokeWidth={1.8} />
-                </div>
-                <input
-                  id="email"
-                  type="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3.5 bg-white border border-gray-200 rounded-2xl text-gray-800 placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-[#11327c]/20 focus:border-[#11327c] transition-all text-sm font-medium"
-                  placeholder="spark@gmail.com"
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <label htmlFor="password" className="text-[11px] font-extrabold text-[#11327c] uppercase tracking-wider ml-0.5">
-                Password
-              </label>
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Lock className="h-[18px] w-[18px] text-gray-400" strokeWidth={1.8} />
-                </div>
-                <input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3.5 bg-white border border-gray-200 rounded-2xl text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#11327c]/20 focus:border-[#11327c] transition-all text-sm font-medium tracking-widest"
-                  placeholder="••••••"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600"
+          <div className="bg-card border border-border rounded-3xl shadow-pop p-7 sm:p-9 animate-slide-up">
+            <form className="space-y-5" onSubmit={handleSubmit}>
+              {error && (
+                <div
+                  role="alert"
+                  className="bg-destructive/10 border border-destructive/20 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl text-[13px] font-semibold flex items-center gap-2 animate-fade-in"
                 >
-                  {showPassword ? <EyeOff className="h-5 w-5" strokeWidth={1.5} /> : <Eye className="h-5 w-5" strokeWidth={1.5} />}
-                </button>
-              </div>
-            </div>
-          </div>
+                  <span className="w-1.5 h-1.5 rounded-full bg-destructive shrink-0" />
+                  {error}
+                </div>
+              )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 bg-gradient-to-r from-[#0d2a6a] to-[#1644a8] hover:to-[#11327c] text-white font-semibold rounded-xl transition-all shadow-[0_8px_16px_-4px_rgba(17,50,124,0.4)] flex items-center justify-center gap-2.5 text-[15px]"
-          >
-            {loading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <Lock className="w-[18px] h-[18px] mb-[1px]" strokeWidth={2.2} />
-                Sign in to Dashboard
-              </>
-            )}
-          </button>
-        </form>
-        
-        {/* Footer section */}
-        <div className="mt-8">
-          <div className="relative mb-5">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-3 bg-white text-gray-400">
-                <ShieldCheck className="w-[18px] h-[18px]" strokeWidth={1.8} />
-              </span>
-            </div>
-          </div>
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="email" className="label">
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Mail className="h-[18px] w-[18px] text-muted-foreground" strokeWidth={2} />
+                    </div>
+                    <input
+                      id="email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="input pl-10"
+                      placeholder="you@pharmacy.com"
+                    />
+                  </div>
+                </div>
 
-          <div className="text-center">
-            <p className="text-[10px] uppercase font-extrabold text-[#11327c] mb-4 tracking-widest">Authorized Access Only</p>
-            <div className="space-y-2.5 px-1">
-              <div className="flex justify-between items-center text-[13px]">
-                <span className="text-gray-600 font-medium">Email:</span>
-                <span className="text-gray-900 font-medium tracking-tight">medsaathi@admin.com</span>
+                <div>
+                  <label htmlFor="password" className="label">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <Lock className="h-[18px] w-[18px] text-muted-foreground" strokeWidth={2} />
+                    </div>
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      required
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="input pl-10 pr-11"
+                      placeholder="••••••••"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground cursor-pointer"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-5 w-5" strokeWidth={1.8} />
+                      ) : (
+                        <Eye className="h-5 w-5" strokeWidth={1.8} />
+                      )}
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="flex justify-between items-center text-[13px]">
-                <span className="text-gray-600 font-medium">Password:</span>
-                <span className="text-gray-900 font-medium tracking-tight">himadri@26</span>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary btn-lg w-full"
+              >
+                {loading ? (
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    Sign in to Dashboard
+                    <ArrowRight size={17} strokeWidth={2.4} />
+                  </>
+                )}
+              </button>
+            </form>
+
+            {/* Demo credentials */}
+            <div className="mt-7 pt-6 border-t border-border">
+              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
+                <ShieldCheck size={14} className="text-success" strokeWidth={2.4} />
+                Demo credentials
               </div>
+              <div className="space-y-2 text-[13px] font-medium">
+                <div className="flex justify-between items-center bg-muted/60 rounded-lg px-3.5 py-2.5">
+                  <span className="text-muted-foreground">Email</span>
+                  <span className="font-bold text-foreground tracking-tight">
+                    medsaathi@admin.com
+                  </span>
+                </div>
+                <div className="flex justify-between items-center bg-muted/60 rounded-lg px-3.5 py-2.5">
+                  <span className="text-muted-foreground">Password</span>
+                  <span className="font-bold text-foreground tracking-tight">
+                    himadri@26
+                  </span>
+                </div>
+              </div>
+              <p className="text-center text-[11px] font-semibold text-muted-foreground mt-4">
+                Authorized access only · All actions are logged
+              </p>
             </div>
           </div>
         </div>
-        
       </div>
     </div>
   );
