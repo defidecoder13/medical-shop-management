@@ -212,7 +212,9 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
     </aside>
 
     {/* Logout confirmation dialog (portal: escapes sidebar/drawer transforms) */}
-    {createPortal(
+    {showLogoutConfirm &&
+      typeof document !== "undefined" &&
+      createPortal(
       <AnimatePresence>
         {showLogoutConfirm && (
           <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
