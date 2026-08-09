@@ -21,6 +21,13 @@ import Link from "next/link";
 import { apiClient } from "@/src/lib/apiClient";
 import { format } from "date-fns";
 
+// Safe date formatting: empty or invalid dates render as "N/A" instead of crashing.
+const safeFormat = (date?: string, pattern = "MMM dd, yyyy") => {
+  if (!date) return "N/A";
+  const d = new Date(date);
+  return isNaN(d.getTime()) ? "N/A" : format(d, pattern);
+};
+
 interface Medicine {
   _id: string;
   name: string;
@@ -183,7 +190,7 @@ export default function LowStockPage() {
                             <span className="text-[13px] font-bold text-foreground uppercase">{med.brand || "Generics"}</span>
                             <span className="text-[10px] font-bold text-muted-foreground flex items-center gap-2 mt-1.5 uppercase tracking-wider">
                               <Calendar className="w-3.5 h-3.5" />
-                              Exp: {format(new Date(med.expiryDate), "MMM dd, yyyy")}
+                              Exp: {safeFormat(med.expiryDate)}
                             </span>
                          </div>
                       </td>

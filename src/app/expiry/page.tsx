@@ -280,7 +280,7 @@ export default function ExpiryPage() {
                          <div className="flex items-center gap-2">
                            <div className={`w-2 h-2 rounded-full ${isExpired ? 'bg-rose-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.5)]' : 'bg-orange-500'}`} />
                            <span className={`text-[13px] font-bold tracking-tight ${isExpired ? 'text-rose-600 dark:text-rose-400' : 'text-foreground'}`}>
-                             {format(new Date(med.expiryDate), "dd MMM, yyyy")}
+                             {med.expiryDate && !isNaN(new Date(med.expiryDate).getTime()) ? format(new Date(med.expiryDate), "dd MMM, yyyy") : "N/A"}
                            </span>
                          </div>
                       </td>
