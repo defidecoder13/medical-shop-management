@@ -2,7 +2,9 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   Home,
   Receipt,
@@ -68,8 +70,10 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   const handleLogout = async () => {
+    setShowLogoutConfirm(false);
     try {
       const res = await fetch("/api/auth/logout", {
         method: "POST",
@@ -82,9 +86,20 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
     }
   };
 
+  // Close the confirm dialog on Escape
+  useEffect(() => {
+    if (!showLogoutConfirm) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowLogoutConfirm(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showLogoutConfirm]);
+
   const isSidebarCollapsed = collapsed && !isMobile;
 
   return (
+    <>
     <aside
       className={cn(
         "transition-all duration-300 ease-out bg-card border-r border-border flex flex-col z-20 h-screen shrink-0",
@@ -184,7 +199,7 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
           </button>
         )}
         <button
-          onClick={handleLogout}
+          onClick={() => setShowLogoutConfirm(true)}
           className={cn(
             "w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold transition-colors text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40",
             isSidebarCollapsed ? "justify-center py-2.5" : "px-3 py-2.5"
@@ -195,5 +210,58 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
         </button>
       </div>
     </aside>
+
+    {/* Logout confirmation dialog (portal: escapes sidebar/drawer transforms) */}
+    {createPortal(
+      <AnimatePresence>
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLogoutConfirm(false)}
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 12 }}
+              transition={{ type: "tween", ease: "easeOut", duration: 0.18 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Confirm logout"
+              className="relative w-[92vw] max-w-sm bg-card border border-border rounded-2xl shadow-pop p-6 text-center"
+            >
+              <div className="w-12 h-12 mx-auto rounded-xl bg-red-50 dark:bg-red-950/40 text-red-500 flex items-center justify-center mb-4">
+                <LogOut size={22} strokeWidth={2.4} />
+              </div>
+              <h3 className="font-display text-[17px] font-extrabold text-foreground">
+                Log out of Medsathi?
+              </h3>
+              <p className="text-[13px] text-muted-foreground font-medium mt-1.5">
+                You will need to sign in again to manage your pharmacy.
+              </p>
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="btn-outline btn-md flex-1 cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="btn-danger btn-md flex-1 cursor-pointer"
+                >
+                  Yes, Log Out
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>,
+      document.body
+    )}
+  </>
   );
 };
