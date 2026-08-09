@@ -22,7 +22,6 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/src/lib/utils";
-import { ThemeToggle } from "@/src/components/theme-toggle";
 import { BrandMark } from "@/src/components/ui/brand-mark";
 
 const navigationGroups = [
@@ -172,7 +171,6 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
 
       {/* Bottom Actions */}
       <div className="p-3 shrink-0 border-t border-border/70 space-y-1">
-        <ThemeToggle showLabel={!isSidebarCollapsed} />
         {!isMobile && (
           <button
             onClick={() => setCollapsed(!collapsed)}
