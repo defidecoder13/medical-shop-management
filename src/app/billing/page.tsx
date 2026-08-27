@@ -34,6 +34,7 @@ import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
 import { setApiCache } from "@/src/lib/localDb";
+import { triggerPrintInvoice } from "@/src/lib/printHelper";
 
 type Medicine = {
   _id: string;
@@ -1093,7 +1094,7 @@ function BillingContent() {
                   <button
                     onClick={() => {
                       if (generatedBillId) {
-                        window.open(`/print/${generatedBillId}`, "_blank");
+                        triggerPrintInvoice(generatedBillId);
                       }
                     }}
                     className="btn-primary btn-lg w-full"

@@ -21,6 +21,7 @@ import Link from "next/link";
 import { apiClient } from "@/src/lib/apiClient";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
+import { triggerPrintInvoice } from "@/src/lib/printHelper";
 
 export default function TransactionDetailsPage() {
   const params = useParams();
@@ -178,7 +179,7 @@ export default function TransactionDetailsPage() {
              </div>
              
              <button
-               onClick={() => window.open(`/print/${id}`, '_blank')}
+               onClick={() => triggerPrintInvoice(id as string)}
                className="flex items-center gap-2 px-6 py-2.5 bg-[#11327c] hover:bg-[#1e4db7] text-white rounded-xl font-black text-[11px] uppercase tracking-widest shadow-xl shadow-[#11327c]/20 transition-all active:scale-95"
              >
                <Printer className="w-4 h-4" strokeWidth={2.5} />

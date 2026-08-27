@@ -15,9 +15,8 @@ import {
   Mail, 
   Contact, 
   FileText,
-  AlertCircle,
-  IndianRupee,
-  CreditCard} from "lucide-react";
+  AlertCircle
+} from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
 
@@ -31,9 +30,6 @@ export default function SuppliersPage() {
 
   // Form / Modal state
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  const [paymentForm, setPaymentForm] = useState({ amount: "", method: "Bank Transfer", reference: "" });
-  const [selectedSupplierForPayment, setSelectedSupplierForPayment] = useState<any>(null);
   const [editingSupplier, setEditingSupplier] = useState<any>(null);
   const [supplierForm, setSupplierForm] = useState({
     name: "",
@@ -131,34 +127,6 @@ export default function SuppliersPage() {
     }
   };
 
-  const handleOpenPaymentModal = (supplier: any) => {
-    setSelectedSupplierForPayment(supplier);
-    setPaymentForm({ amount: supplier.outstandingBalance?.toString() || "", method: "Bank Transfer", reference: "" });
-    setIsPaymentModalOpen(true);
-  };
-
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!paymentForm.amount) return;
-
-    setIsSubmitting(true);
-    try {
-      await apiClient.post("/api/suppliers/pay", {
-        supplierId: selectedSupplierForPayment._id,
-        amount: Number(paymentForm.amount),
-        method: paymentForm.method,
-        reference: paymentForm.reference
-      });
-      showNotification("Payment recorded successfully", "success");
-      setIsPaymentModalOpen(false);
-      fetchSuppliers();
-    } catch (err: any) {
-      showNotification(err.message || "Failed to process payment.", "error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   const handleDeleteSupplier = async (id: string, name: string) => {
     if (!confirm(`Are you sure you want to delete ${name}?`)) return;
 
@@ -176,8 +144,8 @@ export default function SuppliersPage() {
     setTimeout(() => setMessage(null), 4000);
   };
 
-  const totalOutstanding = suppliers.reduce((sum, s) => sum + (s.outstandingBalance || 0), 0);
-  const suppliersWithDue = suppliers.filter(s => (s.outstandingBalance || 0) > 0).length;
+  const withGstinCount = suppliers.filter(s => s.gstin && s.gstin.trim()).length;
+  const withPhoneCount = suppliers.filter(s => s.phone && s.phone.trim()).length;
 
   return (
     <div className="space-y-8 pb-10 max-w-[1400px] mx-auto">
@@ -221,21 +189,21 @@ export default function SuppliersPage() {
            </div>
         </div>
         <div className="surface-card surface-hover p-5 flex items-center gap-4">
-           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-red-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-             <IndianRupee size={22} strokeWidth={2.3} />
+           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+             <FileText size={22} strokeWidth={2.3} />
            </div>
            <div>
-             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Outstanding Dues</p>
-             <h2 className="font-display text-[22px] font-extrabold text-red-600 dark:text-red-400 tracking-tighter">₹{totalOutstanding.toLocaleString()}</h2>
+             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Registered GSTIN</p>
+             <h2 className="font-display text-[22px] font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tighter">{withGstinCount} Verified</h2>
            </div>
         </div>
         <div className="surface-card surface-hover p-5 flex items-center gap-4">
-           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-             <CreditCard size={22} strokeWidth={2.3} />
+           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
+             <Phone size={22} strokeWidth={2.3} />
            </div>
            <div>
-             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">With Outstanding Balance</p>
-             <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{suppliersWithDue} Suppliers</h2>
+             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">With Contact Number</p>
+             <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{withPhoneCount} Listed</h2>
            </div>
         </div>
       </div>
@@ -333,23 +301,6 @@ export default function SuppliersPage() {
                       )}
                     </div>
                   </div>
-
-                  {/* Outstanding balance + pay */}
-                  {(supplier.outstandingBalance || 0) > 0 && (
-                    <div className="flex items-center justify-between gap-3 p-3 rounded-xl bg-red-50/70 dark:bg-red-950/30 ring-1 ring-inset ring-red-100 dark:ring-red-900/40">
-                      <div>
-                        <div className="text-[9px] font-bold uppercase tracking-widest text-red-500/80">Outstanding</div>
-                        <div className="font-display text-[15px] font-extrabold text-red-600 dark:text-red-400">₹{(supplier.outstandingBalance || 0).toLocaleString()}</div>
-                      </div>
-                      <button
-                        onClick={() => handleOpenPaymentModal(supplier)}
-                        className="btn-danger btn-sm"
-                      >
-                        <CreditCard size={14} strokeWidth={2.4} />
-                        Pay
-                      </button>
-                    </div>
-                  )}
                 </motion.div>
               ))}
             </AnimatePresence>
@@ -369,22 +320,22 @@ export default function SuppliersPage() {
         
         {/* Pagination Controls */}
         {!loading && totalPages > 1 && (
-          <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
-            <span className="text-sm text-gray-500 font-medium">
+          <div className="mt-8 pt-6 border-t border-border flex items-center justify-between">
+            <span className="text-sm text-muted-foreground font-medium">
               Page {page} of {totalPages}
             </span>
             <div className="flex gap-2">
               <button
                 disabled={page === 1}
                 onClick={() => setPage(p => Math.max(1, p - 1))}
-                className="px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="btn-outline btn-sm disabled:opacity-50"
               >
                 Previous
               </button>
               <button
                 disabled={page === totalPages}
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                className="px-5 py-2.5 border border-gray-200 rounded-xl text-sm font-semibold text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"
+                className="btn-outline btn-sm disabled:opacity-50"
               >
                 Next
               </button>
@@ -507,101 +458,6 @@ export default function SuppliersPage() {
                   >
                     {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : <CheckCircle2 size={18} strokeWidth={2.6}/>}
                     {editingSupplier ? "Save Changes" : "Register Distributor"}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Record Payment Modal */}
-      <AnimatePresence>
-        {isPaymentModalOpen && selectedSupplierForPayment && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-md">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-card w-full max-w-md rounded-3xl shadow-pop border border-border overflow-hidden"
-            >
-              <div className="p-6 border-b border-border flex justify-between items-center bg-muted/40">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-rose-500 to-red-400 text-white rounded-xl flex items-center justify-center shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-                    <CreditCard size={22} strokeWidth={2.3}/>
-                  </div>
-                  <div>
-                    <h2 className="font-display text-lg font-extrabold text-foreground tracking-tight">Record Payment</h2>
-                    <p className="text-[12px] text-muted-foreground font-semibold mt-0.5">{selectedSupplierForPayment.name}</p>
-                  </div>
-                </div>
-                <button 
-                  onClick={() => setIsPaymentModalOpen(false)} 
-                  className="w-10 h-10 flex items-center justify-center bg-muted text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40 rounded-xl transition-all cursor-pointer"
-                >
-                  <X size={20} strokeWidth={2.6}/>
-                </button>
-              </div>
-
-              <form onSubmit={handlePaymentSubmit} className="p-6 space-y-4">
-                <div className="p-4 rounded-2xl bg-red-50/70 dark:bg-red-950/30 ring-1 ring-inset ring-red-100 dark:ring-red-900/40 flex items-center justify-between">
-                  <span className="text-[12px] font-bold uppercase tracking-widest text-red-500/80">Outstanding Balance</span>
-                  <span className="font-display text-[20px] font-extrabold text-red-600 dark:text-red-400">₹{(selectedSupplierForPayment.outstandingBalance || 0).toLocaleString()}</span>
-                </div>
-
-                <div>
-                  <label className="label">Payment Amount (₹)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    required
-                    placeholder="0.00"
-                    value={paymentForm.amount}
-                    onChange={e => setPaymentForm({...paymentForm, amount: e.target.value})}
-                    className="input"
-                  />
-                </div>
-
-                <div>
-                  <label className="label">Payment Method</label>
-                  <select
-                    value={paymentForm.method}
-                    onChange={e => setPaymentForm({...paymentForm, method: e.target.value})}
-                    className="select"
-                  >
-                    <option>Bank Transfer</option>
-                    <option>Cash</option>
-                    <option>UPI</option>
-                    <option>Cheque</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="label">Reference / Remarks</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. UTR no., cheque no."
-                    value={paymentForm.reference}
-                    onChange={e => setPaymentForm({...paymentForm, reference: e.target.value})}
-                    className="input"
-                  />
-                </div>
-
-                <div className="pt-3 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setIsPaymentModalOpen(false)}
-                    className="btn-outline btn-lg flex-1"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="btn-danger btn-lg flex-[2]"
-                  >
-                    {isSubmitting ? <Loader2 className="animate-spin" size={18}/> : <CheckCircle2 size={18} strokeWidth={2.6}/>}
-                    Confirm Payment
                   </button>
                 </div>
               </form>

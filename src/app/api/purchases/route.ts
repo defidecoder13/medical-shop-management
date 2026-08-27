@@ -254,12 +254,6 @@ export async function POST(req: Request) {
     }], { session }).then(res => res[0]);
 
 
-    // If Credit, update Supplier outstanding balance
-    if (purchaseInvoice.status !== "Paid") {
-       supplier.outstandingBalance = (supplier.outstandingBalance || 0) + (purchaseInvoice.grandTotal - purchaseInvoice.amountPaid);
-       await supplier.save({ session });
-    }
-
     result = { success: true, invoice: purchaseInvoice };
     }); // end withTransaction
     } finally {

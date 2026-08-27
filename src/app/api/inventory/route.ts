@@ -73,7 +73,7 @@ export async function GET(req: Request) {
             purchaseInvoiceNumber: batch.purchaseInvoiceNumber || "",
             category: med.category || "Tablet",
             pack: batch.pack || med.pack || "",
-            purchaseDate: batch.purchaseDate || batch.createdAt,
+            purchaseDate: batch.purchaseDate ? batch.purchaseDate : "",
           };
         });
         
@@ -184,7 +184,7 @@ export async function GET(req: Request) {
         purchaseInvoiceNumber: batch.purchaseInvoiceNumber || "",
         category: med.category || "Tablet",
         pack: batch.pack || med.pack || "",
-        purchaseDate: batch.purchaseDate || batch.createdAt,
+        purchaseDate: batch.purchaseDate ? batch.purchaseDate : "",
       };
     });
 
@@ -332,8 +332,10 @@ export async function POST(req: Request) {
         supplierName: supplierName || "Direct Purchase",
         purchaseInvoiceNumber: purchaseInvoiceNumber || "",
         pack: body.pack || "",
-        purchaseDate: purchaseDate || new Date(),
       };
+      if (purchaseDate) {
+        newBatchData.purchaseDate = purchaseDate;
+      }
       if (expiryDate !== undefined) {
         newBatchData.expiryDate = expiryDate;
       }
@@ -461,7 +463,7 @@ export async function PUT(req: Request) {
         batch.expiryDate = body.expiryDate === "" ? undefined : body.expiryDate;
     }
     if (body.rackNumber !== undefined) batch.rackNumber = body.rackNumber;
-    if (body.purchaseDate !== undefined) batch.purchaseDate = body.purchaseDate;
+    if (body.purchaseDate !== undefined) batch.purchaseDate = body.purchaseDate ? body.purchaseDate : undefined;
 
     if (typeof body.buyingPrice === "number" && body.buyingPrice > 0) {
       batch.buyingPricePerStrip = body.buyingPrice;

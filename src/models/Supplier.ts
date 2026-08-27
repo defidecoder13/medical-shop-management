@@ -8,7 +8,6 @@ const SupplierSchema = new mongoose.Schema(
     email: { type: String, default: "" },
     address: { type: String, default: "" },
     gstin: { type: String, default: "" },
-    outstandingBalance: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

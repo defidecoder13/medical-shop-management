@@ -101,6 +101,24 @@ const formatToMMYY = (dateStr: string): string => {
   return dateStr;
 };
 
+const formatToYYYYMMDD = (val?: string | Date): string => {
+  if (!val) return "";
+  if (typeof val === "string") {
+    if (val.includes("T")) return val.split("T")[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(val.trim())) return val.trim();
+  }
+  try {
+    const d = new Date(val);
+    if (isNaN(d.getTime())) return "";
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}-${mm}-${dd}`;
+  } catch {
+    return "";
+  }
+};
+
 type Medicine = {
   _id?: string;
   medicineId?: string;
@@ -145,7 +163,7 @@ const emptyMedicine: Medicine = {
   supplierName: "",
   purchaseInvoiceNumber: "",
   category: "Tablet",
-  purchaseDate: new Date().toISOString().split('T')[0],
+  purchaseDate: "",
 };
 
 export default function InventoryPage() {
@@ -313,7 +331,8 @@ export default function InventoryPage() {
           discountPercent: m.discountPercent || 0,
           supplierName: m.supplierName || "",
           purchaseInvoiceNumber: m.purchaseInvoiceNumber || "",
-          category: m.category || m.medicineId?.category || "Tablet"
+          category: m.category || m.medicineId?.category || "Tablet",
+          purchaseDate: m.purchaseDate || "",
         })));
       };
 
@@ -489,6 +508,7 @@ export default function InventoryPage() {
   const handleEdit = (med: Medicine) => {
     setForm({
       ...med,
+      purchaseDate: med.purchaseDate ? formatToYYYYMMDD(med.purchaseDate) : "",
       expiryDate: med.expiryDate ? formatToMMYY(med.expiryDate) : "",
     });
     setEditingId(med._id!);
@@ -508,6 +528,7 @@ export default function InventoryPage() {
       gstPercent: med.gstPercent || 5,
       tabletsPerStrip: med.tabletsPerStrip || 10,
       pack: med.pack || "",
+      purchaseDate: "",
       // Important: Leave these empty/0 for the user to fill
       stock: "",
       batchNumber: "",
@@ -834,7 +855,7 @@ export default function InventoryPage() {
               <label className="label">Purchase date</label>
               <input 
                 type="date"
-                value={form.purchaseDate || ""}
+                value={formatToYYYYMMDD(form.purchaseDate)}
                 onChange={e => setForm({...form, purchaseDate: e.target.value})}
                 className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
               />
