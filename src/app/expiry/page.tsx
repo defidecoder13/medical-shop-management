@@ -67,12 +67,14 @@ export default function ExpiryPage() {
         const handleData = (data: any) => {
           if (data) {
             const items = data?.data ? data.data : (Array.isArray(data) ? data : []);
-            const validItems = items.filter((m: any) => m.expiryDate);
+            // Hide dead stock everywhere: stock > 0 means even 1 tablet counts as alive
+            const validItems = items.filter((m: any) => m.expiryDate && Number(m.stock) > 0);
             setMedicines(validItems);
           }
           setLoading(false);
         };
-        await apiClient.get('/api/inventory?limit=5000', {}, handleData).then(handleData);
+        // Server-side hide dead stock (stock > 0) — billing already does, expiry now too
+        await apiClient.get('/api/inventory?limit=5000&inStock=true', {}, handleData).then(handleData);
       } catch (error) {
         console.error('Error fetching expiry data:', error);
         setLoading(false);

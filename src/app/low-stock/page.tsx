@@ -54,12 +54,14 @@ export default function LowStockPage() {
       try {
         const handleData = (data: any) => {
           if (data && Array.isArray(data)) {
-            const lowStockItems = data.filter((med: Medicine) => med.stock <= 10);
+            // Dead stock = 0 or less (even 1 tablet = not dead). Hide dead everywhere.
+            const lowStockItems = data.filter((med: Medicine) => Number(med.stock) > 0 && Number(med.stock) <= 10);
             setLowStockMedicines(lowStockItems);
           }
           setLoading(false);
         };
-        await apiClient.get('/api/inventory', {}, handleData).then(handleData);
+        // Hide dead stock at server too for speed
+        await apiClient.get('/api/inventory?inStock=true', {}, handleData).then(handleData);
       } catch (error) {
         console.error('Error fetching low stock data:', error);
         setLoading(false);
