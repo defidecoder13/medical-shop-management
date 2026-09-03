@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { motion } from "framer-motion";
 import { BarChart3 } from "@/src/components/icons";
 import { useTheme } from "@/src/components/theme-provider";
 import { cn } from "@/src/lib/utils";
@@ -49,13 +50,20 @@ export function SalesChart({ data, range, onRangeChange }: SalesChartProps) {
               key={r.key}
               onClick={() => onRangeChange(r.key)}
               className={cn(
-                "px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-all duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                "relative px-3.5 py-1.5 rounded-lg text-[12px] font-bold transition-colors duration-200 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring select-none",
                 range === r.key
-                  ? "bg-card text-primary shadow-sm border border-border"
+                  ? "text-primary"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              {r.label}
+              {range === r.key && (
+                <motion.div
+                  layoutId="activeChartRange"
+                  transition={{ type: "spring", stiffness: 420, damping: 28 }}
+                  className="absolute inset-0 bg-card rounded-lg shadow-sm border border-border"
+                />
+              )}
+              <span className="relative z-10">{r.label}</span>
             </button>
           ))}
         </div>

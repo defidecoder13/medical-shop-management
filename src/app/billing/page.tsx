@@ -33,6 +33,7 @@ import { Badge } from "@/src/components/ui/badge";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
+import { AnimatedNumber } from "@/src/components/ui/animated";
 import { setApiCache } from "@/src/lib/localDb";
 import { triggerPrintInvoice } from "@/src/lib/printHelper";
 
@@ -837,9 +838,10 @@ function BillingContent() {
                       <motion.div 
                         key={item.medicineId} 
                         layout
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
+                        initial={{ opacity: 0, y: 12, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+                        transition={{ type: "spring", stiffness: 380, damping: 28 }}
                         className="group relative p-3.5 rounded-xl border border-border bg-card hover:border-primary/25 transition-all shadow-sm flex flex-col md:flex-row items-center gap-3"
                       >
                          {/* LEFT: Info */}
@@ -1022,14 +1024,21 @@ function BillingContent() {
                           key={method}
                           type="button"
                           onClick={() => setPaymentMethod(method)}
-                          className={`flex flex-col items-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold transition-all cursor-pointer ring-1 ${
+                          className={`relative flex flex-col items-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold transition-colors cursor-pointer select-none ring-1 ${
                             active
-                              ? "bg-white/15 ring-white/40"
-                              : "bg-white/5 ring-white/10 hover:bg-white/10"
+                              ? "ring-white/40 text-white"
+                              : "bg-white/5 ring-white/10 hover:bg-white/10 text-white/80"
                           }`}
                         >
-                          <Icon size={17} strokeWidth={2.2} />
-                          {method}
+                          {active && (
+                            <motion.div
+                              layoutId="activeBillingPaymentMethod"
+                              transition={{ type: "spring", stiffness: 420, damping: 30 }}
+                              className="absolute inset-0 rounded-xl bg-white/20 shadow-sm"
+                            />
+                          )}
+                          <Icon size={17} strokeWidth={2.2} className="relative z-10" />
+                          <span className="relative z-10">{method}</span>
                         </button>
                       );
                     })}
@@ -1041,7 +1050,9 @@ function BillingContent() {
             <div className="relative mt-4 pt-4 border-t border-white/15">
               <div className="flex justify-between items-end mb-4">
                 <span className="text-[11px] font-bold tracking-[0.14em] opacity-75 uppercase">Grand Total</span>
-                <span className="font-display text-[30px] font-extrabold tracking-tighter tabular-nums">₹{grandTotal.toFixed(2)}</span>
+                <span className="font-display text-[30px] font-extrabold tracking-tighter tabular-nums">
+                  <AnimatedNumber value={grandTotal} prefix="₹" decimals={2} />
+                </span>
               </div>
               <button
                 disabled={loading || cart.length === 0}

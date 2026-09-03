@@ -30,6 +30,7 @@ import {
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
+import { AnimatedNumber } from "@/src/components/ui/animated";
 import { format } from "date-fns";
 import * as xlsx from "xlsx";
 
@@ -688,7 +689,9 @@ export default function InventoryPage() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-[12px] text-muted-foreground font-semibold truncate">Total Items</p>
-            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">{stats ? stats.totalItems.toLocaleString() : "..."}</h3>
+            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">
+              {stats ? <AnimatedNumber value={stats.totalItems} /> : "..."}
+            </h3>
             <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">All products in stock</p>
           </div>
         </div>
@@ -700,7 +703,7 @@ export default function InventoryPage() {
           <div className="flex-1 overflow-hidden">
             <p className="text-[12px] text-muted-foreground font-semibold truncate">Total Stock Value</p>
             <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate" title={stats ? `₹${stats.totalStockValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : ""}>
-              {stats ? `₹${stats.totalStockValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : "..."}
+              {stats ? <AnimatedNumber value={stats.totalStockValue} prefix="₹" decimals={2} /> : "..."}
             </h3>
             <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">At purchase price</p>
           </div>
@@ -712,7 +715,9 @@ export default function InventoryPage() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-[12px] text-muted-foreground font-semibold truncate">Low Stock Items</p>
-            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">{stats ? stats.lowStockItems : "..."}</h3>
+            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">
+              {stats ? <AnimatedNumber value={stats.lowStockItems} /> : "..."}
+            </h3>
             <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">Reorder soon</p>
           </div>
         </div>
@@ -723,7 +728,9 @@ export default function InventoryPage() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-[12px] text-muted-foreground font-semibold truncate">Expiring Soon</p>
-            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">{stats ? stats.expiringSoon : "..."}</h3>
+            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">
+              {stats ? <AnimatedNumber value={stats.expiringSoon} /> : "..."}
+            </h3>
             <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">Within 6 months</p>
           </div>
         </div>
@@ -760,10 +767,11 @@ export default function InventoryPage() {
           onClick={() => { setForm(emptyMedicine); setEditingId(null); setIsRestock(false); setShowForm(false); }}
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={{ opacity: 0, scale: 0.94, y: 14 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-card p-7 md:p-8 rounded-3xl border border-border shadow-pop max-w-5xl w-full"
+            exit={{ opacity: 0, scale: 0.94, y: 14 }}
+            transition={{ type: "spring", stiffness: 360, damping: 26 }}
+            className="bg-card p-7 md:p-8 rounded-3xl border border-border shadow-pop max-w-5xl w-full my-auto"
             onClick={(e) => e.stopPropagation()}
           >
           <div className="flex items-center gap-4 mb-7">

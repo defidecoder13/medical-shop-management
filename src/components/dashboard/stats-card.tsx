@@ -2,6 +2,7 @@
 
 import { cn } from "@/src/lib/utils";
 import { ArrowUpRight, ArrowDownRight, Minus } from "@/src/components/icons";
+import { AnimatedNumber } from "@/src/components/ui/animated";
 
 interface StatsCardProps {
   title: string;
@@ -78,7 +79,17 @@ export function StatsCard({
       <div className="mt-4 relative z-10">
         <p className="text-muted-foreground text-[12px] font-semibold truncate">{title}</p>
         <p className="font-display text-foreground font-extrabold text-[27px] leading-none tracking-tight mt-1">
-          {value}
+          {typeof value === "number" ? (
+            <AnimatedNumber value={value} />
+          ) : typeof value === "string" && !isNaN(Number(value.replace(/[^0-9.-]+/g, ""))) && value.replace(/[^0-9.-]+/g, "").length > 0 ? (
+            <AnimatedNumber
+              value={Number(value.replace(/[^0-9.-]+/g, ""))}
+              prefix={value.trim().startsWith("₹") ? "₹" : ""}
+              decimals={value.includes(".") ? 2 : 0}
+            />
+          ) : (
+            value
+          )}
         </p>
       </div>
 

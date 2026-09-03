@@ -155,28 +155,39 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
                     if (isMobile && onClose) onClose();
                   }}
                   className={cn(
-                    "relative w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold transition-all duration-200 group",
+                    "relative w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold transition-colors duration-200 group select-none",
                     isSidebarCollapsed ? "px-0 justify-center py-2.5" : "px-3 py-2.5",
                     isActive
-                      ? "bg-gradient-to-r from-primary/12 to-primary/5 text-primary shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_22%,transparent)]"
-                      : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+                      ? "text-primary font-extrabold"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                   title={isSidebarCollapsed ? route.label : undefined}
                 >
                   {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary" />
+                    <motion.div
+                      layoutId="activeSidebarIndicator"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/14 to-primary/6 shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent)] pointer-events-none"
+                    />
+                  )}
+                  {isActive && (
+                    <motion.span
+                      layoutId="activeSidebarBar"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                      className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary"
+                    />
                   )}
                   <route.icon
                     size={18}
                     strokeWidth={isActive ? 2.6 : 2.2}
                     className={cn(
-                      "transition-colors shrink-0",
+                      "transition-colors shrink-0 relative z-10",
                       isActive
                         ? "text-primary"
                         : "text-muted-foreground/70 group-hover:text-foreground"
                     )}
                   />
-                  {!isSidebarCollapsed && <span className="truncate">{route.label}</span>}
+                  {!isSidebarCollapsed && <span className="truncate relative z-10">{route.label}</span>}
                 </Link>
               );
             })}

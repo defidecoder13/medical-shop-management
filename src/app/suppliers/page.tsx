@@ -349,9 +349,10 @@ export default function SuppliersPage() {
         {isModalOpen && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#11327c]/40 backdrop-blur-md">
             <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              initial={{ opacity: 0, scale: 0.94, y: 14 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              exit={{ opacity: 0, scale: 0.94, y: 14 }}
+              transition={{ type: "spring", stiffness: 360, damping: 26 }}
               className="bg-card w-full max-w-xl rounded-3xl shadow-pop border border-border overflow-hidden"
             >
               {/* Modal Header */}
