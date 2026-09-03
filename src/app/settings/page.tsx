@@ -19,7 +19,7 @@ import {
   Lock,
   Globe,
   Database
-} from "lucide-react";
+} from "@/src/components/icons";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";

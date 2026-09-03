@@ -9,7 +9,7 @@ import {
   PackagePlus,
   CalendarClock,
   BarChart3,
-} from "lucide-react";
+} from "@/src/components/icons";
 import { apiClient } from "@/src/lib/apiClient";
 import Link from "next/link";
 import { useRouter } from "next/navigation";

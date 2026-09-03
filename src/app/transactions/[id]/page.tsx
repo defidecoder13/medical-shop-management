@@ -16,7 +16,7 @@ import {
   Undo2,
   X,
   AlertCircle
-} from "lucide-react";
+} from "@/src/components/icons";
 import Link from "next/link";
 import { apiClient } from "@/src/lib/apiClient";
 import { format } from "date-fns";

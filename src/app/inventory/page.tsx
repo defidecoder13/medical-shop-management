@@ -26,7 +26,7 @@ import {
   LayoutGrid,
   PackagePlus,
   ShoppingCart
-} from "lucide-react";
+} from "@/src/components/icons";
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";

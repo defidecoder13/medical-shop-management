@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import * as XLSX from "xlsx";
-import { UploadCloud, CheckCircle2, AlertCircle, ArrowRight, Save, FileText, Loader2 } from "lucide-react";
+import { UploadCloud, CheckCircle2, AlertCircle, ArrowRight, Save, FileText, Loader2 } from "@/src/components/icons";
 import { apiClient } from "@/src/lib/apiClient";
 
 export default function ImportPurchasePage() {

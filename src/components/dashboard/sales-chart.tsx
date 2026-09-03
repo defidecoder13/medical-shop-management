@@ -9,7 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { BarChart3 } from "lucide-react";
+import { BarChart3 } from "@/src/components/icons";
 import { useTheme } from "@/src/components/theme-provider";
 import { cn } from "@/src/lib/utils";
 

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, AlertTriangle, PackageX } from "lucide-react";
+import { ArrowRight, AlertTriangle, PackageX } from "@/src/components/icons";
 import { EmptyState } from "@/src/components/ui/empty-state";
 
 interface StockAlertsProps {

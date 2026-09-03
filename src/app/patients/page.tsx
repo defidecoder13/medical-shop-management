@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Users, Search, PackagePlus, Trash2, Edit, Phone, MapPin, Activity, X, Plus, UserPlus, CreditCard, Stethoscope, ChevronRight, Loader2, CheckCircle2 } from "lucide-react";
+import { Users, Search, PackagePlus, Trash2, Edit, Phone, MapPin, Activity, X, Plus, UserPlus, CreditCard, Stethoscope, ChevronRight, Loader2, CheckCircle2 } from "@/src/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { Wifi, WifiOff } from "lucide-react";
+import { Wifi, WifiOff } from "@/src/components/icons";
 import { useNetwork } from "@/src/hooks/useNetwork";
 import { useEffect, useState } from "react";
 

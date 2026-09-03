@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { apiClient } from "@/src/lib/apiClient";
-import { User } from "lucide-react";
+import { User } from "@/src/components/icons";
 
 type BillItem = {
   name: string;

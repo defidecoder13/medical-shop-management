@@ -16,7 +16,7 @@ import {
   Contact, 
   FileText,
   AlertCircle
-} from "lucide-react";
+} from "@/src/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
 

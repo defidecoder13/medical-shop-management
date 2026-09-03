@@ -16,7 +16,7 @@ import {
   Search,
   History,
   Info
-} from "lucide-react";
+} from "@/src/components/icons";
 import Link from "next/link";
 
 type Medicine = {

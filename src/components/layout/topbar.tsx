@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Plus, ChevronRight } from "lucide-react";
+import { Menu, Plus, ChevronRight } from "@/src/components/icons";
 import { ThemeToggle } from "@/src/components/theme-toggle";
 import { BrandMark } from "@/src/components/ui/brand-mark";
 import { cn } from "@/src/lib/utils";

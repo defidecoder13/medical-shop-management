@@ -13,7 +13,7 @@ import {
   ArrowRight,
   Clock,
   Hash
-} from "lucide-react";
+} from "@/src/components/icons";
 import Link from "next/link";
 import { format } from "date-fns";
 import { apiClient } from "@/src/lib/apiClient";

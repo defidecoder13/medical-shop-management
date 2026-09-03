@@ -26,7 +26,7 @@ import {
   Pill,
   Minus,
   Tag
-} from "lucide-react";
+} from "@/src/components/icons";
 import Link from "next/link";
 import { Separator } from "@/src/components/ui/separator";
 import { Badge } from "@/src/components/ui/badge";

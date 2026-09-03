@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "@/src/components/icons";
 import { PharmacyIllustration } from "@/src/components/auth/pharmacy-illustration";
 
 export default function LoginPage() {

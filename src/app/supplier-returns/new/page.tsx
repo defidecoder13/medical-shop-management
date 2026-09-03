@@ -15,7 +15,7 @@ import {
   Truck,
   ArrowLeft,
   Loader2
-} from "lucide-react";
+} from "@/src/components/icons";
 import Link from "next/link";
 import { Separator } from "@/src/components/ui/separator";
 import { useDebounce } from "@/src/hooks/use-debounce";

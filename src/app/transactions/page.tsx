@@ -29,7 +29,7 @@ import {
   Banknote,
   CreditCard,
   Send
-} from "lucide-react";
+} from "@/src/components/icons";
 import { apiClient } from "@/src/lib/apiClient";
 import { Badge } from "@/src/components/ui/badge";
 

@@ -16,7 +16,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Truck
-} from "lucide-react";
+} from "@/src/components/icons";
 import Link from "next/link";
 import { apiClient } from "@/src/lib/apiClient";
 import { format } from "date-fns";

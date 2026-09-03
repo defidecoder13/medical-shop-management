@@ -22,7 +22,7 @@ import {
   Building2,
   FileSpreadsheet,
   X,
-} from "lucide-react";
+} from "@/src/components/icons";
 import { cn } from "@/src/lib/utils";
 import { BrandMark } from "@/src/components/ui/brand-mark";
 

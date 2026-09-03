@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { FileText, Eye, ReceiptText } from "lucide-react";
+import { FileText, Eye, ReceiptText } from "@/src/components/icons";
 import { Badge } from "@/src/components/ui/badge";
 import { EmptyState } from "@/src/components/ui/empty-state";
 

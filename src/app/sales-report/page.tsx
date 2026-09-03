@@ -26,7 +26,7 @@ import {
   Loader2,
   Trophy,
   AlertCircle
-} from "lucide-react";
+} from "@/src/components/icons";
 import Link from "next/link";
 import { apiClient } from "@/src/lib/apiClient";
 
