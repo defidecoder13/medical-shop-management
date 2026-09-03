@@ -163,18 +163,23 @@ export async function POST(req: Request) {
     const calculatedDiscountPercent = subTotal > 0 ? Math.round((roundedDiscountAmount / subTotal) * 100 * 100) / 100 : 0;
     const calculatedGstPercent = subTotalAfterDiscount > 0 ? Math.round((roundedGstAmount / subTotalAfterDiscount) * 100 * 100) / 100 : 0;
 
-        // 💡 GENERATE INVOICE NUMBER
+        // 💡 GENERATE INVOICE NUMBER (Redis with fallback — Redis DNS can fail in dev)
     const dateStr = new Date().toISOString().slice(2, 10).replace(/-/g, '');
     let sequenceNumber = 1;
-
-    if (redis) {
-      sequenceNumber = await redis.incr(`invoice_seq:${dateStr}`);
-    } else {
+    let useRedis = !!redis;
+    if (useRedis) {
+      try {
+        sequenceNumber = await redis!.incr(`invoice_seq:${dateStr}`);
+      } catch (e) {
+        console.warn("Redis incr failed, falling back to countDocuments", e);
+        useRedis = false;
+      }
+    }
+    if (!useRedis) {
       const startOfDay = new Date();
       startOfDay.setHours(0, 0, 0, 0);
       const endOfDay = new Date();
       endOfDay.setHours(23, 59, 59, 999);
-      
       const todayCount = await Bill.countDocuments({ 
         createdAt: { $gte: startOfDay, $lte: endOfDay } 
       });
