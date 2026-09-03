@@ -29,7 +29,12 @@ const MedicineSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Compound Index for Search Performance
+// Indexes for fast joins + filtering
+MedicineSchema.index({ category: 1 });
+MedicineSchema.index({ createdAt: -1 });
+MedicineSchema.index({ name: 1 });
+MedicineSchema.index({ barcode: 1 });
+// Text index for search
 MedicineSchema.index({
   name: "text",
   brand: "text",

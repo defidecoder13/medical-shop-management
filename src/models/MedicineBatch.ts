@@ -22,7 +22,15 @@ const MedicineBatchSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// Compound Index for Search Performance
+// Indexes for fast inventory queries
+MedicineBatchSchema.index({ stock: 1 });
+MedicineBatchSchema.index({ expiryDate: 1 });
+MedicineBatchSchema.index({ supplierName: 1 });
+MedicineBatchSchema.index({ medicineId: 1 });
+MedicineBatchSchema.index({ createdAt: -1 });
+MedicineBatchSchema.index({ batchNumber: 1 });
+MedicineBatchSchema.index({ rackNumber: 1 });
+// Text index for fallback full-text (kept separate)
 MedicineBatchSchema.index({
   batchNumber: "text",
   rackNumber: "text"

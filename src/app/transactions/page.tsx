@@ -5,7 +5,6 @@ import React, { useEffect, useState, Fragment } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
-import * as XLSX from "xlsx";
 import { 
   History, 
   ChevronLeft, 
@@ -185,10 +184,9 @@ export default function TransactionsPage() {
   const expandedBill = transactions.find(t => t._id === expandedBillId);
   const exportToExcel = async () => {
     if (filteredTransactions.length === 0) return;
-    
+    const XLSX = await import("xlsx");
     setLoading(true);
     try {
-      // For export, we use the already filtered and fetched transactions
       const allTransactions = filteredTransactions;
 
       // Sheet 1: Invoice Summary (GST Optimized)
@@ -262,7 +260,7 @@ export default function TransactionsPage() {
   };
   
   return (
-    <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
+    <div className="space-y-5 pb-10 max-w-[1400px] mx-auto">
       {/* Header Actions */}
       <div className="flex justify-end mb-6">
         <button
@@ -275,54 +273,47 @@ export default function TransactionsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Total Sales */}
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-            <ShoppingCart size={22} strokeWidth={2.3} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="surface-card p-4 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <ShoppingCart size={18} strokeWidth={2} />
           </div>
-          <div>
-            <div className="text-[12px] text-muted-foreground font-semibold mb-1">Total Sales</div>
-            <div className="font-display text-[22px] font-extrabold text-foreground tracking-tight leading-none mb-1.5">₹{summary.totalSales.toFixed(2)}</div>
-            <div className="text-[12px] font-bold text-muted-foreground/70">{summary.totalSalesCount} Bills</div>
-          </div>
-        </div>
-        
-        {/* Total Items Sold */}
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-            <TrendingUp size={22} strokeWidth={2.3} />
-          </div>
-          <div>
-            <div className="text-[12px] text-muted-foreground font-semibold mb-1">Total Items Sold</div>
-            <div className="font-display text-[22px] font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tight leading-none mb-1.5">{summary.totalItemsSold}</div>
-            <div className="text-[12px] font-bold text-muted-foreground/70">Selected Period</div>
+          <div className="min-w-0">
+            <div className="text-[11px] font-medium text-muted-foreground">Total Sales</div>
+            <div className="text-[18px] font-bold tracking-tight leading-none mt-1">₹{summary.totalSales.toFixed(2)}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">{summary.totalSalesCount} bills</div>
           </div>
         </div>
-        
-        {/* Total Refunds */}
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-            <Undo size={22} strokeWidth={2.3} />
+        <div className="surface-card p-4 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-success/10 text-success flex items-center justify-center shrink-0">
+            <TrendingUp size={18} strokeWidth={2} />
           </div>
-          <div>
-            <div className="text-[12px] text-muted-foreground font-semibold mb-1">Total Refunds</div>
-            <div className="font-display text-[22px] font-extrabold text-orange-500 dark:text-orange-400 tracking-tight leading-none mb-1.5">₹{summary.totalRefunds.toFixed(2)}</div>
-            <div className="text-[12px] font-bold text-muted-foreground/70">{summary.totalRefundsCount} Refunds</div>
+          <div className="min-w-0">
+            <div className="text-[11px] font-medium text-muted-foreground">Items Sold</div>
+            <div className="text-[18px] font-bold tracking-tight leading-none mt-1">{summary.totalItemsSold}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">Selected period</div>
           </div>
         </div>
-
-        {/* Avg. Bill Value */}
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-            <Receipt size={22} strokeWidth={2.3} />
+        <div className="surface-card p-4 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-warning/15 text-amber-600 flex items-center justify-center shrink-0">
+            <Undo size={18} strokeWidth={2} />
           </div>
-          <div>
-            <div className="text-[12px] text-muted-foreground font-semibold mb-1">Avg. Bill Value</div>
-            <div className="font-display text-[22px] font-extrabold text-violet-600 dark:text-violet-400 tracking-tight leading-none mb-1.5">
+          <div className="min-w-0">
+            <div className="text-[11px] font-medium text-muted-foreground">Refunds</div>
+            <div className="text-[18px] font-bold tracking-tight leading-none mt-1">₹{summary.totalRefunds.toFixed(2)}</div>
+            <div className="text-[11px] text-muted-foreground mt-1">{summary.totalRefundsCount} refunds</div>
+          </div>
+        </div>
+        <div className="surface-card p-4 flex items-center gap-3.5">
+          <div className="w-10 h-10 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
+            <Receipt size={18} strokeWidth={2} />
+          </div>
+          <div className="min-w-0">
+            <div className="text-[11px] font-medium text-muted-foreground">Avg. Bill</div>
+            <div className="text-[18px] font-bold tracking-tight leading-none mt-1">
               ₹{summary.totalSalesCount > 0 ? (summary.totalSales / summary.totalSalesCount).toFixed(2) : "0.00"}
             </div>
-            <div className="text-[12px] font-bold text-muted-foreground/70">Selected Period</div>
+            <div className="text-[11px] text-muted-foreground mt-1">Per invoice</div>
           </div>
         </div>
       </div>

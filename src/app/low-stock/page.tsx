@@ -100,52 +100,40 @@ export default function LowStockPage() {
         </div>
       </div>
 
-      {/* Minimal Status Banner */}
-      <div className={`relative p-6 md:p-7 rounded-3xl overflow-hidden shadow-card transition-colors ${lowStockMedicines.length > 0 ? 'bg-amber-50/70 dark:bg-amber-950/25 ring-1 ring-inset ring-amber-200/60 dark:ring-amber-900/40' : 'bg-success/8 ring-1 ring-inset ring-success/20'}`}>
-        <div className="absolute -right-6 -top-6 opacity-[0.05] pointer-events-none text-foreground">
-          {lowStockMedicines.length > 0 ? <AlertTriangle className="w-44 h-44" /> : <CheckCircle2 className="w-44 h-44" />}
-        </div>
-        
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-          <div className="flex items-center gap-5">
-            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${lowStockMedicines.length > 0 ? 'bg-gradient-to-br from-amber-500 to-orange-400 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]' : 'bg-gradient-to-br from-emerald-500 to-emerald-400 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]'}`}>
-              {lowStockMedicines.length > 0 ? <AlertTriangle className="w-7 h-7" strokeWidth={2.4} /> : <CheckCircle2 className="w-7 h-7" strokeWidth={2.4} />}
-            </div>
-            <div>
-               <h2 className="font-display text-2xl md:text-[26px] font-extrabold text-foreground tracking-tight">
-                 {lowStockMedicines.length > 0 
-                  ? `${lowStockMedicines.length} Critical Stock Alerts` 
-                  : "Inventory Healthy"}
-               </h2>
-               <p className="text-[12px] text-muted-foreground font-bold uppercase tracking-widest mt-1">
-                 System Status: <span className={lowStockMedicines.length > 0 ? 'text-orange-500 dark:text-orange-400' : 'text-emerald-600 dark:text-emerald-400'}>
-                   {lowStockMedicines.length > 0 ? 'Restock Required' : 'Optimal'}
-                 </span>
-               </p>
-            </div>
+      {/* Status Banner */}
+      <div className={`p-5 rounded-xl border flex items-center justify-between gap-4 ${lowStockMedicines.length > 0 ? 'bg-warning/10 border-warning/20' : 'bg-success/10 border-success/20'}`}>
+        <div className="flex items-center gap-3">
+          <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${lowStockMedicines.length > 0 ? 'bg-warning text-warning-foreground' : 'bg-success text-success-foreground'}`}>
+            {lowStockMedicines.length > 0 ? <AlertTriangle size={18} strokeWidth={2} /> : <CheckCircle2 size={18} strokeWidth={2} />}
           </div>
-          
-          {lowStockMedicines.length > 0 && (
-            <div className="flex items-center gap-3 px-5 py-2.5 bg-card/70 backdrop-blur rounded-xl border border-border shrink-0">
-               <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Priority:</div>
-               <div className="text-sm font-extrabold text-orange-600 dark:text-orange-400 uppercase">High</div>
-            </div>
-          )}
+          <div>
+             <h2 className="text-[15px] font-semibold tracking-tight">
+               {lowStockMedicines.length > 0 
+                ? `${lowStockMedicines.length} items need restock` 
+                : "All stock levels healthy"}
+             </h2>
+             <p className="text-[12px] text-muted-foreground">
+               {lowStockMedicines.length > 0 ? 'Threshold: 10 units' : 'No action required'}
+             </p>
+          </div>
         </div>
+        {lowStockMedicines.length > 0 && (
+          <span className="hidden sm:inline-flex items-center rounded-full bg-warning text-warning-foreground px-3 py-1 text-xs font-medium">Action needed</span>
+        )}
       </div>
 
       {/* List Section */}
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1">
-           <h2 className="font-display text-[15px] sm:text-[16px] font-extrabold text-foreground tracking-wide flex items-center gap-2.5">
-              <AlertCircle className="text-amber-500 w-5 h-5 shrink-0" strokeWidth={2.6} />
-              Critical Shortage List
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+           <h2 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+              <AlertCircle className="text-muted-foreground w-4 h-4" strokeWidth={2} />
+              Low Stock List
            </h2>
            <div className="relative group w-full sm:w-auto">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
               <input 
-                placeholder="Filter alerts..."
-                className="input pl-10 w-full sm:w-64"
+                placeholder="Filter..."
+                className="input h-9 pl-9 w-full sm:w-64"
               />
            </div>
         </div>

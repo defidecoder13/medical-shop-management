@@ -20,40 +20,42 @@ export async function GET(request: Request) {
             return NextResponse.json(cachedData);
         }
 
-        // Parallel Fetching
-        const [bills, batches] = await Promise.all([
-            Bill.find({}).sort({ createdAt: -1 }),
-            MedicineBatch.find({})
-        ]);
-
-        // 1. Calculate Summary Stats (exclude return bills from all metrics)
-        const saleBills = bills.filter(b => !b.isReturn);
-        const totalSales = saleBills.reduce((sum, bill) => sum + (bill.grandTotal || 0), 0);
-        const totalOrders = saleBills.length;
-        const lowStockItems = batches.filter(b => (b.stock || 0) <= 10).length;
-        
-        // Calculate unique customers (based on non-empty patient names or phone numbers)
-        const uniqueCustomers = new Set();
-        saleBills.forEach(bill => {
-            if (bill.patientName && bill.patientName.trim().length > 0) {
-                uniqueCustomers.add(bill.patientName.trim().toLowerCase());
-            } else if (bill.patientPhone && bill.patientPhone.trim().length > 0) {
-                uniqueCustomers.add(bill.patientPhone.trim());
-            }
-        });
-
-        // Check expiry
+        // Aggregated stats — no full collection scan in Node
         const today = new Date();
         const nextMonth = new Date();
         nextMonth.setMonth(today.getMonth() + 1);
+        const [salesAgg, stockAgg, expAgg] = await Promise.all([
+          Bill.aggregate([
+            { $match: { isReturn: { $ne: true } } },
+            {
+              $group: {
+                _id: null,
+                totalSales: { $sum: "$grandTotal" },
+                totalOrders: { $sum: 1 },
+                bills: { $push: { patientName: "$patientName", patientPhone: "$patientPhone", grandTotal: "$grandTotal", createdAt: "$createdAt", items: "$items", _id: "$_id" } },
+              },
+            },
+          ]),
+          MedicineBatch.aggregate([
+            { $group: { _id: null, lowStockItems: { $sum: { $cond: [{ $lte: [{ $ifNull: ["$stock", 0] }, 10] }, 1, 0] } } } },
+          ]),
+          MedicineBatch.countDocuments({ expiryDate: { $gte: today, $lte: nextMonth } }),
+        ]);
 
-        let expiring = 0;
-        batches.forEach(b => {
-            if (b.expiryDate) {
-                const exp = new Date(b.expiryDate);
-                if (exp <= nextMonth) expiring++;
-            }
-        });
+        const salesData = salesAgg[0] || { totalSales: 0, totalOrders: 0, bills: [] };
+        const totalSales = salesData.totalSales || 0;
+        const totalOrders = salesData.totalOrders || 0;
+        const lowStockItems = stockAgg[0]?.lowStockItems || 0;
+        const expiring = expAgg || 0;
+        const billsForChart = (salesData.bills || []).sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+        // Unique customers from aggregated bills
+        const uniqueCustomers = new Set<string>();
+        for (const b of billsForChart as any[]) {
+          if (b.patientName && String(b.patientName).trim()) uniqueCustomers.add(String(b.patientName).trim().toLowerCase());
+          else if (b.patientPhone && String(b.patientPhone).trim()) uniqueCustomers.add(String(b.patientPhone).trim());
+        }
+        const saleBills: any[] = billsForChart;
 
         // 2. Prepare Chart Data based on Range
         let salesChart: { name: string; sales: number }[] = [];
@@ -145,9 +147,11 @@ export async function GET(request: Request) {
             recentTransactions
         };
 
-        await setCache(cacheKey, resData, 300); // Cache for 5 mins
+        await setCache(cacheKey, resData, 120); // Cache 2 mins (fresher than 5)
 
-        return NextResponse.json(resData);
+        return NextResponse.json(resData, {
+          headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=60" },
+        });
 
     } catch (error) {
         console.error("DASHBOARD STATS ERROR:", error);

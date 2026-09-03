@@ -5,46 +5,43 @@ export const apiClient = {
      * GET Request wrapper
      */
     async get(url: string, options: RequestInit = {}, onCache?: (data: any) => void) {
-        const isOnline = navigator.onLine;
+        const isOnline = typeof navigator !== "undefined" ? navigator.onLine : true;
 
+        // Abort fast if signal already aborted
+        if ((options as any)?.signal?.aborted) {
+          throw new DOMException("Aborted", "AbortError");
+        }
 
         let networkFinished = false;
 
-        // Instantly return cache to the callback (Stale-While-Revalidate)
+        // Stale-While-Revalidate: serve cache instantly if available
         if (onCache) {
             getApiCache(url).then(cachedData => {
-                if (cachedData && !networkFinished) onCache(cachedData);
+                if (cachedData && !networkFinished && !(options as any)?.signal?.aborted) onCache(cachedData);
             });
         }
 
         if (isOnline) {
             try {
-                const fetchOptions = {
+                const fetchOptions: RequestInit = {
                     ...options,
-                    cache: options.cache || 'no-store'
+                    cache: (options.cache as any) || 'no-store',
                 };
                 const response = await fetch(url, fetchOptions);
                 if (!response.ok) throw new Error("Network response was not ok");
-
                 const data = await response.json();
                 networkFinished = true;
-
-                // Cache successful GET request
                 await setApiCache(url, data);
-
                 return data;
-            } catch (error) {
+            } catch (error: any) {
+                if (error?.name === "AbortError") throw error;
                 console.warn(`Network fetch failed for ${url}, falling back to cache.`, error);
             }
         }
 
-        // Offline or Network Failed -> Fallback to Cache
-        console.log(`[Offline Read] Attempting to load from cache: ${url}`);
+        if ((options as any)?.signal?.aborted) throw new DOMException("Aborted", "AbortError");
         const cachedData = await getApiCache(url);
-        if (cachedData) {
-            return cachedData;
-        }
-
+        if (cachedData) return cachedData;
         throw new Error(`Offline and no cached data available for ${url}`);
     },
 

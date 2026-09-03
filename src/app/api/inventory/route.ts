@@ -8,9 +8,19 @@ import { getCache, setCache, redis, deleteCache } from "@/src/lib/redis";
 
 export const dynamic = "force-dynamic";
 
-// Global in-memory cache for ultra-fast Zero-Latency Search
-let memoryCache: any[] | null = null;
-let memoryCacheVersion: string | null = null;
+// Helper to build search $or for a single term
+function buildTermOr(term: string) {
+  const rx = { $regex: term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), $options: "i" };
+  return [
+    { "medicine.name": rx },
+    { "medicine.brand": rx },
+    { "medicine.composition": rx },
+    { "medicine.barcode": rx },
+    { batchNumber: rx },
+    { rackNumber: rx },
+    { supplierName: rx },
+  ];
+}
 
 export async function GET(req: Request) {
   noStore();
@@ -23,185 +33,324 @@ export async function GET(req: Request) {
     const idsParam = searchParams.get("ids");
     const inStock = searchParams.get("inStock");
     const pageParam = searchParams.get("page");
-    const page = parseInt(pageParam || "1");
-    const pageSize = parseInt(searchParams.get("limit") || "20");
+    const page = Math.max(1, parseInt(pageParam || "1"));
+    const pageSize = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50")));
     const category = searchParams.get("category");
     const supplier = searchParams.get("supplier");
     const status = searchParams.get("status");
 
-    // --------------------------------------------------------------------------------
-    // 🔥 ZERO-LATENCY IN-MEMORY PIPELINE (Syncs via Redis Version)
-    // --------------------------------------------------------------------------------
-    if (!idsParam) {
-      let allBatches = null;
-      let currentVersion = "default";
-      
-      // 1. Fetch lightweight version string from Mongo (~10ms, safe from Next.js caching)
-      const settings = await Settings.findOne({}).lean();
-      if (settings?.catalogVersion) {
-          currentVersion = String(settings.catalogVersion);
-      }
+    // IDS lookup — keep direct path (used by billing regular medicines)
+    if (idsParam) {
+      const ids = idsParam.split(',').filter((id: string) => id.trim() !== '');
+      const batchQuery = { medicineId: { $in: ids } };
+      const batches = await MedicineBatch.find(batchQuery).populate("medicineId").sort({ createdAt: -1 }).lean();
+      const safeBatches = batches.map((batch: any) => {
+        const med = batch.medicineId || {};
+        return {
+          _id: batch._id,
+          medicineId: med._id,
+          name: med.name || "",
+          brand: med.brand || "",
+          batchNumber: batch.batchNumber || "",
+          expiryDate: batch.expiryDate || "",
+          stock: batch.stock || 0,
+          tabletsPerStrip: med.tabletsPerStrip || 0,
+          buyingPricePerStrip: batch.buyingPricePerStrip || 0,
+          sellingPricePerStrip: batch.sellingPricePerStrip || 0,
+          rackNumber: batch.rackNumber || "",
+          composition: med.composition || "",
+          hsnCode: med.hsnCode || "3004",
+          gstPercent: med.gstPercent || 5,
+          totalTabletsInStock: batch.totalTabletsInStock || 0,
+          discountPercent: batch.discountPercent || 0,
+          supplierName: batch.supplierName || "Direct Purchase",
+          purchaseInvoiceNumber: batch.purchaseInvoiceNumber || "",
+          category: med.category || "Tablet",
+          pack: batch.pack || med.pack || "",
+          purchaseDate: batch.purchaseDate ? batch.purchaseDate : "",
+          createdAt: batch.createdAt,
+        };
+      });
+      return NextResponse.json(safeBatches, {
+        headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" },
+      });
+    }
 
-      // 2. Check local memory cache (0ms latency!)
-      if (memoryCache && memoryCacheVersion === currentVersion) {
-          allBatches = memoryCache;
-      }
+    // Build aggregation pipeline for efficient DB-side filtering + pagination
+    const match: any = {};
+    const medicineMatch: any = {};
 
-      // 3. If memory cache miss or stale, fetch from Mongo directly (500ms)
-      if (!allBatches) {
-        const rawBatches = await MedicineBatch.find({}).populate("medicineId").lean();
-        allBatches = rawBatches.map((batch: any) => {
-          const med = batch.medicineId || {};
+    // Stock filters on batch
+    if (inStock === "true") {
+      match.stock = { $gt: 0 };
+    }
+    if (status && status !== "All Status") {
+      if (status === "In Stock") match.stock = { $gt: 10 };
+      else if (status === "Low Stock") match.stock = { $gt: 0, $lte: 10 };
+      else if (status === "Out of Stock") match.stock = { $lte: 0 };
+    }
+    if (supplier && supplier !== "All Suppliers") {
+      match.supplierName = supplier;
+    }
+
+    if (category && category !== "All Categories") {
+      medicineMatch["medicine.category"] = category;
+    }
+
+    // Fuzzy spaceless search: "pand" → "PAN D" / "PAN-D" (pharmacy shorthand)
+    let searchAnd: any[] | null = null;
+    if (q && q.trim()) {
+      const rawTerms = q.trim().split(/\s+/).filter(Boolean);
+      if (rawTerms.length > 0) {
+        searchAnd = rawTerms.map((raw) => {
+          const cleaned = raw.replace(/[^a-zA-Z0-9]/g, "");
+          const source = cleaned.length ? cleaned : raw;
+          const fuzzy = source
+            .split("")
+            .map((ch) => ch.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+            .join("[^a-zA-Z0-9]*");
+          const rx = { $regex: fuzzy, $options: "i" };
           return {
-            _id: String(batch._id), // Pre-cast to string for localeCompare safety
-            medicineId: String(med._id || ""),
-            name: med.name || "",
-            brand: med.brand || "",
-            batchNumber: batch.batchNumber || "",
-            expiryDate: batch.expiryDate || "",
-            stock: batch.stock || 0,
-            tabletsPerStrip: med.tabletsPerStrip || 0,
-            buyingPricePerStrip: batch.buyingPricePerStrip || 0,
-            sellingPricePerStrip: batch.sellingPricePerStrip || 0,
-            rackNumber: batch.rackNumber || "",
-            composition: med.composition || "",
-            hsnCode: med.hsnCode || "3004",
-            gstPercent: med.gstPercent || 5,
-            totalTabletsInStock: batch.totalTabletsInStock || 0,
-            discountPercent: batch.discountPercent || 0,
-            supplierName: batch.supplierName || "Direct Purchase",
-            purchaseInvoiceNumber: batch.purchaseInvoiceNumber || "",
-            category: med.category || "Tablet",
-            pack: batch.pack || med.pack || "",
-            purchaseDate: batch.purchaseDate ? batch.purchaseDate : "",
+            $or: [
+              { "medicine.name": rx },
+              { "medicine.brand": rx },
+              { "medicine.composition": rx },
+              { "medicine.barcode": rx },
+              { batchNumber: rx },
+              { rackNumber: rx },
+              { supplierName: rx },
+            ],
           };
         });
-        
-        // Save to ultra-fast local memory
-        memoryCache = allBatches;
-        memoryCacheVersion = currentVersion;
       }
+    }
 
-      // 3. Perform in-memory filtering (Instantaneous)
-      let filteredBatches = allBatches;
+    const pipeline: any[] = [
+      {
+        $lookup: {
+          from: Medicine.collection.name,
+          localField: "medicineId",
+          foreignField: "_id",
+          as: "medicine",
+        },
+      },
+      { $unwind: "$medicine" },
+    ];
 
-      if (q) {
-        // Strip non-alphanumerics from each query term to handle missing spaces/hyphens
-        const queryTerms = q.toLowerCase().split(/\s+/).map(t => t.replace(/[^a-z0-9]/g, "")).filter(Boolean);
-        
-        filteredBatches = filteredBatches.filter((b: any) => {
-          // Normalize the entire item string to remove spaces and special characters
-          const rawSearchString = `${b.name} ${b.brand} ${b.composition} ${b.barcode || ''} ${b.batchNumber} ${b.rackNumber}`;
-          const cleanSearchString = rawSearchString.toLowerCase().replace(/[^a-z0-9]/g, "");
-          
-          return queryTerms.every(term => cleanSearchString.includes(term));
-        });
-      }
+    const andClauses: any[] = [];
+    if (Object.keys(match).length > 0) andClauses.push(match);
+    if (Object.keys(medicineMatch).length > 0) andClauses.push(medicineMatch);
+    if (searchAnd) andClauses.push(...searchAnd);
 
-      if (category && category !== "All Categories") {
-        filteredBatches = filteredBatches.filter((b: any) => b.category === category);
-      }
+    if (andClauses.length > 0) {
+      pipeline.push({ $match: { $and: andClauses } });
+    }
 
-      if (supplier && supplier !== "All Suppliers") {
-        filteredBatches = filteredBatches.filter((b: any) => b.supplierName === supplier);
-      }
+    pipeline.push({ $sort: { createdAt: -1 } });
 
-      if (status && status !== "All Status") {
-        if (status === "In Stock") filteredBatches = filteredBatches.filter((b: any) => b.stock > 10);
-        else if (status === "Low Stock") filteredBatches = filteredBatches.filter((b: any) => b.stock > 0 && b.stock <= 10);
-        else if (status === "Out of Stock") filteredBatches = filteredBatches.filter((b: any) => b.stock <= 0);
-      }
+    // Use facet to get paginated data + total count in one roundtrip
+    const isPaginated = Boolean(pageParam);
+    const isSearchWithoutPage = Boolean(q && !pageParam);
 
-      if (inStock === "true") {
-        filteredBatches = filteredBatches.filter((b: any) => b.stock > 0);
-      }
-
-      // Sort by createdAt descending so newly added items are at the top, but edited items stay in place
-      filteredBatches.sort((a, b) => {
-        const timeA = new Date(a.createdAt || 0).getTime();
-        const timeB = new Date(b.createdAt || 0).getTime();
-        return timeB - timeA;
+    if (isPaginated) {
+      pipeline.push({
+        $facet: {
+          data: [
+            { $skip: (page - 1) * pageSize },
+            { $limit: pageSize },
+            {
+              $project: {
+                _id: 1,
+                medicineId: "$medicine._id",
+                name: "$medicine.name",
+                brand: "$medicine.brand",
+                batchNumber: 1,
+                expiryDate: 1,
+                stock: 1,
+                tabletsPerStrip: "$medicine.tabletsPerStrip",
+                buyingPricePerStrip: 1,
+                sellingPricePerStrip: 1,
+                rackNumber: 1,
+                composition: "$medicine.composition",
+                hsnCode: "$medicine.hsnCode",
+                gstPercent: "$medicine.gstPercent",
+                totalTabletsInStock: 1,
+                discountPercent: 1,
+                supplierName: 1,
+                purchaseInvoiceNumber: 1,
+                category: "$medicine.category",
+                pack: { $ifNull: ["$pack", "$medicine.pack"] },
+                purchaseDate: 1,
+                createdAt: 1,
+                barcode: "$medicine.barcode",
+              },
+            },
+          ],
+          totalCount: [{ $count: "count" }],
+        },
       });
 
-      const totalCount = filteredBatches.length;
+      const [result] = await MedicineBatch.aggregate(pipeline);
+      const data = result?.data || [];
+      const totalCount = result?.totalCount?.[0]?.count || 0;
       const totalPages = Math.ceil(totalCount / pageSize);
 
-      // Apply pagination limit to the array slice
-      if (pageParam) {
-        const paginatedBatches = filteredBatches.slice((page - 1) * pageSize, page * pageSize);
-        return NextResponse.json({
-          data: paginatedBatches,
-          pagination: {
-            totalCount,
-            totalPages,
-            currentPage: page,
-            limit: pageSize
-          }
-        });
-      } else if (q) {
-         // If it's a search without pagination (like billing autocomplete), limit to 50
-         return NextResponse.json(filteredBatches.slice(0, 50));
-      } else {
-         return NextResponse.json(filteredBatches);
-      }
+      // Normalize for frontend (ensure string _id, defaults)
+      const normalized = data.map((b: any) => ({
+        _id: String(b._id),
+        medicineId: String(b.medicineId || ""),
+        name: b.name || "",
+        brand: b.brand || "",
+        batchNumber: b.batchNumber || "",
+        expiryDate: b.expiryDate || "",
+        stock: b.stock || 0,
+        tabletsPerStrip: b.tabletsPerStrip || 0,
+        buyingPricePerStrip: b.buyingPricePerStrip || 0,
+        sellingPricePerStrip: b.sellingPricePerStrip || 0,
+        rackNumber: b.rackNumber || "",
+        composition: b.composition || "",
+        hsnCode: b.hsnCode || "3004",
+        gstPercent: b.gstPercent ?? 5,
+        totalTabletsInStock: b.totalTabletsInStock || 0,
+        discountPercent: b.discountPercent || 0,
+        supplierName: b.supplierName || "Direct Purchase",
+        purchaseInvoiceNumber: b.purchaseInvoiceNumber || "",
+        category: b.category || "Tablet",
+        pack: b.pack || "",
+        purchaseDate: b.purchaseDate || "",
+        createdAt: b.createdAt,
+        barcode: b.barcode || "",
+      }));
+
+      return NextResponse.json(
+        {
+          data: normalized,
+          pagination: { totalCount, totalPages, currentPage: page, limit: pageSize },
+        },
+        { headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" } }
+      );
     }
 
-    // --------------------------------------------------------------------------------
-    // 🔥 FALLBACK FOR IDS LOOKUP (Because it targets exact batches, hit DB directly)
-    // --------------------------------------------------------------------------------
-    const ids = idsParam.split(',').filter((id: string) => id.trim() !== '');
-    const batchQuery = { medicineId: { $in: ids } };
-    const totalCount = ids.length;
-    const totalPages = Math.ceil(totalCount / pageSize);
+    // Non-paginated but with q (billing autocomplete) → limit 50, no count needed
+    if (isSearchWithoutPage) {
+      pipeline.push({ $limit: 50 });
+      pipeline.push({
+        $project: {
+          _id: 1,
+          medicineId: "$medicine._id",
+          name: "$medicine.name",
+          brand: "$medicine.brand",
+          batchNumber: 1,
+          expiryDate: 1,
+          stock: 1,
+          tabletsPerStrip: "$medicine.tabletsPerStrip",
+          buyingPricePerStrip: 1,
+          sellingPricePerStrip: 1,
+          rackNumber: 1,
+          composition: "$medicine.composition",
+          hsnCode: "$medicine.hsnCode",
+          gstPercent: "$medicine.gstPercent",
+          totalTabletsInStock: 1,
+          discountPercent: 1,
+          supplierName: 1,
+          purchaseInvoiceNumber: 1,
+          category: "$medicine.category",
+          pack: { $ifNull: ["$pack", "$medicine.pack"] },
+          purchaseDate: 1,
+          createdAt: 1,
+          barcode: "$medicine.barcode",
+        },
+      });
+      const docs = await MedicineBatch.aggregate(pipeline);
+      const normalized = docs.map((b: any) => ({
+        _id: String(b._id),
+        medicineId: String(b.medicineId || ""),
+        name: b.name || "",
+        brand: b.brand || "",
+        batchNumber: b.batchNumber || "",
+        expiryDate: b.expiryDate || "",
+        stock: b.stock || 0,
+        tabletsPerStrip: b.tabletsPerStrip || 0,
+        buyingPricePerStrip: b.buyingPricePerStrip || 0,
+        sellingPricePerStrip: b.sellingPricePerStrip || 0,
+        rackNumber: b.rackNumber || "",
+        composition: b.composition || "",
+        hsnCode: b.hsnCode || "3004",
+        gstPercent: b.gstPercent ?? 5,
+        totalTabletsInStock: b.totalTabletsInStock || 0,
+        discountPercent: b.discountPercent || 0,
+        supplierName: b.supplierName || "Direct Purchase",
+        purchaseInvoiceNumber: b.purchaseInvoiceNumber || "",
+        category: b.category || "Tablet",
+        pack: b.pack || "",
+        purchaseDate: b.purchaseDate || "",
+        createdAt: b.createdAt,
+        barcode: b.barcode || "",
+      }));
+      return NextResponse.json(normalized, {
+        headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" },
+      });
+    }
 
-    const query = MedicineBatch.find(batchQuery)
-      .populate("medicineId")
-      .sort({ createdAt: -1 });
-
-    const batches = await query.lean();
-
-    // Map to the flat structure expected by the frontend
-    const safeBatches = batches.map((batch: any) => {
-      const med = batch.medicineId || {};
-      return {
-        _id: batch._id,
-        medicineId: med._id,
-        name: med.name || "",
-        brand: med.brand || "",
-        batchNumber: batch.batchNumber || "",
-        expiryDate: batch.expiryDate || "",
-        stock: batch.stock || 0,
-        tabletsPerStrip: med.tabletsPerStrip || 0,
-        buyingPricePerStrip: batch.buyingPricePerStrip || 0,
-        sellingPricePerStrip: batch.sellingPricePerStrip || 0,
-        rackNumber: batch.rackNumber || "",
-        composition: med.composition || "",
-        hsnCode: med.hsnCode || "3004",
-        gstPercent: med.gstPercent || 5,
-        totalTabletsInStock: batch.totalTabletsInStock || 0,
-        discountPercent: batch.discountPercent || 0,
-        supplierName: batch.supplierName || "Direct Purchase",
-        purchaseInvoiceNumber: batch.purchaseInvoiceNumber || "",
-        category: med.category || "Tablet",
-        pack: batch.pack || med.pack || "",
-        purchaseDate: batch.purchaseDate ? batch.purchaseDate : "",
-      };
+    // Default: no q, no pagination → return all matching (used by expiry/low-stock pages that need full list)
+    // But cap to 5000 to avoid 10k payload, and let client handle in-stock filter already in match
+    pipeline.push({ $limit: 5000 });
+    pipeline.push({
+      $project: {
+        _id: 1,
+        medicineId: "$medicine._id",
+        name: "$medicine.name",
+        brand: "$medicine.brand",
+        batchNumber: 1,
+        expiryDate: 1,
+        stock: 1,
+        tabletsPerStrip: "$medicine.tabletsPerStrip",
+        buyingPricePerStrip: 1,
+        sellingPricePerStrip: 1,
+        rackNumber: 1,
+        composition: "$medicine.composition",
+        hsnCode: "$medicine.hsnCode",
+        gstPercent: "$medicine.gstPercent",
+        totalTabletsInStock: 1,
+        discountPercent: 1,
+        supplierName: 1,
+        purchaseInvoiceNumber: 1,
+        category: "$medicine.category",
+        pack: { $ifNull: ["$pack", "$medicine.pack"] },
+        purchaseDate: 1,
+        createdAt: 1,
+        barcode: "$medicine.barcode",
+      },
     });
-
-    if (pageParam) {
-      const resData = {
-        data: safeBatches,
-        pagination: {
-          totalCount,
-          totalPages,
-          currentPage: page,
-          limit: pageSize
-        }
-      };
-      return NextResponse.json(resData);
-    } else {
-      return NextResponse.json(safeBatches);
-    }
+    const docs = await MedicineBatch.aggregate(pipeline);
+    const normalized = docs.map((b: any) => ({
+      _id: String(b._id),
+      medicineId: String(b.medicineId || ""),
+      name: b.name || "",
+      brand: b.brand || "",
+      batchNumber: b.batchNumber || "",
+      expiryDate: b.expiryDate || "",
+      stock: b.stock || 0,
+      tabletsPerStrip: b.tabletsPerStrip || 0,
+      buyingPricePerStrip: b.buyingPricePerStrip || 0,
+      sellingPricePerStrip: b.sellingPricePerStrip || 0,
+      rackNumber: b.rackNumber || "",
+      composition: b.composition || "",
+      hsnCode: b.hsnCode || "3004",
+      gstPercent: b.gstPercent ?? 5,
+      totalTabletsInStock: b.totalTabletsInStock || 0,
+      discountPercent: b.discountPercent || 0,
+      supplierName: b.supplierName || "Direct Purchase",
+      purchaseInvoiceNumber: b.purchaseInvoiceNumber || "",
+      category: b.category || "Tablet",
+      pack: b.pack || "",
+      purchaseDate: b.purchaseDate || "",
+      createdAt: b.createdAt,
+      barcode: b.barcode || "",
+    }));
+    return NextResponse.json(normalized, {
+      headers: { "Cache-Control": "private, max-age=10, stale-while-revalidate=60" },
+    });
   } catch (error) {
     console.error("INVENTORY ERROR:", error);
     return NextResponse.json(
@@ -242,15 +391,13 @@ export async function POST(req: Request) {
     name = name || "Unknown Medicine";
     batchNumber = batchNumber || "";
     if (!expiryDate || expiryDate.trim() === "") {
-        expiryDate = undefined; // Let Mongoose ignore it if empty
+        expiryDate = undefined;
     }
 
-    // 1. Find or Create Medicine Master
     let medicine = null;
     if (body.medicineId) {
       medicine = await Medicine.findById(body.medicineId);
       if (medicine && name && String(name).trim().toLowerCase() !== String(medicine.name || "").trim().toLowerCase()) {
-        // If the user modified the medicine name while restocking or adding, do not attach to the old medicineId
         medicine = null;
       }
     }
@@ -288,13 +435,10 @@ export async function POST(req: Request) {
       }
     }
 
-    // 2. Prevent Duplicate Batch for the same medicine
     let batchQuery: any = { medicineId: medicine._id };
     if (batchNumber && batchNumber !== "") {
         batchQuery.batchNumber = batchNumber;
     } else {
-        // If no batch number, we won't try to find an exact duplicate to merge
-        // We'll just create a new one every time, or we could group by empty batch
         batchQuery.batchNumber = "";
     }
 
@@ -302,7 +446,6 @@ export async function POST(req: Request) {
     const existingBatch = await MedicineBatch.findOne(batchQuery);
 
     if (existingBatch) {
-      // MERGE / UPDATE EXISTING BATCH INSTEAD OF THROWING ERROR
       if (!Number.isNaN(stock) && stock > 0) {
         existingBatch.stock += stock;
         existingBatch.totalTabletsInStock = existingBatch.stock * (Number.isNaN(tabletsPerStrip) ? 10 : tabletsPerStrip);
@@ -343,10 +486,9 @@ export async function POST(req: Request) {
     }
 
     await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
-    memoryCache = null;
     if (redis) {
       const keys = await redis.keys("inventory:get:*");
-      keys.push("catalog:all"); // Legacy cleanup
+      keys.push("catalog:all");
       await redis.del(...keys);
       await setCache("catalog:version", Date.now().toString(), 604800);
     }
@@ -361,20 +503,12 @@ export async function POST(req: Request) {
   }
 }
 
-/**
- * PUT /api/inventory
- * SAFE UPDATE
- * RULES:
- * - tabletsPerStrip ❌ cannot change
- * - stock ✅ can change (recalculates tablets)
- * - totalTabletsInStock ❌ not directly editable
- */
 export async function PUT(req: Request) {
   try {
     await connectDB();
 
     const body = await req.json();
-    const { _id } = body; // This is the MedicineBatch _id
+    const { _id } = body;
 
     if (!_id) {
       return NextResponse.json(
@@ -394,9 +528,6 @@ export async function PUT(req: Request) {
 
     let medicine = batch.medicineId;
 
-    // BATCH PRIORITY LOGIC:
-    // If multiple batches share this master medicine record, modifying the master record directly
-    // would erroneously rename/alter all other batches pointing to it.
     const batchesSharingMaster = await MedicineBatch.countDocuments({ medicineId: medicine._id });
     const newName = body.name !== undefined ? String(body.name).trim() : medicine.name;
     const nameChanged = newName.toLowerCase() !== (medicine.name || "").trim().toLowerCase();
@@ -413,7 +544,6 @@ export async function PUT(req: Request) {
       if (existingMaster) {
         targetMedicine = existingMaster;
       } else if (batchesSharingMaster > 1) {
-        // Create an independent master record for this batch so other batches keep their old name
         targetMedicine = await Medicine.create({
           name: newName,
           brand: body.brand !== undefined ? body.brand : medicine.brand,
@@ -441,7 +571,6 @@ export async function PUT(req: Request) {
     let currentTabletsPerStrip = targetMedicine.tabletsPerStrip;
     if (typeof body.tabletsPerStrip === "number" && body.tabletsPerStrip > 0 && body.tabletsPerStrip !== targetMedicine.tabletsPerStrip) {
       if (batchesSharingMaster > 1 && targetMedicine._id.toString() === medicine._id.toString()) {
-        // Do not alter shared master tabletsPerStrip if shared with other batches
         currentTabletsPerStrip = body.tabletsPerStrip;
       } else {
         targetMedicine.tabletsPerStrip = body.tabletsPerStrip;
@@ -450,7 +579,6 @@ export async function PUT(req: Request) {
       }
     }
 
-    // UPDATE BATCH FIELDS
     if (typeof body.stock === "number" && body.stock >= 0) {
       batch.stock = body.stock;
       batch.totalTabletsInStock = body.stock * currentTabletsPerStrip;
@@ -484,7 +612,6 @@ export async function PUT(req: Request) {
       batch.pack = body.pack || "";
     }
 
-    // UPDATE MASTER MEDICINE FIELDS IF NOT SHARED OR TARGET CHANGED
     if (targetMedicine._id.toString() === medicine._id.toString() && batchesSharingMaster <= 1) {
       if (body.brand !== undefined && body.brand !== targetMedicine.brand) { targetMedicine.brand = body.brand; masterChanged = true; }
       if (body.barcode !== undefined && body.barcode !== targetMedicine.barcode) { targetMedicine.barcode = body.barcode; masterChanged = true; }
@@ -510,10 +637,9 @@ export async function PUT(req: Request) {
     }
 
     await Settings.findOneAndUpdate({}, { catalogVersion: Date.now().toString() }, { new: true, upsert: true });
-    memoryCache = null;
     if (redis) {
       const keys = await redis.keys("inventory:get:*");
-      keys.push("catalog:all"); // Legacy cleanup
+      keys.push("catalog:all");
       await redis.del(...keys);
       await setCache("catalog:version", Date.now().toString(), 604800);
     }

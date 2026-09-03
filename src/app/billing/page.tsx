@@ -236,51 +236,52 @@ function BillingContent() {
   }, [addId, router]);
 
   useEffect(() => {
-    let ignore = false;
     if (!debouncedSearch) {
       setMedicines([]);
       return;
     }
-    const handleMeds = (res: any) => {
-      if (!ignore && res) setMedicines(res);
-    };
-    apiClient.get(`/api/inventory?q=${encodeURIComponent(debouncedSearch)}&inStock=true`, {}, handleMeds)
-      .then(handleMeds)
-      .catch((err) => console.error(err));
-      
-    return () => { ignore = true; };
+    const controller = new AbortController();
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiClient.get(`/api/inventory/search?q=${encodeURIComponent(debouncedSearch)}&limit=20`, { signal: controller.signal } as any);
+        if (!cancelled && res) setMedicines(Array.isArray(res) ? res : res.data || []);
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+        console.error(err);
+      }
+    })();
+    return () => { cancelled = true; controller.abort(); };
   }, [debouncedSearch]);
 
-  // Handle Patient Autofill
+  // Handle Patient Autofill — single fetch, abort-aware
   useEffect(() => {
     if (!debouncedName || debouncedName.length < 3) {
       setRegularMedicines([]);
       return;
     }
-    let ignore = false;
-    const fetchPatient = async () => {
+    const controller = new AbortController();
+    let cancelled = false;
+    (async () => {
       try {
-        const handlePatient = (res: any) => {
-           if (ignore) return;
-           const p = res?.data?.[0] || (Array.isArray(res) ? res[0] : null);
-           if (p) {
-              if (!patientPhone) setPatientPhone(p.phone || "");
-              if (!doctorName) setDoctorName(p.doctorName || "");
-              if (!patientAddress) setPatientAddress(p.address || "");
-              if (p.regularMedicines?.length > 0) {
-                 setRegularMedicines(p.regularMedicines);
-              }
-           } else {
-              setRegularMedicines([]);
-           }
-        };
-        await apiClient.get(`/api/patients?search=${debouncedName}`, {}, handlePatient).then(handlePatient);
-      } catch (err) {
+        const res: any = await apiClient.get(`/api/patients?search=${debouncedName}`, { signal: controller.signal } as any);
+        if (cancelled) return;
+        const p = res?.data?.[0] || (Array.isArray(res) ? res[0] : null);
+        if (p) {
+          if (!patientPhone) setPatientPhone(p.phone || "");
+          if (!doctorName) setDoctorName(p.doctorName || "");
+          if (!patientAddress) setPatientAddress(p.address || "");
+          if (p.regularMedicines?.length > 0) setRegularMedicines(p.regularMedicines);
+          else setRegularMedicines([]);
+        } else {
+          setRegularMedicines([]);
+        }
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
         console.error("Failed to fetch patient details", err);
       }
-    };
-    fetchPatient();
-    return () => { ignore = true; };
+    })();
+    return () => { cancelled = true; controller.abort(); };
   }, [debouncedName]);
 
   useEffect(() => {
@@ -345,11 +346,10 @@ function BillingContent() {
   const handleBarcodeScan = async (scannedValue: string) => {
     try {
         setLoading(true);
-        // Fast fetch bypasses debounce - perfectly suited for barcode scanners!
-        const res = await apiClient.get(`/api/inventory?q=${encodeURIComponent(scannedValue)}`);
-        if (res && res.length > 0) {
-          // Find first valid batch (stock > 0, unexpired)
-          const validBatch = res.find((b: any) => b.stock > 0 && new Date(b.expiryDate) > new Date());
+        const res = await apiClient.get(`/api/inventory/search?q=${encodeURIComponent(scannedValue)}&limit=10`);
+        const list = Array.isArray(res) ? res : res.data || [];
+        if (list.length > 0) {
+          const validBatch = list.find((b: any) => b.stock > 0 && (!b.expiryDate || new Date(b.expiryDate) > new Date()));
           if (validBatch) {
              addToCart(validBatch);
           } else {
@@ -639,7 +639,7 @@ function BillingContent() {
   };
 
   return (
-    <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
+    <div className="space-y-5 pb-10 max-w-[1400px] mx-auto">
       {/* Toast messages */}
       {message && (
         <div className={`px-4 py-2.5 rounded-xl flex items-center gap-2 text-[13px] font-bold shadow-card animate-fade-in w-fit ml-auto ${
@@ -656,12 +656,12 @@ function BillingContent() {
         <div className="lg:col-span-8 space-y-6">
           
           {/* Patient Details Card */}
-          <div className="surface-card p-6">
-            <div className="flex items-center gap-2.5 mb-5">
-              <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                <Users size={17} strokeWidth={2.4} />
+          <div className="surface-card p-5">
+            <div className="flex items-center gap-2.5 mb-4">
+              <span className="w-7 h-7 rounded-md bg-muted text-muted-foreground flex items-center justify-center">
+                <Users size={15} strokeWidth={2} />
               </span>
-              <h3 className="font-display text-[15px] font-extrabold text-foreground">
+              <h3 className="text-[13px] font-semibold text-foreground">
                 Customer Details
               </h3>
             </div>
@@ -716,12 +716,12 @@ function BillingContent() {
           </div>
 
           {/* Search Box */}
-          <div className="surface-card p-6 relative group">
+          <div className="surface-card p-5 relative group">
             <div className="flex items-center gap-2.5 mb-4">
-              <span className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                <Search size={17} strokeWidth={2.4} />
+              <span className="w-7 h-7 rounded-md bg-muted text-muted-foreground flex items-center justify-center">
+                <Search size={15} strokeWidth={2} />
               </span>
-              <h2 className="font-display text-[15px] font-extrabold text-foreground">
+              <h2 className="text-[13px] font-semibold text-foreground">
                 Add Medicines
               </h2>
             </div>
@@ -741,32 +741,25 @@ function BillingContent() {
                   initial={{ opacity: 0, y: 5, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 5, scale: 0.98 }}
-                  className="absolute top-full left-0 right-0 mt-3 bg-card border border-border rounded-2xl shadow-pop z-20 max-h-80 overflow-y-auto p-2"
+                  className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-pop z-20 max-h-80 overflow-y-auto p-1.5"
                 >
-                  {medicines.slice(0, 50).map((med, index) => (
-                    <motion.button
+                  {medicines.slice(0, 50).map((med) => (
+                    <button
                       key={med._id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
                       onClick={() => addToCart(med)}
-                      className="w-full flex items-center gap-4 p-4 hover:bg-accent/70 text-left transition-colors border-b border-border/60 last:border-b-0 group/item cursor-pointer"
+                      className="w-full flex items-center gap-3 p-3 hover:bg-accent text-left transition-colors rounded-lg group/item cursor-pointer"
                     >
-                      <div className="w-11 h-11 rounded-xl bg-primary/8 text-primary flex items-center justify-center shrink-0 border border-primary/15 transition-all group-hover/item:bg-primary group-hover/item:text-primary-foreground group-hover/item:border-primary">
-                        <Pill size={20} strokeWidth={2} />
+                      <div className="w-9 h-9 rounded-md bg-muted text-muted-foreground flex items-center justify-center shrink-0 group-hover/item:bg-primary group-hover/item:text-primary-foreground transition-colors">
+                        <Pill size={16} strokeWidth={2} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-extrabold text-foreground text-[15px] tracking-tight truncate">{med.name}</div>
+                        <div className="font-semibold text-foreground text-[13px] truncate">{med.name}</div>
                         {med.composition && (
-                          <div className="text-[11px] text-muted-foreground font-medium truncate max-w-sm mt-0.5">{med.composition}</div>
+                          <div className="text-[11px] text-muted-foreground truncate max-w-sm">{med.composition}</div>
                         )}
-                        <div className="flex flex-wrap gap-1.5 mt-2">
-                          {med.rackNumber && (
-                            <Badge variant="neutral" className="font-semibold">Rack: {med.rackNumber}</Badge>
-                          )}
-                          <Badge variant={med.stock < 10 ? "danger" : "success"} className="font-semibold">
-                            Stock:{" "}
-                            {med.tabletsPerStrip > 1
+                        <div className="flex flex-wrap gap-1 mt-1.5 text-[11px]">
+                          <span className={med.stock < 10 ? "text-destructive font-medium" : "text-success font-medium"}>
+                            Stock: {med.tabletsPerStrip > 1
                               ? (() => {
                                   const totalTabs = Math.round((med.stock || 0) * med.tabletsPerStrip);
                                   const strips = Math.floor(totalTabs / med.tabletsPerStrip);
@@ -777,25 +770,23 @@ function BillingContent() {
                                   return `0 Strips`;
                                 })()
                               : `${Math.round(med.stock || 0)} Units`}
-                          </Badge>
-                          <Badge variant="info" className="font-mono font-semibold">
-                            Batch: {med.batchNumber || "N/A"}
-                          </Badge>
-                          <Badge variant="warning" className="font-semibold">
-                            Exp:{" "}
-                            {med.expiryDate
-                              ? new Date(med.expiryDate).toLocaleDateString("en-GB", { month: "short", year: "2-digit" })
-                              : "N/A"}
-                          </Badge>
-                          <Badge variant="brand" className="font-semibold">
-                            MRP: ₹{(med.sellingPricePerStrip || 0).toFixed(2)}
-                          </Badge>
+                          </span>
+                          <span className="text-muted-foreground/50">•</span>
+                          <span className="text-muted-foreground">Batch {med.batchNumber || "N/A"}</span>
+                          <span className="text-muted-foreground/50">•</span>
+                          <span className="text-muted-foreground">₹{(med.sellingPricePerStrip || 0).toFixed(2)}</span>
+                          {med.rackNumber && (
+                            <>
+                              <span className="text-muted-foreground/50">•</span>
+                              <span className="text-muted-foreground">{med.rackNumber}</span>
+                            </>
+                          )}
                         </div>
                       </div>
-                      <div className="w-10 h-10 flex items-center justify-center bg-muted text-muted-foreground rounded-xl group-hover/item:bg-success group-hover/item:text-success-foreground transition-all shadow-sm shrink-0">
-                        <Plus size={20} strokeWidth={2.5} />
+                      <div className="w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground rounded-md shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                        <Plus size={14} strokeWidth={2.5} />
                       </div>
-                    </motion.button>
+                    </button>
                   ))}
                 </motion.div>
               )}
@@ -804,19 +795,19 @@ function BillingContent() {
 
           {/* Cart Table View */}
           <div className="surface-card overflow-hidden">
-            <div className="p-5 border-b border-border bg-muted/40 flex flex-wrap items-center justify-between gap-3">
-              <h3 className="font-display text-[15px] font-extrabold text-foreground flex items-center gap-2">
-                <ShoppingCart size={18} strokeWidth={2.4} className="text-primary" />
+            <div className="p-4 border-b border-border flex items-center justify-between gap-3">
+              <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+                <ShoppingCart size={16} strokeWidth={2} className="text-muted-foreground" />
                 Selected Medicines
-                <span className="ml-1 bg-primary/10 text-primary text-[11px] font-bold px-2 py-0.5 rounded-full">{cart.length} items</span>
+                <span className="ml-1 bg-muted text-muted-foreground text-[11px] font-medium px-2 py-0.5 rounded-full">{cart.length}</span>
               </h3>
               {cart.length > 0 && (
                 <button
                   onClick={() => { setCart([]); localStorage.removeItem('medishop_cart'); }}
-                  className="text-[11px] text-red-500 hover:text-red-600 font-bold uppercase tracking-wider flex items-center gap-1.5 transition-colors cursor-pointer"
+                  className="text-[12px] text-muted-foreground hover:text-destructive font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
                 >
-                  <Trash2 size={14} strokeWidth={2.5} />
-                  Clear Cart
+                  <Trash2 size={13} strokeWidth={2} />
+                  Clear
                 </button>
               )}
             </div>
@@ -835,95 +826,90 @@ function BillingContent() {
                   {cart.map((item) => {
                     const isMulti = item.tabletsPerStrip > 1;
                     return (
-                      <motion.div 
+                       <div 
                         key={item.medicineId} 
-                        layout
-                        initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-                        transition={{ type: "spring", stiffness: 380, damping: 28 }}
-                        className="group relative p-3.5 rounded-xl border border-border bg-card hover:border-primary/25 transition-all shadow-sm flex flex-col md:flex-row items-center gap-3"
+                        className="group relative p-3 rounded-lg border border-border bg-card hover:border-border hover:bg-accent/30 transition-colors flex flex-col md:flex-row items-center gap-3"
                       >
-                         {/* LEFT: Info */}
-                         <div className="flex-1 min-w-0 flex flex-col justify-center w-full">
-                            <div className="font-display font-extrabold text-foreground text-[14px] truncate flex items-center gap-2 mb-1.5">
+                          {/* LEFT: Info */}
+                          <div className="flex-1 min-w-0 flex flex-col justify-center w-full">
+                             <div className="font-semibold text-foreground text-[13px] truncate flex items-center gap-2">
                               {item.name}
-                              {item.stock < 10 && <Badge variant="danger" className="text-[9px] px-1.5 py-0.5 uppercase">Low Stock</Badge>}
-                            </div>
-                            <div className="flex flex-wrap items-center gap-2 text-[10.5px] font-bold uppercase tracking-wider text-muted-foreground">
-                                <span>Batch: <span className="text-foreground">{item.batchNumber || '-'}</span></span>
-                                <span className="opacity-30">•</span>
-                                <span>Exp: <span className="text-foreground">{item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) : "-"}</span></span>
-                                <span className="opacity-30">•</span>
-                                <span>Stock: <span className={item.stock < 10 ? "text-red-500" : "text-foreground"}>
-                                  {Math.round(item.stock || 0)}
-                                </span></span>
-                            </div>
-                         </div>
+                              {item.stock < 10 && <Badge variant="danger">Low</Badge>}
+                             </div>
+                             <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground mt-0.5">
+                                 <span>Batch {item.batchNumber || '-'}</span>
+                                 <span className="opacity-40">•</span>
+                                 <span>Exp {item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }) : "-"}</span>
+                                 <span className="opacity-40">•</span>
+                                 <span className={item.stock < 10 ? "text-destructive" : ""}>
+                                  Stock {Math.round(item.stock || 0)}
+                                 </span>
+                             </div>
+                          </div>
 
-                         {/* MIDDLE: Inputs */}
-                         <div className="flex items-center gap-3 w-full md:w-auto shrink-0 bg-muted/50 px-3 py-2 rounded-lg border border-border/70">
-                             {/* STRIP */}
+          {/* MIDDLE: Inputs */}
+                          <div className="flex items-center gap-2 w-full md:w-auto shrink-0 bg-muted/40 px-2.5 py-1.5 rounded-lg border border-border">
+                              {/* STRIP */}
+                              <div className="flex flex-col items-center">
+                                 <span className="text-[10px] font-medium text-muted-foreground mb-1">{isMulti ? "Strips" : "Qty"} <span className="text-muted-foreground/60 ml-0.5">₹{item.stripSellingPrice}</span></span>
+                                 <div className="flex items-center bg-card border border-border rounded-md h-7">
+                                   <button onClick={() => updateItem(item.medicineId, "stripQty", Math.max(0, (item.stripQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Minus size={12} strokeWidth={2} /></button>
+                                   <input type="text" inputMode="numeric" className="w-9 text-[13px] font-semibold text-foreground text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.stripQty === 0 ? '' : item.stripQty} onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)} />
+                                   <button onClick={() => updateItem(item.medicineId, "stripQty", (item.stripQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Plus size={12} strokeWidth={2} /></button>
+                                 </div>
+                              </div>
+
+                              {isMulti && (
+                                <>
+                                  <div className="w-px h-7 bg-border mx-1"></div>
+                                  {/* TABLET */}
+                                  <div className="flex flex-col items-center">
+                                     <span className="text-[10px] font-medium text-muted-foreground mb-1">Tabs <span className="text-muted-foreground/60 ml-0.5">₹{item.tabletSellingPrice}</span></span>
+                                     <div className="flex items-center bg-card border border-border rounded-md h-7">
+                                       <button onClick={() => updateItem(item.medicineId, "tabletQty", Math.max(0, (item.tabletQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Minus size={12} strokeWidth={2} /></button>
+                                       <input type="text" inputMode="numeric" className="w-9 text-[13px] font-semibold text-foreground text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.tabletQty === 0 ? '' : item.tabletQty} onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)} />
+                                       <button onClick={() => updateItem(item.medicineId, "tabletQty", (item.tabletQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Plus size={12} strokeWidth={2} /></button>
+                                     </div>
+                                  </div>
+                                </>
+                              )}
+                          </div>
+
+                          {/* RIGHT: Price & Delete */}
+                          <div className="flex items-center gap-2 w-full md:w-auto shrink-0 justify-end md:justify-between">
                              <div className="flex flex-col items-center">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">{isMulti ? "Strips" : "Qty"} <span className="text-[#11327c]/70 dark:text-blue-400/70 ml-0.5">(₹{item.stripSellingPrice})</span></span>
-                                <div className="flex items-center bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md shadow-sm h-7">
-                                  <button onClick={() => updateItem(item.medicineId, "stripQty", Math.max(0, (item.stripQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                  <input type="text" inputMode="numeric" className="w-10 text-[13px] font-black text-[#11327c] dark:text-blue-300 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.stripQty === 0 ? '' : item.stripQty} onChange={(e) => updateItem(item.medicineId, "stripQty", Number(e.target.value) || 0)} />
-                                  <button onClick={() => updateItem(item.medicineId, "stripQty", (item.stripQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
-                                </div>
+                                 <span className="text-[10px] font-medium text-muted-foreground mb-1">Disc %</span>
+                                 <div className="flex items-center bg-card border border-border rounded-md h-7">
+                                   <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.max(0, Number((Number(item.discountPercent || 0) - 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Minus size={12} strokeWidth={2} /></button>
+                                   <input type="text" inputMode="decimal" className="w-11 text-[12px] font-medium text-foreground text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.discountPercent === 0 ? '' : item.discountPercent} onChange={(e) => {
+                                       const val = e.target.value;
+                                       if (val === '') {
+                                           updateItem(item.medicineId, "discountPercent", '');
+                                       } else if (/^\d*\.?\d*$/.test(val)) {
+                                           const num = Number(val);
+                                           if (!isNaN(num) && num <= 100) {
+                                               updateItem(item.medicineId, "discountPercent", val);
+                                           }
+                                       }
+                                   }} />
+                                   <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.min(100, Number((Number(item.discountPercent || 0) + 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"><Plus size={12} strokeWidth={2} /></button>
+                                 </div>
                              </div>
 
-                             {isMulti && (
-                               <>
-                                 <div className="w-px h-8 bg-gray-200 dark:bg-slate-700 mx-1"></div>
-                                 {/* TABLET */}
-                                 <div className="flex flex-col items-center">
-                                    <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Tabs <span className="text-[#11327c]/70 dark:text-blue-400/70 ml-0.5">(₹{item.tabletSellingPrice})</span></span>
-                                    <div className="flex items-center bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md shadow-sm h-7">
-                                      <button onClick={() => updateItem(item.medicineId, "tabletQty", Math.max(0, (item.tabletQty || 0) - 1))} className="w-7 h-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-700 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                      <input type="text" inputMode="numeric" className="w-10 text-[13px] font-black text-emerald-700 dark:text-emerald-300 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.tabletQty === 0 ? '' : item.tabletQty} onChange={(e) => updateItem(item.medicineId, "tabletQty", Number(e.target.value) || 0)} />
-                                      <button onClick={() => updateItem(item.medicineId, "tabletQty", (item.tabletQty || 0) + 1)} className="w-7 h-full flex items-center justify-center text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-slate-700 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
-                                    </div>
-                                 </div>
-                               </>
-                             )}
+                            <div className="w-px h-7 bg-border hidden md:block mx-1"></div>
+
+                             <div className="flex flex-col items-end w-20">
+                                 <span className="text-[11px] text-muted-foreground mb-1">Total</span>
+                                 <span className="text-[13px] font-semibold text-foreground tabular-nums">
+                                    ₹{(((item.stripQty || 0) * (Number(item.stripSellingPrice) || 0) + (item.tabletQty || 0) * (Number(item.tabletSellingPrice) || 0)) * (1 - (Number(item.discountPercent) || 0) / 100)).toFixed(2)}
+                                 </span>
+                             </div>
+
+                             <button onClick={() => removeFromCart(item.medicineId)} className="w-7 h-7 flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-md transition-colors ml-1">
+                                <Trash2 size={14} strokeWidth={2} />
+                             </button>
                          </div>
-
-                         {/* RIGHT: Price & Delete */}
-                         <div className="flex items-center gap-3 w-full md:w-auto shrink-0 justify-end md:justify-between">
-                            <div className="flex flex-col items-center">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Disc %</span>
-                                <div className="flex items-center bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md shadow-sm h-7">
-                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.max(0, Number((Number(item.discountPercent || 0) - 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 transition-colors"><Minus size={13} strokeWidth={2.5} /></button>
-                                  <input type="text" inputMode="decimal" className="w-12 text-[12px] font-black text-orange-600 dark:text-orange-400 text-center focus:outline-none bg-transparent appearance-none px-1 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [-moz-appearance:textfield]" value={item.discountPercent === 0 ? '' : item.discountPercent} onChange={(e) => {
-                                      const val = e.target.value;
-                                      if (val === '') {
-                                          updateItem(item.medicineId, "discountPercent", '');
-                                      } else if (/^\d*\.?\d*$/.test(val)) {
-                                          const num = Number(val);
-                                          if (!isNaN(num) && num <= 100) {
-                                              updateItem(item.medicineId, "discountPercent", val);
-                                          }
-                                      }
-                                  }} />
-                                  <button onClick={() => updateItem(item.medicineId, "discountPercent", Math.min(100, Number((Number(item.discountPercent || 0) + 1).toFixed(2))))} className="w-7 h-full flex items-center justify-center text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-slate-700 transition-colors"><Plus size={13} strokeWidth={2.5} /></button>
-                                </div>
-                            </div>
-
-                            <div className="w-px h-8 bg-gray-100 dark:bg-slate-800 hidden md:block mx-1"></div>
-
-                            <div className="flex flex-col items-end w-20">
-                                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">Total</span>
-                                <span className="font-display text-[14px] font-extrabold text-foreground">
-                                   ₹{(((item.stripQty || 0) * (Number(item.stripSellingPrice) || 0) + (item.tabletQty || 0) * (Number(item.tabletSellingPrice) || 0)) * (1 - (Number(item.discountPercent) || 0) / 100)).toFixed(2)}
-                                </span>
-                            </div>
-
-                            <button onClick={() => removeFromCart(item.medicineId)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors ml-1">
-                               <Trash2 size={15} strokeWidth={2.5} />
-                            </button>
-                         </div>
-                      </motion.div>
+                       </div>
                 );
               })}
                 </AnimatePresence>
@@ -936,83 +922,61 @@ function BillingContent() {
         <div className="lg:col-span-4 space-y-6 lg:sticky lg:top-6">
 
 
-          {/* Bill Summary Card */}
-          <div className="relative p-5 rounded-2xl shadow-pop text-white overflow-hidden flex flex-col justify-between bg-[linear-gradient(165deg,oklch(0.24_0.09_262)_0%,oklch(0.33_0.12_262)_45%,oklch(0.44_0.19_255)_110%)]">
-            <div
-              className="absolute inset-0 opacity-[0.06] pointer-events-none"
-              style={{
-                backgroundImage:
-                  "linear-gradient(rgb(255 255 255 / 0.6) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.6) 1px, transparent 1px)",
-                backgroundSize: "28px 28px",
-              }}
-            />
-            <div className="relative">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-display text-[15px] font-extrabold tracking-wide flex items-center gap-2">
-                  <Receipt size={18} strokeWidth={2.4} />
-                  Invoice Summary
-                </h3>
-                {cart.length > 0 && (
-                  <span className="text-[10px] font-bold uppercase tracking-widest bg-white/10 ring-1 ring-white/20 rounded-full px-2.5 py-1">
-                    {cart.length} {cart.length === 1 ? "item" : "items"}
-                  </span>
-                )}
-              </div>
+          {/* Bill Summary Card — restrained, token-driven */}
+          <div className="surface-card p-5 border">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-[13px] font-semibold text-foreground flex items-center gap-2">
+                <Receipt size={16} strokeWidth={2} className="text-muted-foreground" />
+                Invoice Summary
+              </h3>
+              {cart.length > 0 && (
+                <span className="text-[11px] font-medium bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                  {cart.length} {cart.length === 1 ? "item" : "items"}
+                </span>
+              )}
+            </div>
 
-              <div className="space-y-2.5">
-                <div className="flex justify-between text-[13px] font-semibold opacity-90">
-                  <span>Sub Total</span>
-                  <span className="tabular-nums">₹{subTotal.toFixed(2)}</span>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Sub Total</span>
+                  <span className="font-medium tabular-nums">₹{subTotal.toFixed(2)}</span>
                 </div>
 
-                <div className="flex justify-between items-center text-[13px] font-semibold opacity-90">
-                  <span>Weighted Discount</span>
-                  <span className="tabular-nums">{(subTotal > 0 ? (discountAmount / subTotal) * 100 : 0).toFixed(1)}%</span>
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">Discount</span>
+                  <span className="font-medium tabular-nums text-destructive">-₹{discountAmount.toFixed(2)}</span>
                 </div>
 
-                {discountAmount > 0 && (
-                  <div className="flex justify-between text-[13px] font-bold text-rose-300">
-                    <span>Discount Savings</span>
-                    <span>-₹{discountAmount.toFixed(2)}</span>
-                  </div>
-                )}
-
-                <div className="h-px w-full border-b border-dashed border-white/25 my-2" />
-
-                {/* GST Section */}
-                <div className="flex justify-between items-center">
-                  <div className="flex items-center gap-2">
-                    <label className="text-[13px] font-semibold opacity-90 cursor-pointer select-none" htmlFor="gstToggle">
-                      Apply GST (Item-wise)
-                    </label>
-                    <Info size={14} className="opacity-50" strokeWidth={2.5} />
-                  </div>
+                <div className="flex items-center justify-between py-2 border-y border-dashed border-border">
+                  <label className="text-sm text-foreground cursor-pointer select-none" htmlFor="gstToggle">
+                    Apply GST
+                  </label>
                   <button
                     type="button"
                     onClick={() => setGstEnabled(!gstEnabled)}
                     aria-pressed={gstEnabled}
-                    className={`w-11 h-6 rounded-full transition-all relative cursor-pointer flex items-center p-1 ${gstEnabled ? "bg-emerald-500" : "bg-white/20"}`}
+                    className={`w-9 h-5 rounded-full transition-colors relative cursor-pointer flex items-center p-0.5 ${gstEnabled ? "bg-primary" : "bg-muted border border-border"}`}
                   >
-                    <span className={`w-4 h-4 bg-white rounded-full transition-all shadow-sm ${gstEnabled ? "translate-x-5" : "translate-x-0"}`} />
+                    <span className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${gstEnabled ? "translate-x-4" : "translate-x-0"}`} />
                   </button>
                 </div>
 
                 {gstEnabled && (
-                  <div className="flex justify-between text-[13px] font-bold text-emerald-300">
-                    <span>GST Amount</span>
-                    <span>+₹{gstAmount.toFixed(2)}</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">GST</span>
+                    <span className="font-medium tabular-nums">+₹{gstAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {roundingAdjustment !== 0 && (
-                  <div className={`flex justify-between text-[13px] font-bold ${roundingAdjustment < 0 ? "text-rose-300" : "text-emerald-300"}`}>
-                    <span>Rounding</span>
-                    <span>{roundingAdjustment < 0 ? "-" : "+"}₹{Math.abs(roundingAdjustment).toFixed(2)}</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Rounding</span>
+                    <span className="font-medium tabular-nums">{roundingAdjustment < 0 ? "-" : "+"}₹{Math.abs(roundingAdjustment).toFixed(2)}</span>
                   </div>
                 )}
 
                 {/* Payment method */}
-                <div className="pt-3">
-                  <div className="text-[11px] font-bold uppercase tracking-widest opacity-70 mb-2">
+                <div className="pt-2">
+                  <div className="text-[11px] font-medium text-muted-foreground mb-2">
                     Payment Method
                   </div>
                   <div className="grid grid-cols-3 gap-2">
@@ -1024,54 +988,46 @@ function BillingContent() {
                           key={method}
                           type="button"
                           onClick={() => setPaymentMethod(method)}
-                          className={`relative flex flex-col items-center gap-1.5 rounded-xl py-2.5 text-[11px] font-bold transition-colors cursor-pointer select-none ring-1 ${
+                          className={`flex flex-col items-center gap-1.5 rounded-lg py-2.5 text-[12px] font-medium transition-colors cursor-pointer border ${
                             active
-                              ? "ring-white/40 text-white"
-                              : "bg-white/5 ring-white/10 hover:bg-white/10 text-white/80"
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-card text-muted-foreground border-border hover:bg-accent hover:text-foreground"
                           }`}
                         >
-                          {active && (
-                            <motion.div
-                              layoutId="activeBillingPaymentMethod"
-                              transition={{ type: "spring", stiffness: 420, damping: 30 }}
-                              className="absolute inset-0 rounded-xl bg-white/20 shadow-sm"
-                            />
-                          )}
-                          <Icon size={17} strokeWidth={2.2} className="relative z-10" />
-                          <span className="relative z-10">{method}</span>
+                          <Icon size={16} strokeWidth={2} />
+                          <span>{method}</span>
                         </button>
                       );
                     })}
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="relative mt-4 pt-4 border-t border-white/15">
-              <div className="flex justify-between items-end mb-4">
-                <span className="text-[11px] font-bold tracking-[0.14em] opacity-75 uppercase">Grand Total</span>
-                <span className="font-display text-[30px] font-extrabold tracking-tighter tabular-nums">
-                  <AnimatedNumber value={grandTotal} prefix="₹" decimals={2} />
+            <div className="mt-4 pt-4 border-t border-border">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-[11px] font-medium tracking-wide text-muted-foreground">Grand Total</span>
+                <span className="text-[26px] font-bold tracking-tight tabular-nums">
+                  <AnimatedNumber value={grandTotal} prefix="₹" decimals={0} />
                 </span>
               </div>
               <button
                 disabled={loading || cart.length === 0}
                 onClick={submitBill}
-                className="w-full bg-gradient-to-b from-emerald-400 to-emerald-600 text-white py-3.5 rounded-xl font-extrabold text-[13px] hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-[0_10px_24px_-8px_rgb(16_185_129/0.6)]"
+                className="w-full btn-primary btn-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? (
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                 ) : (
                   <>
-                    <FileText size={16} strokeWidth={2.5} />
-                    FINALIZE BILL
+                    <FileText size={16} strokeWidth={2} />
+                    Finalize Bill
                   </>
                 )}
               </button>
 
               {cart.length > 0 && (
-                <div className="mt-3.5 flex gap-1.5 text-[9.5px] font-bold uppercase tracking-widest text-white/45 justify-center">
-                  <AlertCircle size={12} strokeWidth={3} />
+                <div className="mt-2.5 flex gap-1.5 text-[11px] text-muted-foreground justify-center">
+                  <AlertCircle size={12} strokeWidth={2} />
                   Stock will be deducted on submit
                 </div>
               )}
@@ -1089,7 +1045,7 @@ function BillingContent() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="bg-card border border-border rounded-3xl shadow-pop w-full max-w-[400px] overflow-hidden"
+              className="bg-card border border-border rounded-xl shadow-pop w-full max-w-[400px] overflow-hidden"
             >
               <div className="p-8 text-center">
                 <div className="w-20 h-20 bg-success/12 rounded-full flex items-center justify-center mx-auto mb-6 ring-8 ring-success/5">

@@ -30,9 +30,8 @@ import {
 import { useDebounce } from "@/src/hooks/use-debounce";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
-import { AnimatedNumber } from "@/src/components/ui/animated";
 import { format } from "date-fns";
-import * as xlsx from "xlsx";
+import { StatCard } from "@/src/components/dashboard/stat-card";
 
 const parseExpiryDate = (expiryInput: string | number): string => {
   if (!expiryInput) return "";
@@ -288,31 +287,31 @@ export default function InventoryPage() {
     if (!document.cookie.includes('is_logged_in=1')) {
       router.push('/login');
     }
-    fetchSuppliers();
   }, [router]);
 
-  const fetchSuppliers = async () => {
+  const fetchMedicines = async (signal?: AbortSignal) => {
     try {
-      const data = await apiClient.get('/api/suppliers');
-      setSuppliers(data || []);
-    } catch (error) {
-      console.error("Failed to fetch suppliers", error);
-    }
-  };
-
-  const fetchMedicines = async () => {
-    try {
+      setLoading(true);
       const params = new URLSearchParams();
-      params.append("limit", "10000"); // Load all items on one page
+      params.append("page", String(page));
+      params.append("limit", "50");
+      if (deferredSearch) params.append("q", deferredSearch);
       if (filterCategory !== "All Categories") params.append("category", filterCategory);
       if (filterSupplier !== "All Suppliers") params.append("supplier", filterSupplier);
       if (filterStatus !== "All Status") params.append("status", filterStatus);
       if (hideZeroStock) params.append("inStock", "true");
 
       const setMedsFromPayload = (res: any) => {
+        if (signal?.aborted) return;
+        // Paginated response: {data, pagination}
         const payload = res?.data ? res.data : (Array.isArray(res) ? res : []);
-        setTotalPages(1);
-
+        const pagination = res?.pagination;
+        if (pagination) {
+          setTotalPages(pagination.totalPages || 1);
+        } else {
+          // Fallback for non-paginated (should not happen now)
+          setTotalPages(Math.max(1, Math.ceil(payload.length / 50)));
+        }
         setMedicines(payload.map((m: any) => ({
           _id: m._id,
           name: m.name,
@@ -337,17 +336,20 @@ export default function InventoryPage() {
         })));
       };
 
-      const res = await apiClient.get(`/api/inventory?${params.toString()}`, {}, (cachedData) => {
-        setMedsFromPayload(cachedData); // Instantly render cached data in 0ms!
+      const res = await apiClient.get(`/api/inventory?${params.toString()}`, { signal } as any, (cachedData) => {
+        setMedsFromPayload(cachedData);
       });
-      
-      setMedsFromPayload(res); // Quietly update with fresh network data a few seconds later
-    } catch (error) {
+      setMedsFromPayload(res);
+    } catch (error: any) {
+      if (error?.name === "AbortError") return;
       console.error("Failed to fetch medicines", error);
+    } finally {
+      if (!signal?.aborted) setLoading(false);
     }
   };
 
-  const downloadTemplate = () => {
+  const downloadTemplate = async () => {
+    const xlsx = await import("xlsx");
     const ws = xlsx.utils.json_to_sheet([{
       Name: "Dolo 650",
       Brand: "Micro Labs",
@@ -380,6 +382,7 @@ export default function InventoryPage() {
     const reader = new FileReader();
     reader.onload = async (evt) => {
       try {
+        const xlsx = await import("xlsx");
         const bstr = evt.target?.result;
         const wb = xlsx.read(bstr, { type: "binary" });
         const wsname = wb.SheetNames[0];
@@ -426,26 +429,34 @@ export default function InventoryPage() {
     reader.readAsBinaryString(file);
   };
 
+  // Single debounced fetch with abort — covers page, filters, and search
   useEffect(() => {
-    fetchMedicines();
-  }, [page, filterCategory, filterSupplier, filterStatus, hideZeroStock]);
+    const controller = new AbortController();
+    fetchMedicines(controller.signal);
+    return () => controller.abort();
+  }, [page, filterCategory, filterSupplier, filterStatus, hideZeroStock, deferredSearch]);
 
   useEffect(() => {
     setPage(1);
-  }, [filterCategory, filterSupplier, filterStatus, hideZeroStock]);
+  }, [filterCategory, filterSupplier, filterStatus, hideZeroStock, deferredSearch]);
 
+  // Batch initial stats/suppliers/settings in parallel
   useEffect(() => {
-    const fetchSettings = async () => {
+    let ignore = false;
+    (async () => {
       try {
-        const settings = await apiClient.get('/api/settings');
-        if (settings) {
-          setGstEnabled(settings.gstEnabled || false);
-        }
-      } catch (err) {
-        console.error("Failed to load settings in inventory", err);
-      }
-    };
-    fetchSettings();
+        const [statsRes, suppliersRes, settingsRes] = await Promise.all([
+          apiClient.get('/api/inventory/stats').catch(() => null),
+          apiClient.get('/api/suppliers').catch(() => []),
+          apiClient.get('/api/settings').catch(() => null),
+        ]);
+        if (ignore) return;
+        if (statsRes) setStats(statsRes);
+        if (suppliersRes) setSuppliers(suppliersRes || []);
+        if (settingsRes) setGstEnabled(settingsRes.gstEnabled || false);
+      } catch {}
+    })();
+    return () => { ignore = true; };
   }, []);
 
 
@@ -601,46 +612,26 @@ export default function InventoryPage() {
     setForm(updatedForm);
   };
 
-  const filteredMeds = medicines
-    .filter(m => {
-       if (!deferredSearch) return true;
-       const queryTerms = deferredSearch.toLowerCase().split(/\s+/).map(t => t.replace(/[^a-z0-9]/g, "")).filter(Boolean);
-       
-       const rawSearchString = `${m.name} ${m.brand} ${m.composition} ${m.barcode || ''} ${m.batchNumber} ${m.rackNumber}`;
-       const cleanSearchString = rawSearchString.toLowerCase().replace(/[^a-z0-9]/g, "");
-       
-       return queryTerms.every(term => cleanSearchString.includes(term));
-    })
-    .sort((a, b) => {
+  const filteredMeds = [...medicines].sort((a, b) => {
        if (sortConfig.key === 'none') return 0;
-       
        const aValue = a[sortConfig.key as keyof Medicine];
        const bValue = b[sortConfig.key as keyof Medicine];
-
        if (aValue === undefined || bValue === undefined) return 0;
-
        if (sortConfig.key === 'expiryDate') {
           return sortConfig.direction === 'asc' 
              ? new Date(aValue as string).getTime() - new Date(bValue as string).getTime()
              : new Date(bValue as string).getTime() - new Date(aValue as string).getTime();
        }
-
        if (typeof aValue === 'number' && typeof bValue === 'number') {
           return sortConfig.direction === 'asc' ? aValue - bValue : bValue - aValue;
        }
-
        return sortConfig.direction === 'asc' 
           ? String(aValue).localeCompare(String(bValue))
           : String(bValue).localeCompare(String(aValue));
     });
 
-  const ITEMS_PER_PAGE = 50;
-  const totalFrontendPages = Math.max(1, Math.ceil(filteredMeds.length / ITEMS_PER_PAGE));
-  const paginatedMeds = filteredMeds.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
-  useEffect(() => {
-    setPage(1);
-  }, [deferredSearch, filterCategory, filterSupplier, filterStatus, hideZeroStock]);
+  // Server paginates — no client slice needed
+  const paginatedMeds = filteredMeds;
 
   const renderExpiry = (expiryDate: string) => {
     if (!expiryDate) return { date: "-", text: "", color: "text-gray-500" };
@@ -680,71 +671,14 @@ export default function InventoryPage() {
   };
 
   return (
-    <div className="space-y-6 pb-10 max-w-[1600px] mx-auto">
+    <div className="space-y-5 pb-10 max-w-[1400px] mx-auto">
       {/* Stats Cards Row */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#11327c] to-[#1e58b8] flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-            <Package size={22} strokeWidth={2.2} />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-[12px] text-muted-foreground font-semibold truncate">Total Items</p>
-            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">
-              {stats ? <AnimatedNumber value={stats.totalItems} /> : "..."}
-            </h3>
-            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">All products in stock</p>
-          </div>
-        </div>
-
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-400 flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-            <TrendingUp size={22} strokeWidth={2.2} />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-[12px] text-muted-foreground font-semibold truncate">Total Stock Value</p>
-            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate" title={stats ? `₹${stats.totalStockValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}` : ""}>
-              {stats ? <AnimatedNumber value={stats.totalStockValue} prefix="₹" decimals={2} /> : "..."}
-            </h3>
-            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">At purchase price</p>
-          </div>
-        </div>
-
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-            <AlertTriangle size={22} strokeWidth={2.2} />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-[12px] text-muted-foreground font-semibold truncate">Low Stock Items</p>
-            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">
-              {stats ? <AnimatedNumber value={stats.lowStockItems} /> : "..."}
-            </h3>
-            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">Reorder soon</p>
-          </div>
-        </div>
-
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-red-400 flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-            <Clock size={22} strokeWidth={2.2} />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-[12px] text-muted-foreground font-semibold truncate">Expiring Soon</p>
-            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">
-              {stats ? <AnimatedNumber value={stats.expiringSoon} /> : "..."}
-            </h3>
-            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">Within 6 months</p>
-          </div>
-        </div>
-
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-400 flex items-center justify-center text-white shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-            <LayoutGrid size={22} strokeWidth={2.2} />
-          </div>
-          <div className="flex-1 overflow-hidden">
-            <p className="text-[12px] text-muted-foreground font-semibold truncate">Out of Stock</p>
-            <h3 className="font-display text-lg xl:text-xl font-extrabold text-foreground truncate">{stats ? stats.outOfStock : "..."}</h3>
-            <p className="text-[10.5px] text-muted-foreground/70 font-medium mt-0.5 truncate">Out of stock items</p>
-          </div>
-        </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+        <StatCard title="Total Items" value={stats ? stats.totalItems : "..."} icon={Package} tone="brand" hint="All products in catalog" />
+        <StatCard title="Stock Value" value={stats ? stats.totalStockValue : "..."} icon={TrendingUp} tone="success" hint="At purchase price" decimals={2} prefix="₹" />
+        <StatCard title="Low Stock" value={stats ? stats.lowStockItems : "..."} icon={AlertTriangle} tone="warning" hint="Reorder soon" />
+        <StatCard title="Expiring Soon" value={stats ? stats.expiringSoon : "..."} icon={Clock} tone="danger" hint="Within 6 months" />
+        <StatCard title="Out of Stock" value={stats ? stats.outOfStock : "..."} icon={LayoutGrid} tone="neutral" hint="No units available" />
       </div>
 
       {message && (
@@ -771,20 +705,20 @@ export default function InventoryPage() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.94, y: 14 }}
             transition={{ type: "spring", stiffness: 360, damping: 26 }}
-            className="bg-card p-7 md:p-8 rounded-3xl border border-border shadow-pop max-w-5xl w-full my-auto"
+            className="bg-card p-6 md:p-7 rounded-xl border border-border shadow-pop max-w-5xl w-full my-auto"
             onClick={(e) => e.stopPropagation()}
           >
-          <div className="flex items-center gap-4 mb-7">
-            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-              <Edit3 size={24} strokeWidth={2.2} />
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-9 h-9 bg-muted text-muted-foreground rounded-lg flex items-center justify-center">
+              <Edit3 size={18} strokeWidth={2} />
             </div>
             <div>
-              <h3 className="font-display text-[18px] font-extrabold text-foreground tracking-tight">{editingId ? "Edit Product" : isRestock ? "Restock Product Batch" : "Add New Product"}</h3>
-              <p className="text-[11px] text-muted-foreground font-bold uppercase tracking-widest">Update your catalog information</p>
+              <h3 className="text-[15px] font-semibold text-foreground">{editingId ? "Edit Product" : isRestock ? "Restock Batch" : "Add New Product"}</h3>
+              <p className="text-[12px] text-muted-foreground">Update catalog information</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <div className="flex flex-col gap-2 relative">
               <label className="label">Product Name</label>
               <input 
@@ -831,7 +765,7 @@ export default function InventoryPage() {
                 placeholder="0" 
                 value={form.stock}
                 onChange={e => setForm({...form, stock: e.target.value === "" ? "" : Number(e.target.value)})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -843,7 +777,7 @@ export default function InventoryPage() {
                   placeholder="0" 
                   value={form.tabletsPerStrip}
                   onChange={e => setForm({...form, tabletsPerStrip: e.target.value === "" ? "" : Number(e.target.value)})}
-                  className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                  className="input"
                 />
               </div>
             )}
@@ -855,7 +789,7 @@ export default function InventoryPage() {
                 placeholder="e.g. BATCH123" 
                 value={form.batchNumber}
                 onChange={e => setForm({...form, batchNumber: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -865,7 +799,7 @@ export default function InventoryPage() {
                 type="date"
                 value={formatToYYYYMMDD(form.purchaseDate)}
                 onChange={e => setForm({...form, purchaseDate: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -883,7 +817,7 @@ export default function InventoryPage() {
                   setForm({...form, expiryDate: val});
                 }}
                 maxLength={5}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -923,7 +857,7 @@ export default function InventoryPage() {
                 placeholder="e.g. Micro Labs" 
                 value={form.brand}
                 onChange={e => setForm({...form, brand: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -949,7 +883,7 @@ export default function InventoryPage() {
                 placeholder="Scan barcode" 
                 value={form.barcode || ''}
                 onChange={e => handleBarcodeChange(e.target.value)}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -959,7 +893,7 @@ export default function InventoryPage() {
                 placeholder="e.g. A1" 
                 value={form.rackNumber}
                 onChange={e => setForm({...form, rackNumber: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -970,7 +904,7 @@ export default function InventoryPage() {
                 placeholder="e.g. 10 TAB" 
                 value={form.pack}
                 onChange={e => setForm({...form, pack: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -981,7 +915,7 @@ export default function InventoryPage() {
                 placeholder="0" 
                 value={form.discountPercent === 0 ? "" : form.discountPercent}
                 onChange={e => setForm({...form, discountPercent: e.target.value === "" ? 0 : Number(e.target.value)})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -1007,7 +941,7 @@ export default function InventoryPage() {
                 placeholder="e.g. INV-101" 
                 value={form.purchaseInvoiceNumber || ""}
                 onChange={e => setForm({...form, purchaseInvoiceNumber: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -1017,7 +951,7 @@ export default function InventoryPage() {
                 placeholder="e.g. Paracetamol 500mg" 
                 value={form.composition}
                 onChange={e => setForm({...form, composition: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-[13px] font-bold focus:outline-none focus:ring-2 focus:ring-[#11327c]/10 focus:border-[#11327c] dark:focus:border-blue-500 focus:bg-white dark:focus:bg-slate-900 transition-all text-gray-800 dark:text-gray-100"
+                className="input"
               />
             </div>
 
@@ -1028,16 +962,16 @@ export default function InventoryPage() {
                   setEditingId(null);
                   setForm(emptyMedicine);
                 }}
-                className="btn-outline btn-lg w-1/3 uppercase tracking-[0.12em]"
+                className="btn-outline btn-md flex-1"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={isSaving}
-                className="btn-primary btn-lg w-2/3 uppercase tracking-[0.12em]"
+                className="btn-primary btn-md flex-1"
               >
-                {isSaving ? "Saving..." : "Save Medicine"}
+                {isSaving ? "Saving..." : editingId ? "Update Product" : "Add Product"}
               </button>
             </div>
           </div>
@@ -1047,7 +981,7 @@ export default function InventoryPage() {
       </AnimatePresence>
 
       {/* Filters Bar */}
-      <div className="flex flex-wrap items-center gap-3 w-full mb-6 mt-8">
+      <div className="flex flex-wrap items-center gap-3 w-full mb-6 mt-6">
         <select 
           value={filterCategory}
           onChange={e => setFilterCategory(e.target.value)}
@@ -1068,7 +1002,7 @@ export default function InventoryPage() {
         <select 
           value={filterSupplier}
           onChange={e => setFilterSupplier(e.target.value)}
-          className="select w-full sm:w-[170px] shrink-0 truncate"
+          className="select w-full sm:w-[160px] shrink-0 truncate"
         >
            <option>All Suppliers</option>
            {suppliers.map((supplier: any) => (
@@ -1078,23 +1012,23 @@ export default function InventoryPage() {
         <select 
           value={filterStatus}
           onChange={e => setFilterStatus(e.target.value)}
-          className="select w-full sm:w-[140px] shrink-0 truncate"
+          className="select w-full sm:w-[130px] shrink-0 truncate"
         >
            <option>All Status</option>
            <option>In Stock</option>
            <option>Low Stock</option>
            <option>Out of Stock</option>
         </select>
-        <label className="flex items-center gap-2.5 px-3.5 h-10 bg-card border border-border rounded-xl text-[13px] font-semibold text-foreground cursor-pointer shrink-0 hover:bg-accent/60 transition-colors select-none">
-           <input type="checkbox" checked={hideZeroStock} onChange={e => setHideZeroStock(e.target.checked)} className="w-4 h-4 rounded accent-primary" />
-           Hide Dead Stock
+        <label className="flex items-center gap-2 px-3 h-9 bg-card border border-border rounded-lg text-[13px] font-medium text-foreground cursor-pointer shrink-0 hover:bg-accent transition-colors select-none">
+           <input type="checkbox" checked={hideZeroStock} onChange={e => setHideZeroStock(e.target.checked)} className="w-3.5 h-3.5 rounded accent-primary" />
+           Hide zero stock
         </label>
-        <div className="relative flex-1 min-w-[280px] sm:min-w-[340px] group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#11327c] dark:group-focus-within:text-blue-400 transition-colors" size={18} strokeWidth={2.5} />
+        <div className="relative flex-1 min-w-[260px] group">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={16} strokeWidth={2} />
           <input 
             type="text" 
-            placeholder="Search product by name, composition, barcode..."
-            className="input pl-11"
+            placeholder="Search by name, composition, batch..."
+            className="input h-9 pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -1108,7 +1042,7 @@ export default function InventoryPage() {
            }}
            className="btn-primary btn-md shrink-0"
         >
-           <Plus size={17} strokeWidth={2.4} /> Add New Item
+           <Plus size={16} strokeWidth={2} /> Add Item
         </button>
       </div>
 
@@ -1133,20 +1067,15 @@ export default function InventoryPage() {
                 <th className="th text-center">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-slate-800/60">
-              <AnimatePresence>
-              {paginatedMeds.map((med, index) => (
-                <motion.tr 
+            <tbody className="divide-y divide-border/60">
+              {paginatedMeds.map((med, idx) => (
+                <tr 
                   key={med._id} 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ delay: Math.min(index * 0.03, 0.5) }}
                   onClick={() => handleEdit(med)}
-                  className="tbody-row group border-b border-border/60 cursor-pointer"
+                  className="tbody-row group border-b border-border/60 cursor-pointer hover:bg-muted/40 transition-colors"
                 >
 
-                  <td className="td w-12 text-muted-foreground font-semibold">{index + 1}</td>
+                  <td className="td w-12 text-muted-foreground font-semibold">{(page - 1) * 50 + idx + 1}</td>
                   <td className="td">
                      <div>
                        <div className="font-bold text-foreground text-[13px] mb-0.5">{med.name}</div>
@@ -1226,9 +1155,8 @@ export default function InventoryPage() {
                       </button>
                     </div>
                   </td>
-                </motion.tr>
+                </tr>
               ))}
-              </AnimatePresence>
               {filteredMeds.length === 0 && (
                 <tr>
                    <td colSpan={12} className="px-7 py-20 text-center">
@@ -1247,21 +1175,20 @@ export default function InventoryPage() {
             </tbody>
           </table>
         </div>
-        <div className="p-4 bg-muted/40 border-t border-border flex flex-wrap items-center justify-between gap-3 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground">
-          <p>Total Catalog Size: <span className="text-primary ml-1">{filteredMeds.length} Items</span></p>
-          
+        <div className="p-3 bg-muted/40 border-t border-border flex flex-wrap items-center justify-between gap-3 text-[11px] font-medium text-muted-foreground">
+          <p>{loading ? "Loading..." : `${paginatedMeds.length} items on this page`}</p>
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
+              disabled={page === 1 || loading}
               className="btn-outline btn-sm disabled:opacity-40"
             >
               Prev
             </button>
-            <span className="px-2 text-foreground font-bold">Page {page} of {totalFrontendPages}</span>
+            <span className="px-2 text-foreground font-medium">Page {page} of {totalPages}</span>
             <button 
-              onClick={() => setPage(p => Math.min(totalFrontendPages, p + 1))}
-              disabled={page === totalFrontendPages}
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages || loading}
               className="btn-outline btn-sm disabled:opacity-40"
             >
               Next

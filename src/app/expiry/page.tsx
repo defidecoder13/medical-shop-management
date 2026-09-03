@@ -139,83 +139,76 @@ export default function ExpiryPage() {
   }
 
   return (
-    <div className="space-y-8 pb-10 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+    <div className="space-y-5 pb-10 max-w-[1400px] mx-auto">
       {/* Header Actions */}
-      <div className="flex justify-end mb-6">
-        {/* Tab Switcher */}
-        <div className="flex bg-muted/70 p-1 rounded-xl border border-border">
+      <div className="flex justify-end">
+        <div className="flex bg-muted p-1 rounded-lg border border-border">
           {(['expired', 'under30', 'under60'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-5 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+              className={`px-4 py-1.5 rounded-md text-[12px] font-medium transition-colors cursor-pointer ${
                 activeTab === tab 
-                ? 'bg-card text-primary shadow-sm border border-border' 
+                ? 'bg-card text-foreground shadow-sm border border-border' 
                 : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {tab === 'expired' ? 'Expired' : tab === 'under30' ? '30 Days' : '60 Days'}
+              {tab === 'expired' ? 'Expired' : tab === 'under30' ? '30 days' : '60 days'}
             </button>
           ))}
         </div>
       </div>
 
       {/* Summary Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
         <button 
           onClick={() => setActiveTab('expired')}
-          className={`p-5 rounded-2xl border transition-all flex items-center gap-4 text-left group cursor-pointer ${
+          className={`p-4 rounded-xl border flex items-center gap-3 text-left cursor-pointer transition-colors ${
             activeTab === 'expired' 
-            ? 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/60 shadow-card' 
-            : 'surface-card surface-hover hover:border-red-200 dark:hover:border-red-900/60'
+            ? 'bg-destructive/10 border-destructive/20' 
+            : 'surface-card hover:bg-accent/50'
           }`}
         >
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shrink-0 ${
-            activeTab === 'expired' ? 'bg-gradient-to-br from-rose-500 to-red-400 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]' : 'bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400'
-          }`}>
-             <AlertCircle size={23} strokeWidth={2.3} />
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${activeTab === 'expired' ? 'bg-destructive text-destructive-foreground' : 'bg-destructive/10 text-destructive'}`}>
+             <AlertCircle size={18} strokeWidth={2} />
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Status: Expired</p>
-            <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{expiredItems.length} Products</h2>
+            <p className="text-[11px] font-medium text-muted-foreground">Expired</p>
+            <p className="text-[18px] font-bold tracking-tight">{expiredItems.length} items</p>
           </div>
         </button>
 
         <button 
           onClick={() => setActiveTab('under30')}
-          className={`p-5 rounded-2xl border transition-all flex items-center gap-4 text-left group cursor-pointer ${
+          className={`p-4 rounded-xl border flex items-center gap-3 text-left cursor-pointer transition-colors ${
             activeTab === 'under30' 
-            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-900/60 shadow-card' 
-            : 'surface-card surface-hover hover:border-amber-200 dark:hover:border-amber-900/60'
+            ? 'bg-warning/15 border-warning/30' 
+            : 'surface-card hover:bg-accent/50'
           }`}
         >
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shrink-0 ${
-            activeTab === 'under30' ? 'bg-gradient-to-br from-amber-500 to-orange-400 text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-500 dark:text-amber-400'
-          }`}>
-             <Clock size={23} strokeWidth={2.3} />
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${activeTab === 'under30' ? 'bg-warning text-warning-foreground' : 'bg-warning/15 text-amber-600'}`}>
+             <Clock size={18} strokeWidth={2} />
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Status: &lt; 30 Days</p>
-            <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{under30Items.length} Products</h2>
+            <p className="text-[11px] font-medium text-muted-foreground">&lt; 30 days</p>
+            <p className="text-[18px] font-bold tracking-tight">{under30Items.length} items</p>
           </div>
         </button>
 
         <button 
           onClick={() => setActiveTab('under60')}
-          className={`p-5 rounded-2xl border transition-all flex items-center gap-4 text-left group cursor-pointer ${
+          className={`p-4 rounded-xl border flex items-center gap-3 text-left cursor-pointer transition-colors ${
             activeTab === 'under60' 
-            ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-900/60 shadow-card' 
-            : 'surface-card surface-hover hover:border-blue-200 dark:hover:border-blue-900/60'
+            ? 'bg-primary/10 border-primary/20' 
+            : 'surface-card hover:bg-accent/50'
           }`}
         >
-          <div className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all shrink-0 ${
-            activeTab === 'under60' ? 'bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]' : 'bg-blue-50 dark:bg-blue-950/40 text-[#11327c] dark:text-blue-400'
-          }`}>
-             <Calendar size={23} strokeWidth={2.3} />
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${activeTab === 'under60' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
+             <Calendar size={18} strokeWidth={2} />
           </div>
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Status: &lt; 60 Days</p>
-            <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{under60Items.length} Products</h2>
+            <p className="text-[11px] font-medium text-muted-foreground">&lt; 60 days</p>
+            <p className="text-[18px] font-bold tracking-tight">{under60Items.length} items</p>
           </div>
         </button>
       </div>
@@ -318,17 +311,17 @@ export default function ExpiryPage() {
 
       {/* Floating Action Button for Debit Note */}
       {selectedBatches.length > 0 && (
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 px-6 py-3.5 rounded-full shadow-pop flex items-center gap-5 animate-fade-in z-50 bg-[linear-gradient(160deg,oklch(0.24_0.09_262)_0%,oklch(0.33_0.12_262)_50%,oklch(0.44_0.19_255)_115%)] text-white">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 px-5 py-3 rounded-full shadow-pop flex items-center gap-4 z-50 bg-card border border-border">
            <div className="flex items-center gap-2">
-             <span className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-black">{selectedBatches.length}</span>
-             <span className="text-sm font-bold uppercase tracking-widest text-blue-100">Batches Selected</span>
+             <span className="w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-bold">{selectedBatches.length}</span>
+             <span className="text-[13px] font-medium text-foreground">{selectedBatches.length} selected</span>
            </div>
-           <div className="w-px h-8 bg-white/20" />
+           <div className="w-px h-6 bg-border" />
            <button 
              onClick={() => router.push(`/supplier-returns/new?batches=${selectedBatches.join(',')}`)}
-             className="flex items-center gap-2 text-sm font-black uppercase tracking-widest hover:text-orange-400 transition-colors"
+             className="flex items-center gap-1.5 text-[13px] font-medium text-primary hover:text-primary/80 transition-colors"
            >
-             Create Debit Note <ArrowRight size={18} strokeWidth={3} />
+             Create Debit Note <ArrowRight size={16} strokeWidth={2} />
            </button>
         </div>
       )}

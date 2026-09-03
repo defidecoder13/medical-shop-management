@@ -86,7 +86,7 @@ export default function SettingsPage() {
   if (!settings) return null;
 
   return (
-    <div className="space-y-8 pb-12 max-w-[1000px] mx-auto animate-in fade-in duration-500">
+    <div className="space-y-5 pb-10 max-w-[1000px] mx-auto">
       {/* Header Section */}
       {/* Header Actions */}
       <div className="flex justify-end mb-6">
@@ -118,11 +118,11 @@ export default function SettingsPage() {
                <Store size={220} strokeWidth={1} />
             </div>
             
-            <div className="flex items-center gap-4 mb-7 border-b border-border pb-6 relative z-10">
-               <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
-                  <Store size={23} strokeWidth={2.3} />
+            <div className="flex items-center gap-3 mb-6 border-b border-border pb-4 relative z-10">
+               <div className="w-9 h-9 bg-muted text-muted-foreground rounded-lg flex items-center justify-center">
+                  <Store size={18} strokeWidth={2} />
                </div>
-               <h2 className="font-display text-[17px] font-extrabold text-foreground uppercase tracking-widest">Medical Establishment</h2>
+               <h2 className="text-[14px] font-semibold text-foreground">Pharmacy Details</h2>
             </div>
 
             <div className="space-y-8 max-w-2xl relative z-10">
@@ -208,15 +208,15 @@ export default function SettingsPage() {
          </div>
 
          {/* Fiscal Section */}
-         <div className="surface-card p-6 md:p-8 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none group-hover:scale-110 transition-transform duration-700">
-               <Receipt size={240} strokeWidth={1} />
-            </div>               <div className="flex items-center justify-between mb-7 border-b border-border pb-6 relative z-10">
-               <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-amber-500/12 rounded-xl flex items-center justify-center text-amber-500">
-                     <Receipt size={23} strokeWidth={2.3} />
+         <div className="surface-card p-6 md:p-7 relative overflow-hidden">
+            <div className="absolute top-0 right-0 p-10 opacity-[0.03] pointer-events-none">
+               <Receipt size={200} strokeWidth={1} />
+            </div>               <div className="flex items-center justify-between mb-6 border-b border-border pb-4 relative z-10">
+               <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-muted text-muted-foreground rounded-lg flex items-center justify-center">
+                     <Receipt size={18} strokeWidth={2} />
                   </div>
-                  <h2 className="font-display text-[17px] font-extrabold text-foreground uppercase tracking-widest">Fiscal Protocol</h2>
+                  <h2 className="text-[14px] font-semibold text-foreground">Tax Settings</h2>
                </div>
                
                <label className="relative inline-flex items-center cursor-pointer">
@@ -267,36 +267,32 @@ export default function SettingsPage() {
             </div>
          </div>
 
-         {/* Commit Action Bar */}
-         <div className="p-6 rounded-2xl shadow-pop flex items-center justify-between text-white bg-[linear-gradient(160deg,oklch(0.24_0.09_262)_0%,oklch(0.33_0.12_262)_50%,oklch(0.44_0.19_255)_115%)]">
-            <div className="hidden md:flex items-center gap-5 text-white/50">
-               <div className="w-10 h-10 bg-white/10 rounded-2xl flex items-center justify-center text-white/80">
-                 <Database size={20} strokeWidth={2.5} />
+          {/* Commit Action Bar */}
+         <div className="surface-card p-4 flex items-center justify-between">
+            <div className="hidden md:flex items-center gap-3 text-muted-foreground">
+               <div className="w-9 h-9 bg-muted rounded-lg flex items-center justify-center">
+                 <Database size={16} strokeWidth={2} />
                </div>
                <div>
-                 <div className="text-[10px] font-black uppercase tracking-[0.25em] text-white">Registry Synchronizer</div>
-                 <div className="text-[9px] font-bold uppercase tracking-widest text-white/40">Ready to commit system-wide changes</div>
+                 <div className="text-[13px] font-medium text-foreground">Save changes</div>
+                 <div className="text-[11px] text-muted-foreground">Updates apply to invoices and catalog</div>
                </div>
             </div>
             
             <button
               onClick={handleSave}
               disabled={saving}
-              className={`flex items-center gap-3 px-10 py-4 rounded-2xl font-black uppercase tracking-widest text-[11px] transition-all active:scale-95 group ${
-                saving 
-                ? 'bg-white/10 text-white/40 cursor-not-allowed' 
-                : 'bg-orange-500 text-white hover:bg-orange-600 shadow-xl shadow-orange-500/20'
-              }`}
+              className="btn-primary btn-md ml-auto"
             >
               {saving ? (
                  <>
-                    <Loader2 className="animate-spin" size={18} strokeWidth={3} />
-                    Syncing Registry...
+                    <Loader2 className="animate-spin" size={16} strokeWidth={2} />
+                    Saving...
                  </>
               ) : (
                  <>
-                    <CheckCircle2 size={18} strokeWidth={3} className="group-hover:scale-110 transition-transform" />
-                    Synchronize Config
+                    <Save size={16} strokeWidth={2} />
+                    Save Settings
                  </>
               )}
             </button>

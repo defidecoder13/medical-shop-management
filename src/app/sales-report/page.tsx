@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { format, subDays, startOfDay, endOfDay } from "date-fns";
-import * as XLSX from "xlsx";
 import { 
   TrendingUp, 
   BarChart3, 
@@ -29,6 +28,7 @@ import {
 } from "@/src/components/icons";
 import Link from "next/link";
 import { apiClient } from "@/src/lib/apiClient";
+import { ReportTrajectoryChart } from "@/src/components/charts/report-trajectory-chart";
 
 type BillItem = {
   name: string;
@@ -104,9 +104,9 @@ export default function SalesReportPage() {
     fetchReportData();
   }, [dateRange]);
 
-  const exportToExcel = () => {
+  const exportToExcel = async () => {
     if (!reportData || !dateRange) return;
-    
+    const XLSX = await import("xlsx");
     const summaryData = [
       { 'Report Meta': 'Store Name', 'Value': 'MedSathi Admin' },
       { 'Report Meta': 'Period', 'Value': `${format(dateRange.start, "dd-MM-yyyy")} to ${format(dateRange.end, "dd-MM-yyyy")}` },
@@ -155,21 +155,21 @@ export default function SalesReportPage() {
   }
 
   return (
-    <div className="space-y-8 pb-10 max-w-[1400px] mx-auto animate-in fade-in duration-500">
+    <div className="space-y-5 pb-10 max-w-[1400px] mx-auto">
       {/* Header Actions */}
-      <div className="flex flex-wrap items-center justify-end gap-3 mb-6">
-          <div className="flex bg-muted/70 p-1 rounded-xl border border-border">
+      <div className="flex flex-wrap items-center justify-end gap-3">
+          <div className="flex bg-muted p-1 rounded-lg border border-border">
             {(["1d", "7d", "1m"] as const).map((option) => (
               <button
                 key={option}
                 onClick={() => setFilter(option)}
-                className={`px-4 py-2 rounded-lg text-[11px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                className={`px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors cursor-pointer ${
                   filter === option
-                    ? "bg-card text-primary shadow-sm border border-border"
+                    ? "bg-card text-foreground shadow-sm border border-border"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
-                {option === '1d' ? 'Today' : option === '7d' ? 'Week' : 'Month'}
+                {option === '1d' ? 'Today' : option === '7d' ? '7 days' : '30 days'}
               </button>
             ))}
           </div>
@@ -186,111 +186,62 @@ export default function SalesReportPage() {
       {reportData && (
         <>
           {/* Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="relative p-6 rounded-2xl text-white overflow-hidden shadow-pop bg-[linear-gradient(160deg,oklch(0.24_0.09_262)_0%,oklch(0.33_0.12_262)_50%,oklch(0.44_0.19_255)_115%)]">
-              <div className="relative z-10">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1">Total Revenue</p>
-                <h2 className="font-display text-[28px] font-extrabold tracking-tighter">₹{reportData.totalSales.toLocaleString(undefined, { minimumFractionDigits: 0 })}</h2>
-                <div className="mt-4 inline-flex items-center gap-1.5 bg-white/10 ring-1 ring-white/20 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase">
-                  <ArrowUpRight size={12} strokeWidth={3} className="text-emerald-400" /> Gross Intake
-                </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div className="surface-card p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <TrendingUp size={18} strokeWidth={2} />
               </div>
-              <TrendingUp className="absolute -right-4 -bottom-4 text-white/5 w-24 h-24 rotate-12" strokeWidth={1} />
+              <div>
+                <p className="text-[11px] font-medium text-muted-foreground">Total Revenue</p>
+                <p className="text-[18px] font-bold tracking-tight">₹{reportData.totalSales.toLocaleString(undefined, { minimumFractionDigits: 0 })}</p>
+              </div>
             </div>
-
-            <div className="surface-card surface-hover p-5 relative overflow-hidden">
-              <div className="relative z-10">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Net Profit</p>
-                <h2 className="font-display text-[28px] font-extrabold text-foreground tracking-tighter">₹{reportData.totalProfit.toLocaleString(undefined, { minimumFractionDigits: 0 })}</h2>
-                <div className="mt-4 inline-flex items-center gap-1.5 bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase text-amber-600 dark:text-amber-400">
-                  <Wallet size={12} strokeWidth={3} /> Post-Costing
-                </div>
+            <div className="surface-card p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-success/10 text-success flex items-center justify-center shrink-0">
+                <Wallet size={18} strokeWidth={2} />
               </div>
-              <PieChart className="absolute -right-4 -bottom-4 text-muted/20 w-24 h-24 -rotate-12" strokeWidth={1} />
+              <div>
+                <p className="text-[11px] font-medium text-muted-foreground">Net Profit</p>
+                <p className="text-[18px] font-bold tracking-tight">₹{reportData.totalProfit.toLocaleString(undefined, { minimumFractionDigits: 0 })}</p>
+              </div>
             </div>
-
-            <div className="surface-card surface-hover p-5 relative overflow-hidden">
-              <div className="relative z-10">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Transactions</p>
-                <h2 className="font-display text-[28px] font-extrabold text-foreground tracking-tighter">{reportData.totalTransactions}</h2>
-                <div className="mt-4 inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/40 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase text-indigo-600 dark:text-indigo-400">
-                  <CreditCard size={12} strokeWidth={3} /> Invoices
-                </div>
+            <div className="surface-card p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
+                <CreditCard size={18} strokeWidth={2} />
               </div>
-              <Activity className="absolute -right-4 -bottom-4 text-muted/20 w-24 h-24" strokeWidth={1} />
+              <div>
+                <p className="text-[11px] font-medium text-muted-foreground">Transactions</p>
+                <p className="text-[18px] font-bold tracking-tight">{reportData.totalTransactions}</p>
+              </div>
             </div>
-
-            <div className="surface-card surface-hover p-5 relative overflow-hidden">
-              <div className="relative z-10">
-                <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-1">Avg. Ticket</p>
-                <h2 className="font-display text-[28px] font-extrabold text-foreground tracking-tighter">
-                  ₹{reportData.totalTransactions > 0 ? (reportData.totalSales / reportData.totalTransactions).toFixed(0) : '0'}
-                </h2>
-                <div className="mt-4 inline-flex items-center gap-1.5 bg-rose-50 dark:bg-rose-950/40 px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase text-rose-600 dark:text-rose-400">
-                  <BarChart3 size={12} strokeWidth={3} /> Per Client
-                </div>
+            <div className="surface-card p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-warning/15 text-amber-600 flex items-center justify-center shrink-0">
+                <BarChart3 size={18} strokeWidth={2} />
               </div>
-              <PieChart className="absolute -right-4 -bottom-4 text-muted/20 w-24 h-24" strokeWidth={1} />
+              <div>
+                <p className="text-[11px] font-medium text-muted-foreground">Avg. Ticket</p>
+                <p className="text-[18px] font-bold tracking-tight">₹{reportData.totalTransactions > 0 ? (reportData.totalSales / reportData.totalTransactions).toFixed(0) : '0'}</p>
+              </div>
             </div>
           </div>
 
           {/* Market Intelligence Chart */}
-          <div className="surface-card p-6 md:p-8 overflow-hidden relative">
-            <div className="absolute top-0 right-0 p-10 opacity-[0.02] pointer-events-none">
-              <Activity size={320} strokeWidth={1} />
-            </div>
-
-            <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4 relative z-10">
+          <div className="surface-card p-5 md:p-6">
+            <div className="flex items-center gap-2.5 mb-4">
+              <span className="w-7 h-7 rounded-md bg-muted text-muted-foreground flex items-center justify-center">
+                <TrendingUp className="w-4 h-4" strokeWidth={2} />
+              </span>
               <div>
-                <h2 className="font-display text-[17px] font-extrabold text-foreground tracking-tight flex items-center gap-2.5">
-                  <TrendingUp className="text-amber-500" size={21} strokeWidth={2.5} />
-                  Performance Trajectory
-                </h2>
-                <p className="text-[12px] text-muted-foreground font-medium mt-1">Revenue & Profit trend across the selected period</p>
-              </div>
-              <div className="flex gap-5 p-2.5 bg-muted/60 rounded-xl border border-border">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-primary" />
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Revenue</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Net Profit</span>
-                </div>
+                <h2 className="text-[14px] font-semibold text-foreground">Performance Trajectory</h2>
+                <p className="text-[12px] text-muted-foreground">Revenue & profit — {filter === "1d" ? "today" : filter === "7d" ? "last 7 days" : "last 30 days"}</p>
               </div>
             </div>
-
             {reportData.dailySales.length > 0 ? (
-              <div className="flex items-end justify-between h-64 gap-3 lg:gap-6 mt-8">
-                {reportData.dailySales.map((day, i) => {
-                  const maxVal = Math.max(...reportData.dailySales.map(d => d.sales || 1));
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-4 group h-full">
-                      <div className="flex-1 w-full flex items-end justify-center gap-1 lg:gap-2">
-                        <div 
-                          className="w-1/2 bg-primary/20 group-hover:bg-primary transition-all rounded-t-xl relative group/val"
-                          style={{ height: `${(day.sales / maxVal) * 100}%` }}
-                        >
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-primary text-white text-[9px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover/val:opacity-100 transition-all pointer-events-none shadow-lg">₹{day.sales.toLocaleString()}</div>
-                        </div>
-                        <div 
-                          className="w-1/2 bg-amber-400/25 group-hover:bg-amber-400 transition-all rounded-t-xl relative group/prof"
-                          style={{ height: `${(day.profit / maxVal) * 100}%` }}
-                        >
-                          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-amber-400 text-white text-[9px] font-bold px-2 py-1 rounded-lg opacity-0 group-hover/prof:opacity-100 transition-all pointer-events-none shadow-lg">₹{day.profit.toLocaleString()}</div>
-                        </div>
-                      </div>
-                      <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter text-center group-hover:text-primary transition-colors">
-                        {format(new Date(day.date), "EEE dd")}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+              <ReportTrajectoryChart dailySales={reportData.dailySales} />
             ) : (
-              <div className="h-64 flex flex-col items-center justify-center opacity-20">
-                <Activity size={64} strokeWidth={1} />
-                <p className="text-[10px] font-black uppercase tracking-widest mt-4">No trajectory data available</p>
+              <div className="h-[300px] flex flex-col items-center justify-center text-muted-foreground">
+                <Activity size={32} strokeWidth={1.5} className="opacity-40 mb-2" />
+                <p className="text-xs">No data for this period</p>
               </div>
             )}
           </div>

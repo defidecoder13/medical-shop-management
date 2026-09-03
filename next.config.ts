@@ -1,5 +1,4 @@
 import type { NextConfig } from "next";
-import { withSentryConfig } from "@sentry/nextjs";
 
 const withPWA = require("next-pwa")({
   dest: "public",
@@ -9,12 +8,7 @@ const withPWA = require("next-pwa")({
 });
 
 const nextConfig: NextConfig = {
-  /* config options here */
   turbopack: {},
 };
 
-export default withSentryConfig(withPWA(nextConfig), {
-  silent: true,
-  org: "medisathi",
-  project: "medisathi-admin",
-});
+export default withPWA(nextConfig);

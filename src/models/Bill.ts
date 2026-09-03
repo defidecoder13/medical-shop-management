@@ -47,6 +47,15 @@ const BillItemSchema = new Schema(
   { timestamps: true }
 );
 
+// Indexes for transactions & dashboard
+BillSchema.index({ createdAt: -1 });
+BillSchema.index({ isReturn: 1, createdAt: -1 });
+BillSchema.index({ paymentMethod: 1 });
+BillSchema.index({ invoiceNumber: 1 });
+BillSchema.index({ patientPhone: 1 });
+BillSchema.index({ patientName: 1 });
+BillSchema.index({ "items.name": 1 });
+
 // 🔥 FORCE DELETE OLD MODEL (THIS IS THE KEY)
 if (mongoose.models.Bill) {
   delete mongoose.models.Bill;
