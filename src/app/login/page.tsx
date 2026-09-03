@@ -7,7 +7,6 @@ import {
   Lock,
   Eye,
   EyeOff,
-  ShieldCheck,
   ArrowRight,
   ReceiptText,
   PackageSearch,
@@ -249,31 +248,6 @@ export default function LoginPage() {
                 )}
               </button>
             </form>
-
-            {/* Demo credentials */}
-            <div className="mt-7 pt-6 border-t border-border">
-              <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em] text-muted-foreground mb-3">
-                <ShieldCheck size={14} className="text-success" strokeWidth={2.4} />
-                Demo credentials
-              </div>
-              <div className="space-y-2 text-[13px] font-medium">
-                <div className="flex justify-between items-center bg-muted/60 rounded-lg px-3.5 py-2.5">
-                  <span className="text-muted-foreground">Email</span>
-                  <span className="font-bold text-foreground tracking-tight">
-                    medsaathi@admin.com
-                  </span>
-                </div>
-                <div className="flex justify-between items-center bg-muted/60 rounded-lg px-3.5 py-2.5">
-                  <span className="text-muted-foreground">Password</span>
-                  <span className="font-bold text-foreground tracking-tight">
-                    himadri@26
-                  </span>
-                </div>
-              </div>
-              <p className="text-center text-[11px] font-semibold text-muted-foreground mt-4">
-                Authorized access only · All actions are logged
-              </p>
-            </div>
           </div>
         </div>
       </div>
