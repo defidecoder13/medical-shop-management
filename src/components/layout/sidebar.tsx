@@ -17,7 +17,6 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
-  AlertTriangle,
   Truck,
   Building2,
   FileSpreadsheet,
@@ -40,7 +39,6 @@ const navigationGroups = [
     routes: [
       { label: "Stock Items", icon: Package, href: "/inventory" },
       { label: "Expiry Tracker", icon: CalendarClock, href: "/expiry" },
-      { label: "Low Stock", icon: AlertTriangle, href: "/low-stock" },
     ],
   },
   {

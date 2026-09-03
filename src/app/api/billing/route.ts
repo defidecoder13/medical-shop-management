@@ -221,19 +221,15 @@ export async function POST(req: Request) {
 
         // 🧑‍⚕️ PATIENT CRM: Update or Create Patient Record
     if (patientPhone) {
-      // Lazy load to prevent cyclic dependencies if any
       const Patient = (await import("@/src/models/Patient")).default;
-      
       let patient = await Patient.findOne({ phone: patientPhone });
       if (patient) {
-        // Update total spent and latest doctor
         patient.totalSpent += finalGrandTotal;
         if (patientName) patient.name = patientName;
         if (patientAddress) patient.address = patientAddress;
         if (doctorName) patient.doctorName = doctorName;
         await patient.save();
       } else {
-        // Create brand new profile
         await Patient.create([{
           name: patientName || "Guest",
           phone: patientPhone,
@@ -241,6 +237,16 @@ export async function POST(req: Request) {
           doctorName: doctorName || "",
           totalSpent: finalGrandTotal
         }]);
+      }
+    }
+    // 🩺 DOCTOR DIRECTORY: Upsert doctor name for future suggestions (separate from patient)
+    if (doctorName && String(doctorName).trim()) {
+      const Doctor = (await import("@/src/models/Doctor")).default;
+      const cleanName = String(doctorName).trim();
+      // Normalize to avoid duplicates like "dr sharma" vs "Dr. Sharma" — store as typed but unique case-insensitive
+      const existing = await Doctor.findOne({ name: { $regex: `^${cleanName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" } });
+      if (!existing) {
+        try { await Doctor.create({ name: cleanName }); } catch {}
       }
     }
 

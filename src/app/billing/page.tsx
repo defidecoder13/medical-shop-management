@@ -126,10 +126,18 @@ function BillingContent() {
   const [discountPercent, setDiscountPercent] = useState<number | "">("");
   const [patientName, setPatientName] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
-  const debouncedName = useDebounce(patientName, 500);
+  const debouncedName = useDebounce(patientName, 350);
   const [patientAddress, setPatientAddress] = useState("");
   const [doctorName, setDoctorName] = useState("");
+  const debouncedDoctorName = useDebounce(doctorName, 350);
   const [regularMedicines, setRegularMedicines] = useState<any[]>([]);
+  // Suggestion states
+  const [patientSuggestions, setPatientSuggestions] = useState<any[]>([]);
+  const [showPatientSuggestions, setShowPatientSuggestions] = useState(false);
+  const [doctorSuggestions, setDoctorSuggestions] = useState<any[]>([]);
+  const [showDoctorSuggestions, setShowDoctorSuggestions] = useState(false);
+  const patientBoxRef = useRef<HTMLDivElement>(null);
+  const doctorBoxRef = useRef<HTMLDivElement>(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{text: string, type: 'success' | 'error' | 'info'} | null>(null);
   
@@ -254,35 +262,80 @@ function BillingContent() {
     return () => { cancelled = true; controller.abort(); };
   }, [debouncedSearch]);
 
-  // Handle Patient Autofill — single fetch, abort-aware
+  // Patient suggestions — show list, fill only on click (no auto Dr fill)
   useEffect(() => {
-    if (!debouncedName || debouncedName.length < 3) {
-      setRegularMedicines([]);
+    if (!debouncedName || debouncedName.trim().length < 2) {
+      setPatientSuggestions([]);
+      setShowPatientSuggestions(false);
       return;
     }
     const controller = new AbortController();
     let cancelled = false;
     (async () => {
       try {
-        const res: any = await apiClient.get(`/api/patients?search=${debouncedName}`, { signal: controller.signal } as any);
+        const res: any = await apiClient.get(`/api/patients?search=${encodeURIComponent(debouncedName)}&limit=8`, { signal: controller.signal } as any);
         if (cancelled) return;
-        const p = res?.data?.[0] || (Array.isArray(res) ? res[0] : null);
-        if (p) {
-          if (!patientPhone) setPatientPhone(p.phone || "");
-          if (!doctorName) setDoctorName(p.doctorName || "");
-          if (!patientAddress) setPatientAddress(p.address || "");
-          if (p.regularMedicines?.length > 0) setRegularMedicines(p.regularMedicines);
-          else setRegularMedicines([]);
-        } else {
-          setRegularMedicines([]);
-        }
+        const list = res?.data ? res.data : Array.isArray(res) ? res : [];
+        setPatientSuggestions(list.slice(0, 8));
+        setShowPatientSuggestions(list.length > 0);
       } catch (err: any) {
         if (err?.name === "AbortError") return;
-        console.error("Failed to fetch patient details", err);
       }
     })();
     return () => { cancelled = true; controller.abort(); };
   }, [debouncedName]);
+
+  // Doctor suggestions — separate saved list, never auto-fills patient data
+  useEffect(() => {
+    if (!debouncedDoctorName || debouncedDoctorName.trim().length < 2) {
+      setDoctorSuggestions([]);
+      setShowDoctorSuggestions(false);
+      return;
+    }
+    const controller = new AbortController();
+    let cancelled = false;
+    (async () => {
+      try {
+        const res: any = await apiClient.get(`/api/doctors?search=${encodeURIComponent(debouncedDoctorName)}&limit=8`, { signal: controller.signal } as any);
+        if (cancelled) return;
+        const list = Array.isArray(res) ? res : res.data || [];
+        setDoctorSuggestions(list.slice(0, 8));
+        setShowDoctorSuggestions(list.length > 0);
+      } catch (err: any) {
+        if (err?.name === "AbortError") return;
+      }
+    })();
+    return () => { cancelled = true; controller.abort(); };
+  }, [debouncedDoctorName]);
+
+  // Close suggestions on outside click / Escape
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (patientBoxRef.current && !patientBoxRef.current.contains(e.target as Node)) setShowPatientSuggestions(false);
+      if (doctorBoxRef.current && !doctorBoxRef.current.contains(e.target as Node)) setShowDoctorSuggestions(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setShowPatientSuggestions(false); setShowDoctorSuggestions(false); } };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => { document.removeEventListener("mousedown", onDown); document.removeEventListener("keydown", onKey); };
+  }, []);
+
+  const handleSelectPatient = (p: any) => {
+    setPatientName(p.name || "");
+    setPatientPhone(p.phone || "");
+    setPatientAddress(p.address || "");
+    if (p.regularMedicines?.length) setRegularMedicines(p.regularMedicines);
+    else setRegularMedicines([]);
+    setShowPatientSuggestions(false);
+    setPatientSuggestions([]);
+  };
+
+  const handleSelectDoctor = (d: any) => {
+    const name = typeof d === "string" ? d : d.name || "";
+    setDoctorName(name);
+    setShowDoctorSuggestions(false);
+    setDoctorSuggestions([]);
+  };
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -666,23 +719,60 @@ function BillingContent() {
               </h3>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-              <div>
+              <div ref={patientBoxRef} className="relative">
                 <label className="label">Patient Name</label>
                 <input
                   className="input"
                   placeholder="Full Name"
                   value={patientName}
-                  onChange={(e) => setPatientName(e.target.value)}
+                  onChange={(e) => { setPatientName(e.target.value); if (e.target.value.trim().length >= 2) setShowPatientSuggestions(true); }}
+                  onFocus={() => { if (patientSuggestions.length > 0) setShowPatientSuggestions(true); }}
+                  autoComplete="off"
                 />
+                {showPatientSuggestions && patientSuggestions.length > 0 && (
+                  <div className="absolute z-30 mt-1 w-full bg-card border border-border rounded-lg shadow-pop max-h-56 overflow-auto">
+                    {patientSuggestions.map((p: any) => (
+                      <button
+                        key={p._id || p.phone}
+                        type="button"
+                        onClick={() => handleSelectPatient(p)}
+                        className="w-full text-left px-3 py-2.5 hover:bg-accent transition-colors border-b last:border-0 border-border/50"
+                      >
+                        <div className="text-[13px] font-medium text-foreground truncate">{p.name}</div>
+                        <div className="text-[11px] text-muted-foreground truncate">{p.phone}{p.address ? ` • ${p.address}` : ""}{p.doctorName ? ` • Dr. ${p.doctorName}` : ""}</div>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
-              <div>
+              <div ref={doctorBoxRef} className="relative">
                 <label className="label">Doctor Name</label>
                 <input
                   className="input"
                   placeholder="Dr. Name"
                   value={doctorName}
-                  onChange={(e) => setDoctorName(e.target.value)}
+                  onChange={(e) => { setDoctorName(e.target.value); if (e.target.value.trim().length >= 2) setShowDoctorSuggestions(true); }}
+                  onFocus={() => { if (doctorSuggestions.length > 0) setShowDoctorSuggestions(true); }}
+                  autoComplete="off"
                 />
+                {showDoctorSuggestions && doctorSuggestions.length > 0 && (
+                  <div className="absolute z-30 mt-1 w-full bg-card border border-border rounded-lg shadow-pop max-h-48 overflow-auto">
+                    {doctorSuggestions.map((d: any) => {
+                      const name = typeof d === "string" ? d : d.name;
+                      const key = typeof d === "string" ? d : d._id || d.name;
+                      return (
+                        <button
+                          key={key}
+                          type="button"
+                          onClick={() => handleSelectDoctor(d)}
+                          className="w-full text-left px-3 py-2 hover:bg-accent transition-colors text-[13px] text-foreground"
+                        >
+                          {name}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="label">Phone Number</label>

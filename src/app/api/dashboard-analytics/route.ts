@@ -57,6 +57,31 @@ export async function GET(request: Request) {
         }
         const saleBills: any[] = billsForChart;
 
+        // 1b. Top / Least selling (same range filter as chart)
+        const rangeStart = (() => {
+          const d = new Date();
+          if (range === '1d') return new Date(Date.now() - 24*60*60*1000);
+          if (range === '30d') { d.setDate(d.getDate() - 30); d.setHours(0,0,0,0); return d; }
+          d.setDate(d.getDate() - 7); d.setHours(0,0,0,0); return d;
+        })();
+        const rangeFilteredBills = saleBills.filter((b: any) => new Date(b.createdAt) >= rangeStart);
+        const qtyMap = new Map<string, { quantity: number; revenue: number }>();
+        for (const b of rangeFilteredBills) {
+          for (const it of (b.items || []) as any[]) {
+            const name = String(it.name || 'Unknown').trim() || 'Unknown';
+            const qty = Number(it.qty || 0) - Number(it.returnedQty || 0);
+            if (qty <= 0) continue;
+            const rev = Number(it.sellingPrice || 0) * qty;
+            const cur = qtyMap.get(name) || { quantity: 0, revenue: 0 };
+            cur.quantity += qty;
+            cur.revenue += rev;
+            qtyMap.set(name, cur);
+          }
+        }
+        const sorted = Array.from(qtyMap.entries()).map(([name, v]) => ({ name, quantity: v.quantity, revenue: v.revenue })).sort((a,b)=> b.quantity - a.quantity);
+        const topSelling = sorted.slice(0, 5);
+        const leastSelling = sorted.slice().reverse().slice(0, 5);
+
         // 2. Prepare Chart Data based on Range
         let salesChart: { name: string; sales: number }[] = [];
 
@@ -144,6 +169,8 @@ export async function GET(request: Request) {
                 expiring: expiring
             },
             salesChart,
+            topSelling,
+            leastSelling,
             recentTransactions
         };
 

@@ -15,6 +15,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { SalesChart } from "@/src/components/dashboard/sales-chart";
+import { MedRankingCard } from "@/src/components/charts/med-ranking-chart";
 import { PageSkeleton } from "@/src/components/ui/skeleton";
 
 const quickActions = [
@@ -69,6 +70,8 @@ export default function Home() {
   const [data, setData] = useState<any>({
     stats: { sales: "₹0", orders: 0, lowStock: 0, expiring: 0, customers: 0 },
     salesChart: [],
+    topSelling: [],
+    leastSelling: [],
   });
 
   useEffect(() => {
@@ -157,6 +160,22 @@ export default function Home() {
 
       {/* Sales Performance */}
       <SalesChart data={data.salesChart} range={chartRange} onRangeChange={setChartRange} />
+
+      {/* Product Velocity — Most / Least Selling */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <MedRankingCard
+          title="Most Selling"
+          subtitle="Highest units sold"
+          data={data.topSelling || []}
+          variant="most"
+        />
+        <MedRankingCard
+          title="Least Selling"
+          subtitle="Lowest movers — review stock"
+          data={data.leastSelling || []}
+          variant="least"
+        />
+      </div>
     </div>
   );
 }

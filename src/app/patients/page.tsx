@@ -14,8 +14,11 @@ export default function PatientsPage() {
     
     // Modal state
     const [selectedPatient, setSelectedPatient] = useState<any>(null);
-    const [medSearch, setMedSearch] = useState("");
-    const [medResults, setMedResults] = useState<any[]>([]);
+    // Edit patient state
+    const [isEditingPatient, setIsEditingPatient] = useState(false);
+    const [editPatientForm, setEditPatientForm] = useState({ name: "", phone: "", address: "", doctorName: "" });
+    const [isSavingPatient, setIsSavingPatient] = useState(false);
+    const [editError, setEditError] = useState("");
 
     // Add Patient State
     const [isAddingPatient, setIsAddingPatient] = useState(false);
@@ -74,72 +77,55 @@ export default function PatientsPage() {
         }
     };
 
-    // Global Medicine Search for adding to Regular Prescriptions
+    // Sync edit form when modal opens / patient changes
     useEffect(() => {
-        if (medSearch.length < 2) {
-            setMedResults([]);
+        if (selectedPatient) {
+            setEditPatientForm({
+                name: selectedPatient.name || "",
+                phone: selectedPatient.phone || "",
+                address: selectedPatient.address || "",
+                doctorName: selectedPatient.doctorName || "",
+            });
+            setIsEditingPatient(false);
+            setEditError("");
+        }
+    }, [selectedPatient?._id]);
+
+    const handleUpdatePatient = async () => {
+        if (!selectedPatient) return;
+        if (!editPatientForm.name.trim() || !editPatientForm.phone.trim()) {
+            setEditError("Name and phone are required");
             return;
         }
-        const delaySearch = setTimeout(async () => {
-            try {
-                const res = await apiClient.get(`/api/inventory?q=${medSearch}`);
-                const uniqueMeds = new Map();
-                for (const item of (res || [])) {
-                    if (!uniqueMeds.has(item.medicineId)) {
-                        uniqueMeds.set(item.medicineId, {
-                            _id: item.medicineId,
-                            name: item.name,
-                            brand: item.brand
-                        });
-                    }
-                }
-                setMedResults(Array.from(uniqueMeds.values()));
-            } catch (err) {
-                console.error(err);
-            }
-        }, 300);
-        return () => clearTimeout(delaySearch);
-    }, [medSearch]);
-
-    const addRegularMedicine = async (med: any) => {
-        if (!selectedPatient) return;
-        
-        const existing = selectedPatient.regularMedicines?.find((r: any) => r.medicineId === med._id);
-        if (existing) return;
-
-        const updatedList = [
-            ...(selectedPatient.regularMedicines || []),
-            { medicineId: med._id, name: med.name, dosageInstructions: "" }
-        ];
-
+        setIsSavingPatient(true);
+        setEditError("");
         try {
-            const res = await apiClient.post("/api/patients", {
-                phone: selectedPatient.phone,
-                regularMedicines: updatedList
+            const updated = await apiClient.put("/api/patients", {
+                _id: selectedPatient._id,
+                name: editPatientForm.name.trim(),
+                phone: editPatientForm.phone.trim(),
+                address: editPatientForm.address.trim(),
+                doctorName: editPatientForm.doctorName.trim(),
             });
-            setSelectedPatient(res);
-            setMedSearch("");
-            setMedResults([]);
+            setSelectedPatient(updated);
             fetchPatients();
-        } catch (err) {
-            console.error("Failed to update prescription", err);
+            setIsEditingPatient(false);
+        } catch (err: any) {
+            setEditError(err?.message || "Failed to update patient");
+        } finally {
+            setIsSavingPatient(false);
         }
     };
 
-    const removeRegularMedicine = async (medicineId: string) => {
-        if (!selectedPatient) return;
-
-        const updatedList = selectedPatient.regularMedicines.filter((r: any) => r.medicineId !== medicineId);
-
+    const handleDeletePatient = async (e: React.MouseEvent, patient: any) => {
+        e.stopPropagation();
+        if (!window.confirm(`Delete patient "${patient.name}" (${patient.phone})? This cannot be undone.`)) return;
         try {
-            const res = await apiClient.post("/api/patients", {
-                phone: selectedPatient.phone,
-                regularMedicines: updatedList
-            });
-            setSelectedPatient(res);
+            await apiClient.delete(`/api/patients?id=${patient._id}`);
+            if (selectedPatient?._id === patient._id) setSelectedPatient(null);
             fetchPatients();
-        } catch (err) {
-            console.error("Failed to delete medicine", err);
+        } catch (err: any) {
+            alert(err?.message || "Failed to delete patient");
         }
     };
 
@@ -215,13 +201,16 @@ export default function PatientsPage() {
                     <div className="flex flex-col gap-3">
                         <AnimatePresence>
                             {patients.map((patient, idx) => (
-                                <motion.button
+                                <motion.div
                                     key={patient._id}
                                     initial={{ opacity: 0, y: 10 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: idx * 0.03 }}
                                     onClick={() => setSelectedPatient(patient)}
-                                    className="group relative p-4 rounded-2xl border border-border bg-card hover:border-primary/25 transition-all text-left flex items-center justify-between gap-5 hover:shadow-lift active:scale-[0.99] w-full"
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setSelectedPatient(patient); } }}
+                                    className="group relative p-4 rounded-2xl border border-border bg-card hover:border-primary/25 transition-all text-left flex items-center justify-between gap-5 hover:shadow-lift active:scale-[0.99] w-full cursor-pointer"
                                 >
                                     <div className="flex items-center gap-5 w-1/3 min-w-[200px]">
                                         <div className="w-12 h-12 bg-muted rounded-2xl flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-primary-foreground transition-all shrink-0">
@@ -236,29 +225,31 @@ export default function PatientsPage() {
                                         </div>
                                     </div>
 
-                                    <div className="flex items-center gap-6 w-1/3 min-w-[200px] justify-center border-l border-r border-border/60 px-6">
-                                        <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                                            <Activity size={14} className="text-indigo-400" />
-                                            {patient.regularMedicines?.length || 0} RX
+                                    <div className="flex items-center justify-center border-l border-r border-border/60 px-6 w-1/3 min-w-[200px]">
+                                        <div className="flex items-center gap-2 text-[12px] text-muted-foreground truncate max-w-[260px]">
+                                            <MapPin size={14} className="text-primary shrink-0" />
+                                            <span className="truncate" title={patient.address || ""}>{patient.address?.trim() ? patient.address : "No address"}</span>
                                         </div>
-                                        {patient.doctorName && (
-                                            <div className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate max-w-[150px]">
-                                                <Stethoscope size={14} className="text-rose-400" />
-                                                {patient.doctorName}
-                                            </div>
-                                        )}
                                     </div>
 
-                                    <div className="flex justify-end items-center gap-4 w-1/3 min-w-[150px]">
+                                    <div className="flex justify-end items-center gap-3 w-1/3 min-w-[150px]">
                                         <div className="flex flex-col items-end">
                                             <div className="bg-success/12 text-emerald-700 dark:text-emerald-300 px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-widest ring-1 ring-inset ring-success/25">
                                                 ₹{patient.totalSpent.toLocaleString()}
                                             </div>
                                             <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-widest mt-1">Lifetime Value</span>
                                         </div>
-                                        <ChevronRight size={18} className="text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all ml-2" strokeWidth={3} />
+                                        <button
+                                            onClick={(e) => handleDeletePatient(e, patient)}
+                                            className="w-9 h-9 rounded-xl flex items-center justify-center bg-card border border-border text-muted-foreground hover:text-destructive hover:border-destructive/30 hover:bg-destructive/10 transition-all shrink-0"
+                                            title={`Delete ${patient.name}`}
+                                            aria-label={`Delete ${patient.name}`}
+                                        >
+                                            <Trash2 size={16} strokeWidth={2} />
+                                        </button>
+                                        <ChevronRight size={18} className="text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-1 transition-all" strokeWidth={3} />
                                     </div>
-                                </motion.button>
+                                </motion.div>
                             ))}
                         </AnimatePresence>
                         {patients.length === 0 && (
@@ -306,119 +297,84 @@ export default function PatientsPage() {
                 {selectedPatient && (
                     <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-black/50 backdrop-blur-md">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            initial={{ opacity: 0, scale: 0.96, y: 12 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="bg-card w-full max-w-3xl rounded-3xl shadow-pop border border-border overflow-hidden flex flex-col max-h-[90vh]"
+                            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+                            transition={{ type: "spring", stiffness: 360, damping: 26 }}
+                            className="bg-card w-full max-w-xl rounded-xl shadow-pop border border-border overflow-hidden"
                         >
-                            {/* Modal Header */}
-                            <div className="p-7 border-b border-border flex justify-between items-start bg-muted/40">
-                                <div className="flex gap-5">
-                                    <div className="w-16 h-16 bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white rounded-2xl flex items-center justify-center shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_8px_20px_-6px_rgb(15_23_42/0.5)]">
-                                        <Users size={30} strokeWidth={2.3} />
-                                    </div>
-                                    <div>
-                                        <h2 className="font-display text-2xl font-extrabold text-foreground uppercase tracking-tight">{selectedPatient.name}</h2>
-                                        <div className="flex flex-wrap items-center gap-5 mt-2 text-[11px] font-bold text-muted-foreground uppercase tracking-[0.08em]">
-                                            <span className="flex items-center gap-2"><Phone size={14} className="text-amber-500" /> {selectedPatient.phone}</span>
-                                            {selectedPatient.address && <span className="flex items-center gap-2"><MapPin size={14} className="text-primary" /> {selectedPatient.address}</span>}
-                                            <span className="badge-success"><CreditCard size={13} /> ₹{selectedPatient.totalSpent.toLocaleString()} Spent</span>
+                            {/* Modal Header — view / edit */}
+                            <div className="p-7 border-b border-border bg-muted/40">
+                                <div className="flex justify-between items-start gap-4">
+                                    <div className="flex gap-5 flex-1 min-w-0">
+                                        <div className="w-16 h-16 bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white rounded-2xl flex items-center justify-center shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_8px_20px_-6px_rgb(15_23_42/0.5)] shrink-0">
+                                            <Users size={30} strokeWidth={2.3} />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            {!isEditingPatient ? (
+                                                <>
+                                                    <h2 className="font-display text-2xl font-extrabold text-foreground uppercase tracking-tight truncate">{selectedPatient.name}</h2>
+                                                    <div className="flex flex-wrap items-center gap-4 mt-2 text-[11px] font-bold text-muted-foreground uppercase tracking-[0.08em]">
+                                                        <span className="flex items-center gap-2"><Phone size={14} className="text-amber-500" /> {selectedPatient.phone}</span>
+                                                        {selectedPatient.address && <span className="flex items-center gap-2 truncate"><MapPin size={14} className="text-primary" /> {selectedPatient.address}</span>}
+                                                        <span className="badge-success"><CreditCard size={13} /> ₹{selectedPatient.totalSpent.toLocaleString()} Spent</span>
+                                                    </div>
+                                                    {selectedPatient.doctorName && <div className="mt-2 text-[11px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2"><Stethoscope size={14} className="text-rose-400" /> Dr. {selectedPatient.doctorName}</div>}
+                                                </>
+                                            ) : (
+                                                <div className="space-y-3">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        <div>
+                                                            <label className="label">Patient Name *</label>
+                                                            <input value={editPatientForm.name} onChange={(e)=>setEditPatientForm({...editPatientForm, name:e.target.value})} className="input" placeholder="Full Name" />
+                                                        </div>
+                                                        <div>
+                                                            <label className="label">Phone *</label>
+                                                            <input value={editPatientForm.phone} onChange={(e)=>setEditPatientForm({...editPatientForm, phone:e.target.value})} className="input" placeholder="10-digit" />
+                                                        </div>
+                                                    </div>
+                                                    <div>
+                                                        <label className="label">Address</label>
+                                                        <input value={editPatientForm.address} onChange={(e)=>setEditPatientForm({...editPatientForm, address:e.target.value})} className="input" placeholder="Full address" />
+                                                    </div>
+                                                    <div>
+                                                        <label className="label">Doctor</label>
+                                                        <input value={editPatientForm.doctorName} onChange={(e)=>setEditPatientForm({...editPatientForm, doctorName:e.target.value})} className="input" placeholder="Dr. Name" />
+                                                    </div>
+                                                    {editError && <div className="text-xs font-medium text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2">{editError}</div>}
+                                                    <div className="flex gap-2">
+                                                        <button onClick={()=>{ setIsEditingPatient(false); setEditError(""); }} disabled={isSavingPatient} className="btn-outline btn-sm flex-1">Cancel</button>
+                                                        <button onClick={handleUpdatePatient} disabled={isSavingPatient} className="btn-primary btn-sm flex-1">{isSavingPatient ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle2 size={14} strokeWidth={2} />} Save Changes</button>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
+                                    <div className="flex items-center gap-2 shrink-0">
+                                        {!isEditingPatient && (
+                                            <button onClick={()=>setIsEditingPatient(true)} className="w-10 h-10 flex items-center justify-center bg-card border border-border text-muted-foreground hover:text-primary hover:border-primary/30 rounded-xl transition-all" title="Edit patient">
+                                                <Edit size={18} strokeWidth={2} />
+                                            </button>
+                                        )}
+                                        <button onClick={() => setSelectedPatient(null)} className="w-10 h-10 flex items-center justify-center bg-muted text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40 rounded-xl transition-all active:scale-90 cursor-pointer">
+                                            <X size={20} strokeWidth={2.6}/>
+                                        </button>
+                                    </div>
                                 </div>
-                                <button onClick={() => setSelectedPatient(null)} className="w-10 h-10 flex items-center justify-center bg-muted text-muted-foreground hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-950/40 rounded-xl transition-all active:scale-90 cursor-pointer">
-                                    <X size={20} strokeWidth={2.6}/>
-                                </button>
                             </div>
 
-                            {/* Modal Content */}
-                            <div className="p-7 overflow-y-auto flex-1">
-                                <div className="flex items-center justify-between mb-5">
-                                    <h3 className="text-[12px] font-extrabold text-foreground uppercase tracking-[0.2em] flex items-center gap-2.5">
-                                        <Activity size={19} className="text-amber-500" strokeWidth={2.4} />
-                                        Regular Prescriptions
-                                    </h3>
-                                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{selectedPatient.regularMedicines?.length || 0} Items Active</span>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mb-8">
-                                    {selectedPatient.regularMedicines?.map((med: any) => (
-                                        <div key={med.medicineId} className="group flex items-center justify-between p-4 rounded-2xl border border-border bg-muted/40 hover:border-primary/25 transition-all">
-                                            <div>
-                                                <div className="text-[13px] font-extrabold text-foreground uppercase tracking-tight">{med.name}</div>
-                                                <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mt-1">Daily Maintenance</div>
-                                            </div>
-                                            <button 
-                                                onClick={() => removeRegularMedicine(med.medicineId)}
-                                                className="w-9 h-9 flex items-center justify-center text-muted-foreground/50 hover:text-red-500 hover:bg-card rounded-xl transition-all cursor-pointer"
-                                                aria-label={`Remove ${med.name} from prescriptions`}
-                                            >
-                                                <Trash2 size={16} strokeWidth={2.4} />
-                                            </button>
-                                        </div>
-                                    ))}
-                                    {(!selectedPatient.regularMedicines || selectedPatient.regularMedicines.length === 0) && (
-                                        <div className="col-span-full text-center py-12 bg-muted/40 rounded-2xl border border-dashed border-border">
-                                            <Activity size={30} className="mx-auto text-muted-foreground/40 mb-3" />
-                                            <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest">No maintenance meds defined</p>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Add Rx Search Area */}
-                                <div className="p-6 rounded-3xl text-white relative overflow-hidden bg-[linear-gradient(160deg,oklch(0.24_0.09_262)_0%,oklch(0.33_0.12_262)_50%,oklch(0.44_0.19_255)_115%)]">
-                                    <div
-                                        className="absolute inset-0 opacity-[0.06] pointer-events-none"
-                                        style={{
-                                            backgroundImage:
-                                                "linear-gradient(rgb(255 255 255 / 0.6) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 0.6) 1px, transparent 1px)",
-                                            backgroundSize: "26px 26px",
-                                        }}
-                                    />
-                                    <div className="relative z-10">
-                                        <h4 className="text-[10px] font-bold text-white/60 uppercase tracking-[0.22em] mb-3.5 flex items-center gap-2.5">
-                                            <Search size={15} className="text-amber-400" strokeWidth={2.6} />
-                                            Inventory Rx Search
-                                        </h4>
-                                        <div className="relative">
-                                            <input
-                                                type="text"
-                                                placeholder="Search your master inventory..."
-                                                value={medSearch}
-                                                onChange={(e) => setMedSearch(e.target.value)}
-                                                className="w-full bg-white/10 border border-white/20 px-5 py-3.5 rounded-xl outline-none focus:ring-4 focus:ring-white/10 focus:bg-white focus:text-[#11327c] transition-all text-[14px] font-bold placeholder:text-white/40"
-                                            />
-                                            
-                                            <AnimatePresence>
-                                                {medResults.length > 0 && (
-                                                    <motion.div 
-                                                        initial={{ opacity: 0, y: 10 }}
-                                                        animate={{ opacity: 1, y: 0 }}
-                                                        exit={{ opacity: 0, y: 10 }}
-                                                        className="absolute bottom-full mb-3 left-0 right-0 bg-card border border-border rounded-2xl shadow-pop z-20 max-h-56 overflow-y-auto p-2"
-                                                    >
-                                                        {medResults.map((med) => (
-                                                            <button
-                                                                key={med._id}
-                                                                onClick={() => addRegularMedicine(med)}
-                                                                className="w-full text-left p-3.5 hover:bg-accent/70 rounded-xl flex justify-between items-center group transition-all mb-1 last:mb-0 cursor-pointer"
-                                                            >
-                                                                <div>
-                                                                    <div className="text-[13px] font-extrabold text-foreground uppercase tracking-tight">{med.name}</div>
-                                                                    {med.brand && <div className="text-[9px] text-muted-foreground font-bold uppercase tracking-widest mt-1">{med.brand}</div>}
-                                                                </div>
-                                                                <div className="w-9 h-9 bg-primary text-primary-foreground rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 shadow-md">
-                                                                    <PackagePlus size={17} strokeWidth={2.5} />
-                                                                </div>
-                                                            </button>
-                                                        ))}
-                                                    </motion.div>
-                                                )}
-                                            </AnimatePresence>
-                                        </div>
+                            {/* Modal Content — simplified (Regular Prescriptions removed) */}
+                            <div className="p-7">
+                                <div className="rounded-xl border border-border bg-muted/40 p-4 flex gap-3">
+                                    <div className="w-9 h-9 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                                        <Stethoscope size={16} strokeWidth={2} />
                                     </div>
-                                    <div className="absolute right-0 bottom-0 opacity-5 pointer-events-none translate-x-1/4 translate-y-1/4">
-                                        <Stethoscope size={150} />
+                                    <div>
+                                        <p className="text-[13px] font-medium text-foreground">Patient record</p>
+                                        <p className="text-[12px] text-muted-foreground leading-relaxed mt-1">
+                                            This patient’s <span className="font-medium text-foreground">name, phone and address</span> are used for billing auto-fill.
+                                            Keep them up to date via <span className="font-medium text-foreground">Edit</span> — billing will always show the latest saved values.
+                                        </p>
                                     </div>
                                 </div>
                             </div>
