@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Mail, Lock, Eye, EyeOff, Loader2 } from "@/src/components/icons";
+import { AnimatePresence, motion } from "framer-motion";
+import { CheckCircle2, Mail, Lock, Eye, EyeOff, Loader2 } from "@/src/components/icons";
 import { PharmacyIllustration } from "@/src/components/auth/pharmacy-illustration";
 
 const REMEMBERED_EMAIL_KEY = "medishop_remembered_email";
@@ -14,6 +15,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [authSuccess, setAuthSuccess] = useState(false);
   const router = useRouter();
 
   // Prefill saved email when Keep me logged in was used before
@@ -46,6 +48,9 @@ export default function LoginPage() {
           if (rememberMe) localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
           else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
         } catch {}
+        // Smart transition: celebrate success briefly before entering the app
+        setAuthSuccess(true);
+        await new Promise((r) => setTimeout(r, 1400));
         router.push("/");
         router.refresh();
       } else {
@@ -230,6 +235,48 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* Smart success transition before entering dashboard */}
+      <AnimatePresence>
+        {authSuccess && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
+            role="status"
+            aria-live="polite"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.94, y: 12 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 320, damping: 24 }}
+              className="w-[92vw] max-w-xs bg-card border border-border rounded-2xl shadow-pop p-6 text-center"
+            >
+              <motion.div
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", stiffness: 380, damping: 16, delay: 0.05 }}
+                className="w-12 h-12 mx-auto rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4"
+              >
+                <CheckCircle2 size={24} strokeWidth={2.4} />
+              </motion.div>
+              <h3 className="text-[15px] font-bold text-foreground">Welcome back!</h3>
+              <p className="text-[12px] text-muted-foreground font-medium mt-1">
+                Signed in successfully — opening your dashboard…
+              </p>
+              <div className="mt-4 h-1 rounded-full bg-muted overflow-hidden">
+                <motion.div
+                  initial={{ width: "0%" }}
+                  animate={{ width: "100%" }}
+                  transition={{ duration: 1.1, ease: "easeInOut" }}
+                  className="h-full rounded-full bg-emerald-500"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
