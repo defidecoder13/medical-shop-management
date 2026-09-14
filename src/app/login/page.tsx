@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
-import { CheckCircle2, Mail, Lock, Eye, EyeOff, Loader2 } from "@/src/components/icons";
+import { Mail, Lock, Eye, EyeOff, Loader2 } from "@/src/components/icons";
 import { PharmacyIllustration } from "@/src/components/auth/pharmacy-illustration";
 
 const REMEMBERED_EMAIL_KEY = "medishop_remembered_email";
+const JUST_SIGNED_OUT_KEY = "medishop_just_signed_out";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,6 +16,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
+  const [justSignedOut, setJustSignedOut] = useState(false);
   const router = useRouter();
 
   // Prefill saved email when Keep me logged in was used before
@@ -27,7 +28,21 @@ export default function LoginPage() {
         setRememberMe(true);
       }
     } catch {}
+    // One-shot inline note after a real logout (no separate screen)
+    try {
+      if (sessionStorage.getItem(JUST_SIGNED_OUT_KEY) === "1") {
+        sessionStorage.removeItem(JUST_SIGNED_OUT_KEY);
+        setJustSignedOut(true);
+      }
+    } catch {}
   }, []);
+
+  // Auto-dismiss the note briefly — it is informational only
+  useEffect(() => {
+    if (!justSignedOut) return;
+    const t = setTimeout(() => setJustSignedOut(false), 4000);
+    return () => clearTimeout(t);
+  }, [justSignedOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,9 +63,10 @@ export default function LoginPage() {
           if (rememberMe) localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
           else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
         } catch {}
-        // Smart transition: celebrate success briefly before entering the app
+        // Inline success state: button becomes confirmation, then navigate
+        setLoading(false);
         setAuthSuccess(true);
-        await new Promise((r) => setTimeout(r, 1400));
+        await new Promise((r) => setTimeout(r, 1050));
         router.push("/");
         router.refresh();
       } else {
@@ -160,6 +176,24 @@ export default function LoginPage() {
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Brief inline note after a real logout */}
+              {justSignedOut && !error && (
+                <div
+                  role="status"
+                  className="signin-fade-up flex items-center justify-center gap-1.5 text-[12px] font-medium text-muted-foreground dark:text-white/55"
+                >
+                  <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
+                    <path
+                      d="M6.5 3H4.8a1.3 1.3 0 0 0-1.3 1.3v7.4a1.3 1.3 0 0 0 1.3 1.3h1.7M10 5.5L12.5 8 10 10.5M12.3 8H6.5"
+                      stroke="currentColor"
+                      strokeWidth={1.4}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                  Signed out
+                </div>
+              )}
               {/* Error Message */}
               {error && (
                 <div className="p-2.5 rounded-lg bg-destructive/10 dark:bg-red-500/10 border border-destructive/20 dark:border-red-500/20 text-destructive dark:text-red-300 text-xs font-medium">
@@ -219,64 +253,84 @@ export default function LoginPage() {
                 </label>
               </div>
 
-              {/* Sign in Button — stronger in dark with glow */}
+              {/* Sign in Button — transitions to a compact inline success state */}
               <button
                 type="submit"
-                disabled={loading}
-                className="w-full py-2.5 px-4 rounded-lg bg-primary hover:bg-primary/90 dark:bg-[#3b82f6] dark:hover:bg-[#2563eb] text-primary-foreground dark:text-white font-medium text-[13px] transition-all flex items-center justify-center cursor-pointer disabled:opacity-50 shadow-sm dark:shadow-[0_4px_16px_rgba(59,130,246,0.35),0_1px_0_rgba(255,255,255,0.12)_inset] active:scale-[0.98]"
+                disabled={loading || authSuccess}
+                aria-live="polite"
+                className={`w-full py-2.5 px-4 rounded-lg bg-primary hover:bg-primary/90 dark:bg-[#3b82f6] dark:hover:bg-[#2563eb] text-primary-foreground dark:text-white font-medium text-[13px] transition-all duration-200 ease-out flex items-center justify-center gap-2 cursor-pointer shadow-sm dark:shadow-[0_4px_16px_rgba(59,130,246,0.35),0_1px_0_rgba(255,255,255,0.12)_inset] active:scale-[0.98] ${authSuccess ? "disabled:opacity-100 dark:disabled:opacity-100" : "disabled:opacity-50"}`}
               >
-                {loading ? (
+                {authSuccess ? (
+                  <span className="signin-fade-up inline-flex items-center gap-2">
+                    <span className="signin-check-wrap inline-flex">
+                      <svg viewBox="0 0 16 16" fill="none" className="w-4 h-4" aria-hidden="true">
+                        <path
+                          d="M3.2 8.6l3.1 3.1 6.5-7.4"
+                          stroke="currentColor"
+                          strokeWidth={1.8}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="signin-check-path"
+                        />
+                      </svg>
+                    </span>
+                    Signed in
+                  </span>
+                ) : loading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   "Sign in"
                 )}
               </button>
+              {/* Subtle secondary status — no layout shift theatrics */}
+              <div aria-live="polite" className="min-h-[18px] text-center">
+                {authSuccess && (
+                  <p className="signin-fade-up text-[12px] text-muted-foreground dark:text-white/55 font-medium">
+                    Opening your workspace…
+                  </p>
+                )}
+              </div>
             </form>
           </div>
         </div>
       </div>
 
-      {/* Smart success transition before entering dashboard */}
-      <AnimatePresence>
-        {authSuccess && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm"
-            role="status"
-            aria-live="polite"
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.94, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ type: "spring", stiffness: 320, damping: 24 }}
-              className="w-[92vw] max-w-xs bg-card border border-border rounded-2xl shadow-pop p-6 text-center"
-            >
-              <motion.div
-                initial={{ scale: 0.6, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ type: "spring", stiffness: 380, damping: 16, delay: 0.05 }}
-                className="w-12 h-12 mx-auto rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mb-4"
-              >
-                <CheckCircle2 size={24} strokeWidth={2.4} />
-              </motion.div>
-              <h3 className="text-[15px] font-bold text-foreground">Welcome back!</h3>
-              <p className="text-[12px] text-muted-foreground font-medium mt-1">
-                Signed in successfully — opening your dashboard…
-              </p>
-              <div className="mt-4 h-1 rounded-full bg-muted overflow-hidden">
-                <motion.div
-                  initial={{ width: "0%" }}
-                  animate={{ width: "100%" }}
-                  transition={{ duration: 1.1, ease: "easeInOut" }}
-                  className="h-full rounded-full bg-emerald-500"
-                />
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Inline success keyframes: stroke-draw check + gentle fade-up */}
+      <style>{`
+        @keyframes signin-check-draw {
+          from { stroke-dashoffset: 24; }
+          to { stroke-dashoffset: 0; }
+        }
+        @keyframes signin-check-pop {
+          from { transform: scale(0.9); }
+          to { transform: scale(1); }
+        }
+        @keyframes signin-fade-up {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        .signin-check-path {
+          stroke-dasharray: 24;
+          stroke-dashoffset: 24;
+          animation: signin-check-draw 400ms ease-out forwards;
+        }
+        .signin-check-wrap {
+          transform: scale(0.9);
+          animation: signin-check-pop 250ms ease-out forwards;
+        }
+        .signin-fade-up {
+          animation: signin-fade-up 220ms ease-out both;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .signin-check-path,
+          .signin-check-wrap,
+          .signin-fade-up {
+            animation: none;
+          }
+          .signin-check-path { stroke-dashoffset: 0; }
+          .signin-check-wrap { transform: scale(1); }
+        }
+      `}</style>
     </div>
   );
 }

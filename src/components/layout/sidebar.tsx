@@ -17,6 +17,7 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  Loader2,
   Truck,
   Building2,
   FileSpreadsheet,
@@ -69,38 +70,40 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [loggingOut, setLoggingOut] = useState(false);
+  const [logoutBusy, setLogoutBusy] = useState(false);
 
   const handleLogout = async () => {
-    setShowLogoutConfirm(false);
-    setLoggingOut(true);
+    if (logoutBusy) return;
+    setLogoutBusy(true);
     try {
       const res = await fetch("/api/auth/logout", {
         method: "POST",
       });
-      // Smart transition: brief farewell before going to sign in
-      await new Promise((r) => setTimeout(r, 1300));
       if (res.ok) {
+        // One-shot flag so the login page can show a brief inline note;
+        // navigation starts immediately — no artificial delay.
+        try {
+          sessionStorage.setItem("medishop_just_signed_out", "1");
+        } catch {}
         router.push("/login");
         router.refresh();
-      } else {
-        setLoggingOut(false);
       }
     } catch (error) {
       console.error("Logout failed", error);
-      setLoggingOut(false);
+    } finally {
+      setLogoutBusy(false);
     }
   };
 
-  // Close the confirm dialog on Escape
+  // Close the confirm dialog on Escape (ignored while signing out)
   useEffect(() => {
-    if (!showLogoutConfirm) return;
+    if (!showLogoutConfirm || logoutBusy) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setShowLogoutConfirm(false);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showLogoutConfirm]);
+  }, [showLogoutConfirm, logoutBusy]);
 
   const isSidebarCollapsed = collapsed && !isMobile;
 
@@ -263,16 +266,25 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
               </p>
               <div className="flex gap-3 mt-6">
                 <button
-                  onClick={() => setShowLogoutConfirm(false)}
-                  className="btn-outline btn-md flex-1 cursor-pointer"
+                  onClick={() => !logoutBusy && setShowLogoutConfirm(false)}
+                  disabled={logoutBusy}
+                  className="btn-outline btn-md flex-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Cancel
                 </button>
                 <button
                   onClick={handleLogout}
-                  className="btn-danger btn-md flex-1 cursor-pointer"
+                  disabled={logoutBusy}
+                  className="btn-danger btn-md flex-1 cursor-pointer inline-flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
                 >
-                  Yes, Log Out
+                  {logoutBusy ? (
+                    <>
+                      <Loader2 size={15} className="animate-spin" />
+                      Signing out…
+                    </>
+                  ) : (
+                    "Yes, Log Out"
+                  )}
                 </button>
               </div>
             </motion.div>
@@ -281,57 +293,6 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
       </AnimatePresence>,
       document.body
     )}
-
-    {/* Smart farewell transition before going to sign in */}
-    {loggingOut &&
-      typeof document !== "undefined" &&
-      createPortal(
-        <AnimatePresence>
-          {loggingOut && (
-            <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-              />
-              <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 12 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 12 }}
-                transition={{ type: "spring", stiffness: 320, damping: 24 }}
-                role="status"
-                aria-live="polite"
-                className="relative w-[92vw] max-w-xs bg-card border border-border rounded-2xl shadow-pop p-6 text-center"
-              >
-                <motion.div
-                  initial={{ scale: 0.6, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ type: "spring", stiffness: 380, damping: 16, delay: 0.05 }}
-                  className="w-12 h-12 mx-auto rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-4"
-                >
-                  <LogOut size={22} strokeWidth={2.4} />
-                </motion.div>
-                <h3 className="font-display text-[16px] font-extrabold text-foreground">
-                  Signed out
-                </h3>
-                <p className="text-[13px] text-muted-foreground font-medium mt-1.5">
-                  See you soon — taking you to sign in…
-                </p>
-                <div className="mt-4 h-1 rounded-full bg-muted overflow-hidden">
-                  <motion.div
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 1.1, ease: "easeInOut" }}
-                    className="h-full rounded-full bg-primary"
-                  />
-                </div>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>,
-        document.body
-      )}
   </>
   );
 };
