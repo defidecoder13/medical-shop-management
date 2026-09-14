@@ -60,12 +60,66 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 overflow-hidden bg-background dark:bg-[#0b1220]">
-      {/* Layered background — light: soft radial, dark: deep mesh */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute inset-0 bg-[radial-gradient(60rem_30rem_at_50%_-10%,color-mix(in_oklab,var(--primary)_8%,transparent),transparent_70%)] dark:opacity-[0.15]" />
+    <div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 overflow-hidden bg-[#f6f9ff] dark:bg-[#0b1220]">
+      {/* Decorative healthcare background — behind card only, non-interactive */}
+      <div aria-hidden className="absolute inset-0 z-0 pointer-events-none select-none">
+        {/* 1. Overall wash: white → pale blue (light) */}
+        <div className="absolute inset-0 bg-gradient-to-br from-white via-[#f3f8ff] to-[#e5efff] dark:opacity-0" />
+        {/* Keep existing dark mesh */}
+        <div className="absolute inset-0 hidden dark:block bg-[radial-gradient(60rem_30rem_at_50%_-10%,color-mix(in_oklab,var(--primary)_8%,transparent),transparent_70%)] opacity-[0.15]" />
         <div className="absolute inset-0 hidden dark:block bg-[radial-gradient(45rem_28rem_at_85%_85%,color-mix(in_oklab,var(--primary)_12%,transparent),transparent_65%)]" />
         <div className="absolute inset-0 hidden dark:block bg-[radial-gradient(35rem_20rem_at_15%_90%,color-mix(in_oklab,var(--primary)_5%,transparent),transparent_65%)]" />
+
+        {/* Light-only decorations, softened in dark */}
+        <div className="absolute inset-0 dark:opacity-[0.12]">
+          {/* 2a. Large soft glow bottom-right */}
+          <div className="absolute -right-40 -bottom-48 hidden sm:block w-[620px] h-[620px] rounded-full bg-[#dbe8ff]/60 blur-3xl" />
+          <div className="absolute right-[-140px] bottom-[-120px] hidden lg:block w-[440px] h-[440px] rounded-full bg-[#e2ecff]/70" />
+          <div className="absolute right-[-40px] bottom-[-40px] hidden lg:block w-[300px] h-[300px] rounded-full bg-[#eaf1ff]/80" />
+
+          {/* 2b. Overlapping waves bottom-left */}
+          <svg className="absolute bottom-[-40px] left-[-80px] hidden sm:block w-[720px] text-[#e2ecff]" viewBox="0 0 720 260" fill="currentColor" opacity={0.7}>
+            <path d="M0 150 C 140 110, 260 110, 380 160 S 600 220, 720 180 L720 260 L0 260 Z" opacity={0.9} />
+            <path d="M0 190 C 150 150, 300 150, 430 200 S 620 250, 720 220 L720 260 L0 260 Z" fill="#d5e4ff" opacity={0.7} />
+          </svg>
+
+          {/* 3. Faint medical "+" symbols */}
+          <svg className="absolute top-14 left-10 hidden md:block w-24 text-[#dbe7fb]" viewBox="0 0 64 64" fill="currentColor" opacity={0.9}>
+            <path d="M24 6h16v18h18v16H40v18H24V40H6V24h18z" />
+          </svg>
+          <svg className="absolute top-[52%] right-[8%] hidden lg:block w-12 text-[#dbe7fb]" viewBox="0 0 64 64" fill="currentColor" opacity={0.9}>
+            <path d="M24 6h16v18h18v16H40v18H24V40H6V24h18z" />
+          </svg>
+
+          {/* 3b. Capsule outline inside lower-right circle */}
+          <svg className="absolute right-[52px] bottom-[72px] hidden lg:block w-36 text-[#b9cff2]" viewBox="0 0 144 120" fill="none" stroke="currentColor" strokeWidth={5} opacity={0.55}>
+            <g transform="rotate(32 72 60)">
+              <rect x="48" y="14" width="48" height="92" rx="24" />
+              <line x1="48" y1="60" x2="96" y2="60" />
+            </g>
+            <circle cx="118" cy="96" r="16" fill="currentColor" stroke="none" opacity={0.55} />
+            <line x1="110" y1="104" x2="126" y2="88" stroke="#eef4ff" strokeWidth={4} strokeLinecap="round" />
+          </svg>
+
+          {/* 4. Dotted grids */}
+          <div className="absolute top-10 right-12 hidden md:block w-32 h-24 opacity-70 bg-[radial-gradient(#b9cff0_1.3px,transparent_1.3px)] bg-[size:16px_16px]" />
+          <div className="absolute bottom-16 left-10 hidden md:block w-32 h-24 opacity-60 bg-[radial-gradient(#b9cff0_1.3px,transparent_1.3px)] bg-[size:16px_16px]" />
+
+          {/* 5. Thin dashed curve upper-left → card */}
+          <svg className="absolute top-0 left-0 hidden md:block w-[440px] text-[#c2d6f3]" viewBox="0 0 440 240" fill="none" stroke="currentColor" strokeWidth={1.5} strokeDasharray="7 7" opacity={0.8}>
+            <path d="M-10 230 C 110 170, 210 130, 330 20" />
+          </svg>
+
+          {/* 6. Subtle tagline left of card */}
+          <div className="absolute left-[4%] top-[36%] hidden xl:block -rotate-[6deg]">
+            <p className="text-[22px] leading-[1.35] font-medium text-[#9db9e8]">
+              Better Health
+              <br />
+              Brighter Tomorrow
+            </p>
+            <div className="mt-3 h-[3px] w-10 rounded-full bg-[#9db9e8]/60" />
+          </div>
+        </div>
       </div>
 
       {/* Center Auth Card — elevated in dark with ring + deep shadow */}
