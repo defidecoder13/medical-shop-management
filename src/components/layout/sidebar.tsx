@@ -80,11 +80,6 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
         method: "POST",
       });
       if (res.ok) {
-        // One-shot flag so the login page can show a brief inline note;
-        // navigation starts immediately — no artificial delay.
-        try {
-          sessionStorage.setItem("medishop_just_signed_out", "1");
-        } catch {}
         router.push("/login");
         router.refresh();
       }

@@ -6,7 +6,6 @@ import { Mail, Lock, Eye, EyeOff, Loader2 } from "@/src/components/icons";
 import { PharmacyIllustration } from "@/src/components/auth/pharmacy-illustration";
 
 const REMEMBERED_EMAIL_KEY = "medishop_remembered_email";
-const JUST_SIGNED_OUT_KEY = "medishop_just_signed_out";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -16,7 +15,6 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [authSuccess, setAuthSuccess] = useState(false);
-  const [justSignedOut, setJustSignedOut] = useState(false);
   const router = useRouter();
 
   // Prefill saved email when Keep me logged in was used before
@@ -28,21 +26,7 @@ export default function LoginPage() {
         setRememberMe(true);
       }
     } catch {}
-    // One-shot inline note after a real logout (no separate screen)
-    try {
-      if (sessionStorage.getItem(JUST_SIGNED_OUT_KEY) === "1") {
-        sessionStorage.removeItem(JUST_SIGNED_OUT_KEY);
-        setJustSignedOut(true);
-      }
-    } catch {}
   }, []);
-
-  // Auto-dismiss the note briefly — it is informational only
-  useEffect(() => {
-    if (!justSignedOut) return;
-    const t = setTimeout(() => setJustSignedOut(false), 4000);
-    return () => clearTimeout(t);
-  }, [justSignedOut]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,24 +160,6 @@ export default function LoginPage() {
 
             {/* Login Form */}
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Brief inline note after a real logout */}
-              {justSignedOut && !error && (
-                <div
-                  role="status"
-                  className="signin-fade-up flex items-center justify-center gap-1.5 text-[12px] font-medium text-muted-foreground dark:text-white/55"
-                >
-                  <svg viewBox="0 0 16 16" fill="none" className="w-3.5 h-3.5" aria-hidden="true">
-                    <path
-                      d="M6.5 3H4.8a1.3 1.3 0 0 0-1.3 1.3v7.4a1.3 1.3 0 0 0 1.3 1.3h1.7M10 5.5L12.5 8 10 10.5M12.3 8H6.5"
-                      stroke="currentColor"
-                      strokeWidth={1.4}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  Signed out
-                </div>
-              )}
               {/* Error Message */}
               {error && (
                 <div className="p-2.5 rounded-lg bg-destructive/10 dark:bg-red-500/10 border border-destructive/20 dark:border-red-500/20 text-destructive dark:text-red-300 text-xs font-medium">
