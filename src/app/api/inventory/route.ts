@@ -152,6 +152,26 @@ export async function GET(req: Request) {
     const isPaginated = Boolean(pageParam);
     const isSearchWithoutPage = Boolean(q && !pageParam);
 
+    // Rule: expired / out-of-stock / dead never in inventory search/list.
+    // Default branch (expiry/low-stock pages, no page + no q) stays untouched so those pages keep working.
+    if (isPaginated || isSearchWithoutPage) {
+      pipeline.push({
+        $match: {
+          $or: [
+            { expiryDate: { $exists: false } },
+            { expiryDate: null },
+            { expiryDate: { $gt: new Date() } },
+          ],
+        },
+      });
+      // Force hide dead in search even if Hide-zero-stock unchecked, unless user explicitly wants Out of Stock
+      const hasSearch = Boolean(q && String(q).trim());
+      const hasStockFilter = Boolean(match.stock);
+      if (hasSearch && !hasStockFilter && status !== "Out of Stock") {
+        pipeline.push({ $match: { stock: { $gt: 0 } } });
+      }
+    }
+
     if (isPaginated) {
       pipeline.push({
         $facet: {

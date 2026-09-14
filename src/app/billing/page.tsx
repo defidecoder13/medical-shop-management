@@ -252,7 +252,7 @@ function BillingContent() {
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiClient.get(`/api/inventory/search?q=${encodeURIComponent(debouncedSearch)}&limit=20`, { signal: controller.signal } as any);
+        const res = await apiClient.get(`/api/inventory/search?q=${encodeURIComponent(debouncedSearch)}&limit=50`, { signal: controller.signal } as any);
         if (!cancelled && res) setMedicines(Array.isArray(res) ? res : res.data || []);
       } catch (err: any) {
         if (err?.name === "AbortError") return;

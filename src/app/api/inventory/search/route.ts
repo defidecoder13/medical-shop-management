@@ -10,7 +10,7 @@ export async function GET(req: Request) {
     await connectDB();
     const { searchParams } = new URL(req.url);
     const q = (searchParams.get("q") || "").trim();
-    const limit = Math.min(30, Math.max(1, parseInt(searchParams.get("limit") || "20")));
+    const limit = Math.min(50, Math.max(1, parseInt(searchParams.get("limit") || "20")));
 
     if (!q || q.length < 1) {
       return NextResponse.json([], {
@@ -37,12 +37,26 @@ export async function GET(req: Request) {
           { "medicine.barcode": rx },
           { batchNumber: rx },
           { rackNumber: rx },
+          { supplierName: rx },
         ],
       };
     });
 
     const pipeline: any[] = [
-      { $match: { stock: { $gt: 0 } } },
+      {
+        $match: {
+          $and: [
+            { stock: { $gt: 0 } },
+            {
+              $or: [
+                { expiryDate: { $exists: false } },
+                { expiryDate: null },
+                { expiryDate: { $gt: new Date() } },
+              ],
+            },
+          ],
+        },
+      },
       {
         $lookup: {
           from: Medicine.collection.name,
@@ -53,7 +67,7 @@ export async function GET(req: Request) {
       },
       { $unwind: "$medicine" },
       { $match: { $and: andClauses } },
-      // Prefer batches that expire later and have stock; sort by relevance proxy (name starts with term)
+      // In-stock + unexpired only (dead/expired never in billing) — in-stock first, then newest
       { $sort: { stock: -1, createdAt: -1 } },
       { $limit: limit },
       {
@@ -71,6 +85,7 @@ export async function GET(req: Request) {
           rackNumber: 1,
           composition: "$medicine.composition",
           gstPercent: "$medicine.gstPercent",
+          discountPercent: 1,
           supplierName: 1,
           pack: { $ifNull: ["$pack", "$medicine.pack"] },
           barcode: "$medicine.barcode",
@@ -93,6 +108,7 @@ export async function GET(req: Request) {
       rackNumber: b.rackNumber || "",
       composition: b.composition || "",
       gstPercent: b.gstPercent ?? 5,
+      discountPercent: b.discountPercent || 0,
       supplierName: b.supplierName || "Direct Purchase",
       pack: b.pack || "",
       barcode: b.barcode || "",
