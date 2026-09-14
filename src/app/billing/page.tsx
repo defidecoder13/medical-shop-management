@@ -826,7 +826,7 @@ function BillingContent() {
 
             {/* Results Dropdown */}
             <AnimatePresence>
-              {medicines.length > 0 && (
+              {medicines.length > 0 ? (
                 <motion.div
                   initial={{ opacity: 0, y: 5, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -879,7 +879,22 @@ function BillingContent() {
                     </button>
                   ))}
                 </motion.div>
-              )}
+              ) : debouncedSearch ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 5, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 5, scale: 0.98 }}
+                  className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-pop z-20 p-6 text-center"
+                >
+                  <div className="w-10 h-10 rounded-md bg-muted text-muted-foreground flex items-center justify-center mx-auto mb-2.5">
+                    <Pill size={18} strokeWidth={2} />
+                  </div>
+                  <p className="text-[13px] font-semibold text-foreground">No medicines found</p>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    No match for &quot;{debouncedSearch}&quot; — expired / out-of-stock batches are hidden
+                  </p>
+                </motion.div>
+              ) : null}
             </AnimatePresence>
           </div>
 
