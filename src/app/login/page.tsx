@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, Loader2 } from "@/src/components/icons";
 import { PharmacyIllustration } from "@/src/components/auth/pharmacy-illustration";
+
+const REMEMBERED_EMAIL_KEY = "medishop_remembered_email";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,6 +15,17 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  // Prefill saved email when Keep me logged in was used before
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(REMEMBERED_EMAIL_KEY);
+      if (saved) {
+        setEmail(saved);
+        setRememberMe(true);
+      }
+    } catch {}
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,6 +42,10 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (res.ok) {
+        try {
+          if (rememberMe) localStorage.setItem(REMEMBERED_EMAIL_KEY, email);
+          else localStorage.removeItem(REMEMBERED_EMAIL_KEY);
+        } catch {}
         router.push("/");
         router.refresh();
       } else {

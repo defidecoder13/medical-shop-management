@@ -36,8 +36,8 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      // Verify the token using jose
-      const secret = new TextEncoder().encode(process.env.JWT_SECRET || "fallback_secret_key");
+      // Verify the token using jose (fallback must match login/check routes)
+      const secret = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key");
       await jwtVerify(token, secret);
       // Token is valid, allow access
     } catch (error) {
@@ -55,7 +55,7 @@ export async function middleware(request: NextRequest) {
     const token = request.cookies.get("auth_token")?.value;
     if (token) {
       try {
-        const secret = new TextEncoder().encode(process.env.JWT_SECRET || "fallback_secret_key");
+        const secret = new TextEncoder().encode(process.env.JWT_SECRET || "your-secret-key");
         await jwtVerify(token, secret);
         // If valid token exists, redirect to dashboard
         return NextResponse.redirect(new URL("/", request.url));

@@ -12,7 +12,7 @@ const DEMO_PASSWORD = "himadri@26";
 
 export async function POST(req: Request) {
   try {
-    const { email, password } = await req.json();
+    const { email, password, rememberMe } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
@@ -45,11 +45,12 @@ export async function POST(req: Request) {
       user = { _id: found._id, email: found.email };
     }
 
-    // Create JWT
+    // Create JWT — Keep me logged in = 30 days, otherwise 1 day
+    const maxAge = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
     const token = jwt.sign(
       { userId: user._id, email: user.email },
       JWT_SECRET,
-      { expiresIn: "1d" }
+      { expiresIn: rememberMe ? "30d" : "1d" }
     );
 
     const response = NextResponse.json({ message: "Login successful" }, { status: 200 });
@@ -61,7 +62,7 @@ export async function POST(req: Request) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 86400, // 1 day
+      maxAge,
       path: "/",
     });
 
@@ -72,7 +73,7 @@ export async function POST(req: Request) {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
-      maxAge: 86400, // 1 day
+      maxAge,
       path: "/",
     });
 
