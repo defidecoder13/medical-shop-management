@@ -166,6 +166,17 @@ const emptyMedicine: Medicine = {
   purchaseDate: "",
 };
 
+type MasterSuggestion = {
+  _id: string;
+  name: string;
+  brand: string;
+  composition: string;
+  pack: string;
+  packLabel: string;
+  category: string;
+  tabletsPerStrip: number;
+};
+
 export default function InventoryPage() {
   const router = useRouter();
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -188,6 +199,14 @@ export default function InventoryPage() {
   const [uploading, setUploading] = useState(false);
   const [gstEnabled, setGstEnabled] = useState(false);
   const [stats, setStats] = useState<{ totalItems: number, totalStockValue: number, lowStockItems: number, expiringSoon: number, outOfStock: number } | null>(null);
+
+  // Master-medicine autocomplete (Add Product type-to-suggest, no price)
+  const [masterResults, setMasterResults] = useState<MasterSuggestion[]>([]);
+  const [masterOpen, setMasterOpen] = useState(false);
+  const [masterLoading, setMasterLoading] = useState(false);
+  const [masterHighlight, setMasterHighlight] = useState(0);
+  const masterJustSelected = useRef(false);
+  const debouncedProductName = useDebounce(form.name, 300);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -461,8 +480,72 @@ export default function InventoryPage() {
 
 
   const handleMedicineNameChange = async (val: string) => {
+    masterJustSelected.current = false;
     setForm({...form, name: val});
+    setMasterHighlight(0);
   };
+
+  const applyMasterSuggestion = (s: MasterSuggestion) => {
+    masterJustSelected.current = true;
+    setMasterResults([]);
+    setMasterOpen(false);
+    const isMulti = s.category === "Tablet" || s.category === "Capsule";
+    setForm((prev) => ({
+      ...prev,
+      name: s.name,
+      brand: s.brand || prev.brand,
+      composition: s.composition || prev.composition,
+      pack: s.pack || prev.pack,
+      category: s.category || prev.category,
+      tabletsPerStrip: isMulti ? s.tabletsPerStrip : 1,
+    }));
+  };
+
+  // Fetch master suggestions while typing a new product name.
+  // Skipped on edit/restock (name already fixed) and right after a pick.
+  useEffect(() => {
+    if (!showForm || editingId || isRestock || masterJustSelected.current) return;
+    const q = debouncedProductName.trim();
+    if (q.length < 2) {
+      setMasterResults([]);
+      setMasterOpen(false);
+      return;
+    }
+    let cancelled = false;
+    setMasterLoading(true);
+    apiClient
+      .get(`/api/master-medicines/search?q=${encodeURIComponent(q)}&limit=8`)
+      .then((res: any) => {
+        if (cancelled) return;
+        const list: MasterSuggestion[] = Array.isArray(res) ? res : [];
+        setMasterResults(list);
+        setMasterOpen(list.length > 0);
+        setMasterHighlight(0);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setMasterResults([]);
+          setMasterOpen(false);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setMasterLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedProductName, showForm, editingId, isRestock]);
+
+  // Reset master dropdown whenever the dialog closes
+  useEffect(() => {
+    if (!showForm) {
+      setMasterResults([]);
+      setMasterOpen(false);
+      setMasterLoading(false);
+      setMasterHighlight(0);
+      masterJustSelected.current = false;
+    }
+  }, [showForm]);
 
   const handleSubmit = async () => {
     let parsedExpiry = "";
@@ -721,13 +804,50 @@ export default function InventoryPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             <div className="flex flex-col gap-2 relative">
               <label className="label">Product Name</label>
-              <input 
+              <input
                 autoFocus
-                placeholder="e.g. Paracetamol 500mg" 
+                placeholder="e.g. Paracetamol 500mg"
                 value={form.name}
-                onChange={e => setForm({...form, name: e.target.value})}
+                onChange={e => handleMedicineNameChange(e.target.value)}
+                onFocus={() => { if (masterResults.length > 0 && !editingId && !isRestock) setMasterOpen(true); }}
+                onBlur={() => setTimeout(() => setMasterOpen(false), 150)}
+                onKeyDown={e => {
+                  if (!masterOpen || masterResults.length === 0) return;
+                  if (e.key === "ArrowDown") { e.preventDefault(); setMasterHighlight(h => Math.min(h + 1, masterResults.length - 1)); }
+                  else if (e.key === "ArrowUp") { e.preventDefault(); setMasterHighlight(h => Math.max(h - 1, 0)); }
+                  else if (e.key === "Enter") { e.preventDefault(); const s = masterResults[masterHighlight]; if (s) applyMasterSuggestion(s); }
+                  else if (e.key === "Escape") { setMasterOpen(false); }
+                }}
                 className="input"
+                autoComplete="off"
               />
+              {masterOpen && !editingId && !isRestock && (
+                <div className="absolute top-full left-0 right-0 mt-1.5 z-[120] bg-card border border-border rounded-xl shadow-pop overflow-hidden max-h-72 overflow-y-auto">
+                  {masterLoading && masterResults.length === 0 ? (
+                    <div className="px-4 py-3 text-[12.5px] font-medium text-muted-foreground flex items-center gap-2">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Searching master database…
+                    </div>
+                  ) : (
+                    masterResults.map((s, idx) => (
+                      <button
+                        key={s._id}
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); applyMasterSuggestion(s); }}
+                        onMouseEnter={() => setMasterHighlight(idx)}
+                        className={`w-full text-left px-4 py-2.5 border-b border-border/60 last:border-0 transition-colors ${idx === masterHighlight ? 'bg-primary/10' : 'hover:bg-muted/50'}`}
+                      >
+                        <div className="text-[13px] font-bold text-foreground leading-tight">{s.name}</div>
+                        <div className="text-[11px] font-medium text-muted-foreground mt-0.5 truncate">
+                          {[s.brand, s.pack, s.category].filter(Boolean).join(" • ")}
+                        </div>
+                        {s.composition ? (
+                          <div className="text-[11px] text-muted-foreground/80 truncate">{s.composition}</div>
+                        ) : null}
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
