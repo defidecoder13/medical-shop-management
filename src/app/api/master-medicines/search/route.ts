@@ -72,20 +72,6 @@ export async function GET(req: Request) {
       };
     });
 
-    // Over-fetch, then rank: prefix matches first so "Dolo 650" tops
-    // "dolo" (not "Adoloc"), "Pan D" tops "pand". Pure alphabetical sort
-    // buries the exact matches under A-names that merely contain the letters.
-    const candidateLimit = Math.min(60, Math.max(limit * 4, 30));
-    const qNorm = q.toLowerCase().replace(/[^a-z0-9]/g, "");
-
-    const rankTier = (name: string): number => {
-      const nameNorm = name.toLowerCase().replace(/[^a-z0-9]/g, "");
-      if (qNorm && nameNorm.startsWith(qNorm)) return 0;
-      const words = name.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
-      if (qNorm && words.some((w) => w.startsWith(qNorm))) return 1;
-      return 2;
-    };
-
     const docs = await MasterMedicine.find({
       $and: [
         { Is_discontinued: { $in: ["FALSE", "False", "false", false, "", null] } },
@@ -102,21 +88,10 @@ export async function GET(req: Request) {
         // NOTE: price deliberately never selected / never returned
       })
       .sort({ name: 1 })
-      .limit(candidateLimit)
+      .limit(limit)
       .lean();
 
-    const ranked = docs
-      .map((d: any) => ({ d, tier: rankTier((d.name || "") as string) }))
-      .sort(
-        (a, b) =>
-          a.tier - b.tier ||
-          ((a.d.name || "").length - (b.d.name || "").length) ||
-          String(a.d.name || "").localeCompare(String(b.d.name || ""))
-      )
-      .slice(0, limit)
-      .map((r) => r.d);
-
-    const normalized = ranked.map((d: any) => {
+    const normalized = docs.map((d: any) => {
       const name = (d.name || "").trim();
       const packLabel = (d.pack_size_label || "").trim();
       const category = inferCategory(name, packLabel);
