@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Users, Search, PackagePlus, Trash2, Edit, Phone, MapPin, Activity, X, Plus, UserPlus, CreditCard, Stethoscope, ChevronRight, Loader2, CheckCircle2 } from "@/src/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
+import { StatCard } from "@/src/components/dashboard/stat-card";
 
 export default function PatientsPage() {
     const [patients, setPatients] = useState<any[]>([]);
@@ -146,36 +147,30 @@ export default function PatientsPage() {
             </div>
 
             {/* KPI Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="surface-card surface-hover p-5 flex items-center gap-4">
-                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-                     <Users size={22} strokeWidth={2.3} />
-                   </div>
-                   <div>
-                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Total Patients</p>
-                     <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{patients.length} Enrolled</h2>
-                   </div>
-                </div>
-
-                <div className="surface-card surface-hover p-5 flex items-center gap-4">
-                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-                     <CreditCard size={22} strokeWidth={2.3} />
-                   </div>
-                   <div>
-                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Lifetime Value</p>
-                     <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">₹{totalSpent.toLocaleString()}</h2>
-                   </div>
-                </div>
-
-                <div className="surface-card surface-hover p-5 flex items-center gap-4">
-                   <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-400 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-                     <Activity size={22} strokeWidth={2.3} />
-                   </div>
-                   <div>
-                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Chronic Care</p>
-                     <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{chronicPatients} Patients</h2>
-                   </div>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
+                <StatCard
+                    title="Total Patients"
+                    value={patients.length}
+                    icon={Users}
+                    variant="mint"
+                    hint="Registered accounts"
+                />
+                <StatCard
+                    title="Lifetime Value"
+                    value={totalSpent}
+                    prefix="₹"
+                    decimals={0}
+                    icon={CreditCard}
+                    variant="lime"
+                    hint="Cumulative patient spend"
+                />
+                <StatCard
+                    title="Chronic Care"
+                    value={chronicPatients}
+                    icon={Activity}
+                    variant="lavender"
+                    hint="Regular prescriptions"
+                />
             </div>
 
             {/* Main Content Area */}

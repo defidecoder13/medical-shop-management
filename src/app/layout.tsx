@@ -1,20 +1,15 @@
 import type { Metadata } from "next";
-import { Manrope, Figtree, Geist_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/src/components/theme-provider";
 import ClientLayout from "@/src/components/layout/client-layout";
 import { NetworkStatusIndicator } from "@/src/components/NetworkStatusIndicator";
 
-const manrope = Manrope({
-  variable: "--font-manrope",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-sans",
   subsets: ["latin"],
   display: "swap",
-});
-
-const figtree = Figtree({
-  variable: "--font-figtree",
-  subsets: ["latin"],
-  display: "swap",
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({
@@ -60,7 +55,7 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${manrope.variable} ${figtree.variable} ${geistMono.variable} antialiased`}
+        className={`${plusJakarta.variable} ${geistMono.variable} antialiased`}
         suppressHydrationWarning={true}
       >
         <ThemeProvider>

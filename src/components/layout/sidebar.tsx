@@ -28,7 +28,7 @@ import { BrandMark } from "@/src/components/ui/brand-mark";
 
 const navigationGroups = [
   {
-    group: "MAIN MENU",
+    group: "OVERVIEW",
     routes: [
       { label: "Dashboard", icon: Home, href: "/" },
       { label: "New Bill", icon: Receipt, href: "/billing" },
@@ -51,7 +51,7 @@ const navigationGroups = [
     ],
   },
   {
-    group: "BUSINESS",
+    group: "MANAGEMENT",
     routes: [
       { label: "Patients CRM", icon: Users, href: "/patients" },
       { label: "Reports", icon: BarChart3, href: "/sales-report" },
@@ -90,7 +90,6 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
     }
   };
 
-  // Close the confirm dialog on Escape (ignored while signing out)
   useEffect(() => {
     if (!showLogoutConfirm || logoutBusy) return;
     const onKey = (e: KeyboardEvent) => {
@@ -104,190 +103,194 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
 
   return (
     <>
-    <aside
-      className={cn(
-        "transition-all duration-300 ease-out bg-card border-r border-border flex flex-col z-20 h-screen shrink-0",
-        isSidebarCollapsed ? "w-[76px]" : "w-[248px]"
-      )}
-    >
-      {/* App Branding */}
-      <div
+      <aside
         className={cn(
-          "h-[68px] flex items-center gap-3 px-4 shrink-0 overflow-hidden border-b border-border/70",
-          isSidebarCollapsed && "justify-center px-0"
+          "transition-all duration-300 ease-out bg-card/90 backdrop-blur-xs border-r border-border/70 flex flex-col z-20 h-full shrink-0 select-none",
+          isSidebarCollapsed ? "w-[72px]" : "w-[236px]"
         )}
       >
-        <BrandMark size={isSidebarCollapsed ? 38 : 40} />
-        {!isSidebarCollapsed && (
-          <div className="flex flex-col leading-none min-w-0">
-            <span className="font-display font-extrabold text-[15px] tracking-tight text-warning">
-              MEDSATHI
-            </span>
-            <span className="font-display font-extrabold text-[13px] tracking-[0.08em] text-brand mt-0.5">
-              PHARMACY
-            </span>
-          </div>
-        )}
-        {isMobile && onClose && (
-          <button
-            onClick={onClose}
-            className="ml-auto p-1.5 text-muted-foreground hover:text-foreground rounded-lg hover:bg-accent transition-colors"
-            aria-label="Close menu"
-          >
-            <X size={18} strokeWidth={2.5} />
-          </button>
-        )}
-      </div>
-
-      {/* Navigation Links */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-5">
-        {navigationGroups.map((section, sectionIdx) => (
-          <div key={sectionIdx} className="space-y-1">
-            {!isSidebarCollapsed && (
-              <div className="px-3 mb-1.5 text-[10px] font-bold tracking-[0.16em] text-muted-foreground/70">
-                {section.group}
-              </div>
-            )}
-            {section.routes.map((route) => {
-              const isActive =
-                pathname === route.href || pathname.startsWith(`${route.href}/`);
-              return (
-                <Link
-                  key={route.href}
-                  href={route.href}
-                  onClick={() => {
-                    if (isMobile && onClose) onClose();
-                  }}
-                  className={cn(
-                    "relative w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold transition-colors duration-200 group select-none",
-                    isSidebarCollapsed ? "px-0 justify-center py-2.5" : "px-3 py-2.5",
-                    isActive
-                      ? "text-primary font-extrabold"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                  title={isSidebarCollapsed ? route.label : undefined}
-                >
-                  {isActive && (
-                    <motion.div
-                      layoutId="activeSidebarIndicator"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      className="absolute inset-0 rounded-xl bg-gradient-to-r from-primary/14 to-primary/6 shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_25%,transparent)] pointer-events-none"
-                    />
-                  )}
-                  {isActive && (
-                    <motion.span
-                      layoutId="activeSidebarBar"
-                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                      className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-1 rounded-r-full bg-primary"
-                    />
-                  )}
-                  <route.icon
-                    size={18}
-                    strokeWidth={isActive ? 2.6 : 2.2}
-                    className={cn(
-                      "transition-colors shrink-0 relative z-10",
-                      isActive
-                        ? "text-primary"
-                        : "text-muted-foreground/70 group-hover:text-foreground"
-                    )}
-                  />
-                  {!isSidebarCollapsed && <span className="truncate relative z-10">{route.label}</span>}
-                </Link>
-              );
-            })}
-          </div>
-        ))}
-      </nav>
-
-      {/* Bottom Actions */}
-      <div className="p-3 shrink-0 border-t border-border/70 space-y-1">
-        {!isMobile && (
-          <button
-            onClick={() => setCollapsed(!collapsed)}
-            className={cn(
-              "w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold transition-colors text-muted-foreground hover:bg-accent/70 hover:text-foreground",
-              isSidebarCollapsed ? "justify-center py-2.5" : "px-3 py-2.5"
-            )}
-          >
-            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
-            {!collapsed && <span>Collapse Sidebar</span>}
-          </button>
-        )}
-        <button
-          onClick={() => setShowLogoutConfirm(true)}
+        {/* Brand header */}
+        <div
           className={cn(
-            "w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold transition-colors text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40",
-            isSidebarCollapsed ? "justify-center py-2.5" : "px-3 py-2.5"
+            "h-[64px] flex items-center gap-3 px-4.5 shrink-0 overflow-hidden border-b border-border/60",
+            isSidebarCollapsed && "justify-center px-0"
           )}
         >
-          <LogOut size={18} strokeWidth={2.2} />
-          {!isSidebarCollapsed && <span>Logout</span>}
-        </button>
-      </div>
-    </aside>
-
-    {/* Logout confirmation dialog (portal: escapes sidebar/drawer transforms) */}
-    {showLogoutConfirm &&
-      typeof document !== "undefined" &&
-      createPortal(
-      <AnimatePresence>
-        {showLogoutConfirm && (
-          <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowLogoutConfirm(false)}
-              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 12 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 12 }}
-              transition={{ type: "tween", ease: "easeOut", duration: 0.18 }}
-              role="dialog"
-              aria-modal="true"
-              aria-label="Confirm logout"
-              className="relative w-[92vw] max-w-sm bg-card border border-border rounded-2xl shadow-pop p-6 text-center"
+          <BrandMark size={isSidebarCollapsed ? 34 : 36} />
+          {!isSidebarCollapsed && (
+            <div className="flex flex-col leading-tight min-w-0">
+              <span className="font-display font-semibold text-[15px] tracking-tight text-foreground truncate">
+                MEDSATHI
+              </span>
+              <span className="text-[11px] font-medium tracking-wide text-muted-foreground truncate">
+                Pharmacy OS
+              </span>
+            </div>
+          )}
+          {isMobile && onClose && (
+            <button
+              onClick={onClose}
+              className="ml-auto p-1.5 text-muted-foreground hover:text-foreground rounded-full hover:bg-muted transition-colors"
+              aria-label="Close menu"
             >
-              <div className="w-12 h-12 mx-auto rounded-xl bg-red-50 dark:bg-red-950/40 text-red-500 flex items-center justify-center mb-4">
-                <LogOut size={22} strokeWidth={2.4} />
-              </div>
-              <h3 className="font-display text-[17px] font-extrabold text-foreground">
-                Log out of Medsathi?
-              </h3>
-              <p className="text-[13px] text-muted-foreground font-medium mt-1.5">
-                You will need to sign in again to manage your pharmacy.
-              </p>
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => !logoutBusy && setShowLogoutConfirm(false)}
-                  disabled={logoutBusy}
-                  className="btn-outline btn-md flex-1 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              <X size={18} strokeWidth={2.2} />
+            </button>
+          )}
+        </div>
+
+        {/* Navigation list */}
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-4">
+          {navigationGroups.map((section, sectionIdx) => (
+            <div key={sectionIdx} className="space-y-1">
+              {!isSidebarCollapsed && (
+                <div className="px-3 mb-1 text-[10px] font-semibold tracking-[0.14em] text-muted-foreground/75 uppercase">
+                  {section.group}
+                </div>
+              )}
+              {section.routes.map((route) => {
+                const isActive =
+                  pathname === route.href ||
+                  (route.href !== "/" && pathname.startsWith(`${route.href}/`));
+                return (
+                  <Link
+                    key={route.href}
+                    href={route.href}
+                    onClick={() => {
+                      if (isMobile && onClose) onClose();
+                    }}
+                    className={cn(
+                      "relative w-full flex items-center gap-2.5 rounded-full text-[13.5px] font-medium transition-all duration-150 group select-none min-h-[42px]",
+                      isSidebarCollapsed ? "px-0 justify-center" : "px-3 py-2",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-soft"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
+                    )}
+                    title={isSidebarCollapsed ? route.label : undefined}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    <span
+                      className={cn(
+                        "w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                        isActive
+                          ? "bg-white/20 text-primary-foreground"
+                          : "bg-muted/60 text-muted-foreground group-hover:text-foreground"
+                      )}
+                    >
+                      <route.icon
+                        size={15}
+                        strokeWidth={isActive ? 2.5 : 2}
+                      />
+                    </span>
+                    {!isSidebarCollapsed && (
+                      <span className="truncate">{route.label}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
+        </nav>
+
+        {/* Bottom controls */}
+        <div className="p-3 shrink-0 border-t border-border/60 space-y-1">
+          {!isMobile && (
+            <button
+              onClick={() => setCollapsed(!collapsed)}
+              className={cn(
+                "w-full flex items-center gap-2.5 rounded-full text-[12.5px] font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground",
+                isSidebarCollapsed ? "justify-center py-2" : "px-3 py-2"
+              )}
+              title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+              {!collapsed && <span>Collapse Sidebar</span>}
+            </button>
+          )}
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className={cn(
+              "w-full flex items-center gap-2.5 rounded-full text-[12.5px] font-medium transition-colors text-[#C94A58] hover:bg-[#EDB2B7]/20",
+              isSidebarCollapsed ? "justify-center py-2" : "px-3 py-2"
+            )}
+            title="Logout"
+          >
+            <LogOut size={16} strokeWidth={2.2} />
+            {!isSidebarCollapsed && <span>Logout</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* Logout confirmation dialog */}
+      {showLogoutConfirm &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <AnimatePresence>
+            {showLogoutConfirm && (
+              <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="absolute inset-0 bg-black/40 backdrop-blur-xs"
+                />
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                  transition={{ type: "tween", ease: "easeOut", duration: 0.16 }}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Confirm logout"
+                  className="relative z-10 w-full max-w-sm rounded-[28px] border border-border bg-card p-6 shadow-pop text-card-foreground"
                 >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleLogout}
-                  disabled={logoutBusy}
-                  className="btn-danger btn-md flex-1 cursor-pointer inline-flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-wait"
-                >
-                  {logoutBusy ? (
-                    <>
-                      <Loader2 size={15} className="animate-spin" />
-                      Signing out…
-                    </>
-                  ) : (
-                    "Yes, Log Out"
-                  )}
-                </button>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="w-10 h-10 rounded-full bg-[#EDB2B7]/30 text-[#C94A58] flex items-center justify-center shrink-0">
+                      <LogOut size={18} strokeWidth={2.4} />
+                    </span>
+                    <div>
+                      <h2 className="text-base font-semibold leading-tight text-foreground">
+                        Sign Out
+                      </h2>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        End your active pharmacy session
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground mb-5 leading-relaxed">
+                    Are you sure you want to log out? Unsaved bill drafts in progress will remain in offline storage.
+                  </p>
+                  <div className="flex items-center justify-end gap-2">
+                    <button
+                      type="button"
+                      disabled={logoutBusy}
+                      onClick={() => setShowLogoutConfirm(false)}
+                      className="btn btn-outline btn-sm px-4"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={logoutBusy}
+                      onClick={handleLogout}
+                      className="btn btn-danger btn-sm px-4 flex items-center gap-2"
+                    >
+                      {logoutBusy ? (
+                        <>
+                          <Loader2 size={13} className="animate-spin" />
+                          <span>Signing out…</span>
+                        </>
+                      ) : (
+                        <span>Yes, Sign Out</span>
+                      )}
+                    </button>
+                  </div>
+                </motion.div>
               </div>
-            </motion.div>
-          </div>
+            )}
+          </AnimatePresence>,
+          document.body
         )}
-      </AnimatePresence>,
-      document.body
-    )}
-  </>
+    </>
   );
 };

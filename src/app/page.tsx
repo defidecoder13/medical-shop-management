@@ -9,11 +9,14 @@ import {
   PackagePlus,
   CalendarClock,
   BarChart3,
+  Banknote,
+  TrendingUp,
 } from "@/src/components/icons";
 import { apiClient } from "@/src/lib/apiClient";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import { StatCard } from "@/src/components/dashboard/stat-card";
 import { SalesChart } from "@/src/components/dashboard/sales-chart";
 import { MedRankingCard } from "@/src/components/charts/med-ranking-chart";
 import { PageSkeleton } from "@/src/components/ui/skeleton";
@@ -24,35 +27,35 @@ const quickActions = [
     desc: "Create sale invoice",
     href: "/billing",
     icon: FileText,
-    tone: "brand" as const,
+    tone: "mint" as const,
   },
   {
     label: "Add Stock",
     desc: "Record new inventory",
     href: "/inventory",
     icon: PackagePlus,
-    tone: "success" as const,
+    tone: "lime" as const,
   },
   {
     label: "Expiry Tracker",
     desc: "Check expiring batches",
     href: "/expiry",
     icon: CalendarClock,
-    tone: "info" as const,
+    tone: "lavender" as const,
   },
   {
     label: "Transactions",
     desc: "View sales history",
     href: "/transactions",
     icon: ReceiptText,
-    tone: "warning" as const,
+    tone: "coral" as const,
   },
   {
     label: "Low Stock",
     desc: "Critical shortages",
     href: "/low-stock",
     icon: AlertOctagon,
-    tone: "danger" as const,
+    tone: "coral" as const,
   },
   {
     label: "Reports",
@@ -112,44 +115,77 @@ export default function Home() {
   }
 
   const toneClasses: Record<string, string> = {
-    brand: "bg-primary/10 text-primary",
-    success: "bg-success/10 text-success",
-    info: "bg-info/10 text-info",
-    warning: "bg-warning/15 text-amber-600 dark:text-amber-400",
-    danger: "bg-destructive/10 text-destructive",
-    neutral: "bg-muted text-muted-foreground",
+    mint: "bg-[#9CD4D2]/40 text-[#062C2F] dark:bg-[#16403F] dark:text-[#9CD4D2]",
+    lime: "bg-[#D6EDB3]/50 text-[#062C2F] dark:bg-[#1E3B24] dark:text-[#A7E8B8]",
+    lavender: "bg-[#B2BCEE]/40 text-[#062C2F] dark:bg-[#1E274A] dark:text-[#BFDBFE]",
+    coral: "bg-[#EDB2B7]/40 text-[#062C2F] dark:bg-[#3E1B21] dark:text-[#FCA5A5]",
+    neutral: "bg-muted text-foreground",
   };
 
   return (
-    <div className="space-y-5 max-w-[1400px] mx-auto pb-10 pt-1">
-      {/* Quick Actions */}
-      <div className="surface-card p-4 md:p-5">
-        <div className="flex items-center gap-2.5 mb-3.5">
-          <span className="w-7 h-7 rounded-md bg-muted text-muted-foreground flex items-center justify-center">
-            <Zap className="w-[15px] h-[15px]" strokeWidth={2} />
+    <div className="space-y-5.5 max-w-[1400px] mx-auto pb-8 pt-1">
+      {/* 4-Column Metric Grid as defined in DESIGN.md Section 8 */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
+        <StatCard
+          title="Total Sales"
+          value={data.stats?.sales ?? "₹0"}
+          icon={Banknote}
+          variant="lime"
+          hint="Gross revenue"
+        />
+        <StatCard
+          title="Invoices Generated"
+          value={data.stats?.orders ?? 0}
+          icon={ReceiptText}
+          variant="mint"
+          hint="Completed orders"
+        />
+        <StatCard
+          title="Low Stock Alert"
+          value={data.stats?.lowStock ?? 0}
+          icon={AlertOctagon}
+          variant="coral"
+          hint="Needs reordering"
+        />
+        <StatCard
+          title="Expiring Batches"
+          value={data.stats?.expiring ?? 0}
+          icon={CalendarClock}
+          variant="lavender"
+          hint="Within 6 months"
+        />
+      </div>
+
+      {/* Quick Actions Panel */}
+      <div className="surface-card p-5 md:p-6 rounded-[28px] md:rounded-[32px]">
+        <div className="flex items-center gap-2.5 mb-4">
+          <span className="w-8 h-8 rounded-full bg-muted text-foreground flex items-center justify-center">
+            <Zap className="w-4 h-4" strokeWidth={2.2} />
           </span>
-          <h3 className="text-[13px] font-semibold tracking-tight text-foreground">
+          <h3 className="text-[15px] font-semibold tracking-tight text-foreground">
             Quick Actions
           </h3>
-          <span className="text-[11px] text-muted-foreground ml-auto hidden sm:block">
-            Shortcuts
+          <span className="text-[11px] font-medium text-muted-foreground ml-auto hidden sm:block">
+            Frequently Used
           </span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
           {quickActions.map((action) => (
             <Link
               key={action.href}
               href={action.href}
-              className="group flex items-center gap-3 rounded-lg border border-border bg-card p-3 hover:bg-accent/50 hover:border-border transition-colors"
+              className="group flex items-center gap-3 rounded-2xl border border-border/80 bg-card/60 p-3 hover:bg-muted/50 hover:border-border transition-all duration-150"
             >
-              <div className={`w-9 h-9 rounded-md flex items-center justify-center shrink-0 ${toneClasses[action.tone]}`}>
-                <action.icon size={16} strokeWidth={2} />
+              <div
+                className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-transform group-hover:scale-105 ${toneClasses[action.tone]}`}
+              >
+                <action.icon size={16} strokeWidth={2.2} />
               </div>
               <div className="min-w-0">
                 <div className="text-[13px] font-semibold text-foreground leading-tight truncate">
                   {action.label}
                 </div>
-                <div className="text-[11px] text-muted-foreground leading-tight truncate">
+                <div className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
                   {action.desc}
                 </div>
               </div>
@@ -158,7 +194,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Sales Performance */}
+      {/* Sales Performance Chart */}
       <SalesChart data={data.salesChart} range={chartRange} onRangeChange={setChartRange} />
 
       {/* Product Velocity — Most / Least Selling */}

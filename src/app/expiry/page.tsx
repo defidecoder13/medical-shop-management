@@ -144,73 +144,73 @@ export default function ExpiryPage() {
     <div className="space-y-5 pb-10 max-w-[1400px] mx-auto">
       {/* Header Actions */}
       <div className="flex justify-end">
-        <div className="flex bg-muted p-1 rounded-lg border border-border">
+        <div className="flex bg-secondary/80 p-1 rounded-full border border-border/70">
           {(['expired', 'under30', 'under60'] as const).map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`px-4 py-1.5 rounded-md text-[12px] font-medium transition-colors cursor-pointer ${
+              className={`px-4 py-1.5 rounded-full text-[12px] font-semibold transition-all duration-150 cursor-pointer ${
                 activeTab === tab 
-                ? 'bg-card text-foreground shadow-sm border border-border' 
+                ? 'bg-primary text-primary-foreground shadow-xs' 
                 : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              {tab === 'expired' ? 'Expired' : tab === 'under30' ? '30 days' : '60 days'}
+              {tab === 'expired' ? 'Expired' : tab === 'under30' ? '< 30 days' : '< 60 days'}
             </button>
           ))}
         </div>
       </div>
 
       {/* Summary Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5">
         <button 
           onClick={() => setActiveTab('expired')}
-          className={`p-4 rounded-xl border flex items-center gap-3 text-left cursor-pointer transition-colors ${
+          className={`p-5 rounded-[26px] md:rounded-[30px] border flex items-center gap-3.5 text-left cursor-pointer transition-all ${
             activeTab === 'expired' 
-            ? 'bg-destructive/10 border-destructive/20' 
-            : 'surface-card hover:bg-accent/50'
+            ? 'bg-[#EDB2B7]/35 border-[#E09EA5] shadow-soft' 
+            : 'surface-card hover:bg-muted/50'
           }`}
         >
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${activeTab === 'expired' ? 'bg-destructive text-destructive-foreground' : 'bg-destructive/10 text-destructive'}`}>
-             <AlertCircle size={18} strokeWidth={2} />
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-xs ${activeTab === 'expired' ? 'bg-[#C94A58] text-white' : 'bg-[#EDB2B7]/50 text-[#5C151F]'}`}>
+             <AlertCircle size={18} strokeWidth={2.4} />
           </div>
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground">Expired</p>
-            <p className="text-[18px] font-bold tracking-tight">{expiredItems.length} items</p>
+            <p className="text-[12px] font-medium text-muted-foreground">Expired</p>
+            <p className="font-display text-[22px] font-semibold tracking-tight text-foreground">{expiredItems.length} items</p>
           </div>
         </button>
 
         <button 
           onClick={() => setActiveTab('under30')}
-          className={`p-4 rounded-xl border flex items-center gap-3 text-left cursor-pointer transition-colors ${
+          className={`p-5 rounded-[26px] md:rounded-[30px] border flex items-center gap-3.5 text-left cursor-pointer transition-all ${
             activeTab === 'under30' 
-            ? 'bg-warning/15 border-warning/30' 
-            : 'surface-card hover:bg-accent/50'
+            ? 'bg-[#FEE9C5] border-[#F5D59A] shadow-soft' 
+            : 'surface-card hover:bg-muted/50'
           }`}
         >
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${activeTab === 'under30' ? 'bg-warning text-warning-foreground' : 'bg-warning/15 text-amber-600'}`}>
-             <Clock size={18} strokeWidth={2} />
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-xs ${activeTab === 'under30' ? 'bg-[#D9822B] text-white' : 'bg-[#FEE9C5] text-[#5C3205]'}`}>
+             <Clock size={18} strokeWidth={2.4} />
           </div>
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground">&lt; 30 days</p>
-            <p className="text-[18px] font-bold tracking-tight">{under30Items.length} items</p>
+            <p className="text-[12px] font-medium text-muted-foreground">&lt; 30 days</p>
+            <p className="font-display text-[22px] font-semibold tracking-tight text-foreground">{under30Items.length} items</p>
           </div>
         </button>
 
         <button 
           onClick={() => setActiveTab('under60')}
-          className={`p-4 rounded-xl border flex items-center gap-3 text-left cursor-pointer transition-colors ${
+          className={`p-5 rounded-[26px] md:rounded-[30px] border flex items-center gap-3.5 text-left cursor-pointer transition-all ${
             activeTab === 'under60' 
-            ? 'bg-primary/10 border-primary/20' 
-            : 'surface-card hover:bg-accent/50'
+            ? 'bg-[#9CD4D2]/35 border-[#83BEBC] shadow-soft' 
+            : 'surface-card hover:bg-muted/50'
           }`}
         >
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${activeTab === 'under60' ? 'bg-primary text-primary-foreground' : 'bg-primary/10 text-primary'}`}>
-             <Calendar size={18} strokeWidth={2} />
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-xs ${activeTab === 'under60' ? 'bg-primary text-primary-foreground' : 'bg-[#9CD4D2]/40 text-[#062C2F]'}`}>
+             <Calendar size={18} strokeWidth={2.4} />
           </div>
           <div>
-            <p className="text-[11px] font-medium text-muted-foreground">&lt; 60 days</p>
-            <p className="text-[18px] font-bold tracking-tight">{under60Items.length} items</p>
+            <p className="text-[12px] font-medium text-muted-foreground">&lt; 60 days</p>
+            <p className="font-display text-[22px] font-semibold tracking-tight text-foreground">{under60Items.length} items</p>
           </div>
         </button>
       </div>

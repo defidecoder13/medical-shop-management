@@ -14,16 +14,22 @@ export function useEchartsTheme() {
   return useMemo(
     () => ({
       isDark,
-      axisColor: isDark ? "#64748b" : "#94a3b8",
-      gridColor: isDark ? "#1e293b" : "#e2e8f0",
-      tooltipBg: isDark ? "#1e293b" : "#ffffff",
-      tooltipBorder: isDark ? "#334155" : "#e2e8f0",
-      tooltipText: isDark ? "#f1f5f9" : "#0f172a",
-      primary: isDark ? "#60a5fa" : "#2563eb",
-      primaryArea: isDark ? "rgba(96,165,250,0.15)" : "rgba(37,99,235,0.10)",
-      success: isDark ? "#34d399" : "#10b981",
-      warning: isDark ? "#fbbf24" : "#f59e0b",
-      border: isDark ? "#334155" : "#e2e8f0",
+      axisColor: isDark ? "#92ADA9" : "#506867",
+      gridColor: isDark ? "#184144" : "#D7E6E5",
+      // Deep teal tooltip with crisp white text as per DESIGN.md 9.4
+      tooltipBg: isDark ? "#062C2F" : "#062C2F",
+      tooltipBorder: isDark ? "#235458" : "#397F7C",
+      tooltipText: "#FFFFFF",
+      primary: isDark ? "#9CD4D2" : "#062C2F",
+      primaryArea: isDark ? "rgba(156,212,210,0.22)" : "rgba(6,44,47,0.12)",
+      mint: "#9CD4D2",
+      lime: "#D6EDB3",
+      coral: "#EDB2B7",
+      lavender: "#B2BCEE",
+      pink: "#E5B1DB",
+      success: isDark ? "#6EE7B7" : "#3B8A74",
+      warning: isDark ? "#FBBF24" : "#D9822B",
+      border: isDark ? "#184144" : "#D7E6E5",
     }),
     [isDark]
   );

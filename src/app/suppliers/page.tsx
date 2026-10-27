@@ -19,6 +19,7 @@ import {
 } from "@/src/components/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import { apiClient } from "@/src/lib/apiClient";
+import { StatCard } from "@/src/components/dashboard/stat-card";
 
 export default function SuppliersPage() {
   const [suppliers, setSuppliers] = useState<any[]>([]);
@@ -178,34 +179,28 @@ export default function SuppliersPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#11327c] to-[#1e58b8] text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-             <Building2 size={22} strokeWidth={2.3} />
-           </div>
-           <div>
-             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Total Distributors</p>
-             <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{suppliers.length} Active</h2>
-           </div>
-        </div>
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-500 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-             <FileText size={22} strokeWidth={2.3} />
-           </div>
-           <div>
-             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">Registered GSTIN</p>
-             <h2 className="font-display text-[22px] font-extrabold text-emerald-600 dark:text-emerald-400 tracking-tighter">{withGstinCount} Verified</h2>
-           </div>
-        </div>
-        <div className="surface-card surface-hover p-5 flex items-center gap-4">
-           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-500 text-white flex items-center justify-center shrink-0 shadow-[inset_0_1px_0_rgb(255_255_255/0.25),0_6px_14px_-6px_rgb(15_23_42/0.5)]">
-             <Phone size={22} strokeWidth={2.3} />
-           </div>
-           <div>
-             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground mb-1">With Contact Number</p>
-             <h2 className="font-display text-[22px] font-extrabold text-foreground tracking-tighter">{withPhoneCount} Listed</h2>
-           </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+        <StatCard
+          title="Total Distributors"
+          value={suppliers.length}
+          icon={Building2}
+          variant="mint"
+          hint="Active accounts"
+        />
+        <StatCard
+          title="Registered GSTIN"
+          value={withGstinCount}
+          icon={FileText}
+          variant="lime"
+          hint="Verified tax records"
+        />
+        <StatCard
+          title="With Contact Number"
+          value={withPhoneCount}
+          icon={Phone}
+          variant="lavender"
+          hint="Direct phone on file"
+        />
       </div>
 
       {/* Main Content Area */}

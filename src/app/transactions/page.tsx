@@ -31,6 +31,7 @@ import {
 } from "@/src/components/icons";
 import { apiClient } from "@/src/lib/apiClient";
 import { Badge } from "@/src/components/ui/badge";
+import { StatCard } from "@/src/components/dashboard/stat-card";
 
 type Transaction = {
   _id: string;
@@ -273,49 +274,41 @@ export default function TransactionsPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="surface-card p-4 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-            <ShoppingCart size={18} strokeWidth={2} />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] font-medium text-muted-foreground">Total Sales</div>
-            <div className="text-[18px] font-bold tracking-tight leading-none mt-1">₹{summary.totalSales.toFixed(2)}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">{summary.totalSalesCount} bills</div>
-          </div>
-        </div>
-        <div className="surface-card p-4 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-success/10 text-success flex items-center justify-center shrink-0">
-            <TrendingUp size={18} strokeWidth={2} />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] font-medium text-muted-foreground">Items Sold</div>
-            <div className="text-[18px] font-bold tracking-tight leading-none mt-1">{summary.totalItemsSold}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">Selected period</div>
-          </div>
-        </div>
-        <div className="surface-card p-4 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-warning/15 text-amber-600 flex items-center justify-center shrink-0">
-            <Undo size={18} strokeWidth={2} />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] font-medium text-muted-foreground">Refunds</div>
-            <div className="text-[18px] font-bold tracking-tight leading-none mt-1">₹{summary.totalRefunds.toFixed(2)}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">{summary.totalRefundsCount} refunds</div>
-          </div>
-        </div>
-        <div className="surface-card p-4 flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
-            <Receipt size={18} strokeWidth={2} />
-          </div>
-          <div className="min-w-0">
-            <div className="text-[11px] font-medium text-muted-foreground">Avg. Bill</div>
-            <div className="text-[18px] font-bold tracking-tight leading-none mt-1">
-              ₹{summary.totalSalesCount > 0 ? (summary.totalSales / summary.totalSalesCount).toFixed(2) : "0.00"}
-            </div>
-            <div className="text-[11px] text-muted-foreground mt-1">Per invoice</div>
-          </div>
-        </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <StatCard
+          title="Total Sales"
+          value={summary.totalSales}
+          prefix="₹"
+          decimals={2}
+          icon={ShoppingCart}
+          variant="lime"
+          hint={`${summary.totalSalesCount} bills generated`}
+        />
+        <StatCard
+          title="Items Sold"
+          value={summary.totalItemsSold}
+          icon={TrendingUp}
+          variant="mint"
+          hint="Selected period"
+        />
+        <StatCard
+          title="Refunds"
+          value={summary.totalRefunds}
+          prefix="₹"
+          decimals={2}
+          icon={Undo}
+          variant="coral"
+          hint={`${summary.totalRefundsCount} refunds processed`}
+        />
+        <StatCard
+          title="Avg. Bill Value"
+          value={summary.totalSalesCount > 0 ? (summary.totalSales / summary.totalSalesCount) : 0}
+          prefix="₹"
+          decimals={2}
+          icon={Receipt}
+          variant="lavender"
+          hint="Per invoice average"
+        />
       </div>
 
       {/* Filters Bar */}

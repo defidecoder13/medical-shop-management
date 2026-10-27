@@ -13,7 +13,7 @@ interface PageHeaderProps {
 
 /**
  * PageHeader — consistent page title block used across every screen.
- * Renders title + subtitle on the left and action buttons on the right.
+ * Styled with deep teal typography, rounded icon container, and compact actions.
  */
 export function PageHeader({
   title,
@@ -23,15 +23,15 @@ export function PageHeader({
   className,
 }: PageHeaderProps) {
   return (
-    <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6 animate-fade-in", className)}>
+    <div className={cn("flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-5.5 animate-fade-in", className)}>
       <div className="flex items-center gap-3.5 min-w-0">
-        {icon ?? <BrandMark size={44} />}
+        {icon ?? <BrandMark size={40} />}
         <div className="min-w-0">
-          <h1 className="font-display text-[21px] md:text-[24px] font-extrabold tracking-tight text-foreground leading-tight truncate">
+          <h1 className="font-display text-[24px] md:text-[27px] font-semibold tracking-tight text-foreground leading-tight truncate">
             {title}
           </h1>
           {subtitle && (
-            <p className="text-[13px] font-medium text-muted-foreground mt-0.5 truncate">
+            <p className="text-[13px] font-normal text-muted-foreground mt-0.5 truncate">
               {subtitle}
             </p>
           )}

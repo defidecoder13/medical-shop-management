@@ -29,6 +29,7 @@ import {
 import Link from "next/link";
 import { apiClient } from "@/src/lib/apiClient";
 import { ReportTrajectoryChart } from "@/src/components/charts/report-trajectory-chart";
+import { StatCard } from "@/src/components/dashboard/stat-card";
 
 type BillItem = {
   name: string;
@@ -158,14 +159,14 @@ export default function SalesReportPage() {
     <div className="space-y-5 pb-10 max-w-[1400px] mx-auto">
       {/* Header Actions */}
       <div className="flex flex-wrap items-center justify-end gap-3">
-          <div className="flex bg-muted p-1 rounded-lg border border-border">
+          <div className="flex bg-secondary/80 p-1 rounded-full border border-border/70">
             {(["1d", "7d", "1m"] as const).map((option) => (
               <button
                 key={option}
                 onClick={() => setFilter(option)}
-                className={`px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-full text-[12px] font-semibold transition-all duration-150 cursor-pointer ${
                   filter === option
-                    ? "bg-card text-foreground shadow-sm border border-border"
+                    ? "bg-primary text-primary-foreground shadow-xs"
                     : "text-muted-foreground hover:text-foreground"
                 }`}
               >
@@ -178,7 +179,7 @@ export default function SalesReportPage() {
              onClick={exportToExcel}
              className="btn-success btn-md"
           >
-            <FileSpreadsheet size={17} strokeWidth={2.4} />
+            <FileSpreadsheet size={16} strokeWidth={2.4} />
             Export Intel
           </button>
       </div>
@@ -186,43 +187,41 @@ export default function SalesReportPage() {
       {reportData && (
         <>
           {/* Metrics Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className="surface-card p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                <TrendingUp size={18} strokeWidth={2} />
-              </div>
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground">Total Revenue</p>
-                <p className="text-[18px] font-bold tracking-tight">₹{reportData.totalSales.toLocaleString(undefined, { minimumFractionDigits: 0 })}</p>
-              </div>
-            </div>
-            <div className="surface-card p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-success/10 text-success flex items-center justify-center shrink-0">
-                <Wallet size={18} strokeWidth={2} />
-              </div>
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground">Net Profit</p>
-                <p className="text-[18px] font-bold tracking-tight">₹{reportData.totalProfit.toLocaleString(undefined, { minimumFractionDigits: 0 })}</p>
-              </div>
-            </div>
-            <div className="surface-card p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-muted text-muted-foreground flex items-center justify-center shrink-0">
-                <CreditCard size={18} strokeWidth={2} />
-              </div>
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground">Transactions</p>
-                <p className="text-[18px] font-bold tracking-tight">{reportData.totalTransactions}</p>
-              </div>
-            </div>
-            <div className="surface-card p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-warning/15 text-amber-600 flex items-center justify-center shrink-0">
-                <BarChart3 size={18} strokeWidth={2} />
-              </div>
-              <div>
-                <p className="text-[11px] font-medium text-muted-foreground">Avg. Ticket</p>
-                <p className="text-[18px] font-bold tracking-tight">₹{reportData.totalTransactions > 0 ? (reportData.totalSales / reportData.totalTransactions).toFixed(0) : '0'}</p>
-              </div>
-            </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <StatCard
+              title="Total Revenue"
+              value={reportData.totalSales}
+              prefix="₹"
+              decimals={0}
+              icon={TrendingUp}
+              variant="lime"
+              hint="Gross revenue"
+            />
+            <StatCard
+              title="Net Profit"
+              value={reportData.totalProfit}
+              prefix="₹"
+              decimals={0}
+              icon={Wallet}
+              variant="mint"
+              hint="Operating margin"
+            />
+            <StatCard
+              title="Transactions"
+              value={reportData.totalTransactions}
+              icon={CreditCard}
+              variant="lavender"
+              hint="Completed invoices"
+            />
+            <StatCard
+              title="Avg. Ticket Size"
+              value={reportData.totalTransactions > 0 ? (reportData.totalSales / reportData.totalTransactions) : 0}
+              prefix="₹"
+              decimals={0}
+              icon={BarChart3}
+              variant="neutral"
+              hint="Per customer average"
+            />
           </div>
 
           {/* Market Intelligence Chart */}

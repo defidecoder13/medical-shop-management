@@ -30,12 +30,13 @@ export function SalesChart({ data, range, onRangeChange }: SalesChartProps) {
         borderColor: t.tooltipBorder,
         borderWidth: 1,
         padding: [10, 14],
-        textStyle: { color: t.tooltipText, fontSize: 12, fontWeight: 600 },
-        axisPointer: { type: "line", lineStyle: { color: t.gridColor, type: "dashed", width: 1 } },
+        extraCssText: "border-radius: 20px; box-shadow: 0 8px 24px rgba(6,44,47,0.18);",
+        textStyle: { color: t.tooltipText, fontSize: 12, fontWeight: 500 },
+        axisPointer: { type: "line", lineStyle: { color: t.primary, type: "dashed", width: 1.5, opacity: 0.6 } },
         formatter: (params: any) => {
           const p = Array.isArray(params) ? params[0] : params;
           if (!p) return "";
-          return `<div style="min-width:90px"><div style="color:${t.axisColor};font-size:11px;margin-bottom:4px">${p.axisValue}</div><div style="font-weight:700">₹${Number(p.value).toLocaleString("en-IN")}</div></div>`;
+          return `<div style="min-width:100px"><div style="color:rgba(255,255,255,0.7);font-size:11px;margin-bottom:3px">${p.axisValue}</div><div style="font-weight:700;font-size:15px;color:#FFFFFF">₹${Number(p.value).toLocaleString("en-IN")}</div></div>`;
         },
       },
       xAxis: {
@@ -64,8 +65,10 @@ export function SalesChart({ data, range, onRangeChange }: SalesChartProps) {
           data: data.map((d) => d.sales),
           smooth: true,
           smoothMonotone: "x",
-          symbol: "none",
-          lineStyle: { color: t.primary, width: 2 },
+          symbol: "circle",
+          symbolSize: 6,
+          itemStyle: { color: t.primary, borderColor: "#FFFFFF", borderWidth: 1.5 },
+          lineStyle: { color: t.primary, width: 2.5 },
           areaStyle: {
             color: {
               type: "linear",
@@ -87,28 +90,28 @@ export function SalesChart({ data, range, onRangeChange }: SalesChartProps) {
   );
 
   return (
-    <div className="surface-card p-5 md:p-6 flex flex-col">
+    <div className="surface-card p-5 md:p-6 rounded-[28px] md:rounded-[32px] flex flex-col">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
-          <h3 className="text-[14px] font-semibold text-foreground flex items-center gap-2.5">
-            <span className="w-7 h-7 rounded-md bg-muted text-muted-foreground flex items-center justify-center">
-              <BarChart3 className="w-4 h-4" strokeWidth={2} />
+          <h3 className="text-[15px] font-semibold text-foreground flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-full bg-muted text-foreground flex items-center justify-center">
+              <BarChart3 className="w-4 h-4" strokeWidth={2.2} />
             </span>
             Sales Performance
           </h3>
-          <p className="text-[12px] text-muted-foreground mt-1">
+          <p className="text-[12px] text-muted-foreground mt-0.5">
             Revenue trend — {range === "1d" ? "last 24 hours" : range === "7d" ? "last 7 days" : "last 30 days"}
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-1 border border-border">
+        <div className="flex items-center gap-1 bg-secondary/80 p-1 rounded-full border border-border/60">
           {ranges.map((r) => (
             <button
               key={r.key}
               onClick={() => onRangeChange(r.key)}
               className={cn(
-                "relative px-3 py-1.5 rounded-md text-[12px] font-medium transition-colors cursor-pointer select-none",
+                "px-3 py-1 rounded-full text-xs font-semibold transition-all duration-150",
                 range === r.key
-                  ? "bg-card text-foreground shadow-sm border border-border"
+                  ? "bg-primary text-primary-foreground shadow-xs"
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
@@ -117,16 +120,7 @@ export function SalesChart({ data, range, onRangeChange }: SalesChartProps) {
           ))}
         </div>
       </div>
-      <div className="w-full h-[210px] md:h-[230px]">
-        {data.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-muted-foreground">
-            <BarChart3 className="w-8 h-8 mb-2 opacity-40" strokeWidth={1.5} />
-            <p className="text-xs">No sales data for this period</p>
-          </div>
-        ) : (
-          <EChartsWrapper option={option} height={230} />
-        )}
-      </div>
+      <EChartsWrapper option={option} height={260} />
     </div>
   );
 }

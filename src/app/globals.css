@@ -5,10 +5,11 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --font-sans: var(--font-figtree), ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: var(--font-manrope), var(--font-figtree), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-sans), "Plus Jakarta Sans", Inter, -apple-system, sans-serif;
+  --font-display: var(--font-sans), "Plus Jakarta Sans", Inter, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
 
+  --color-canvas: var(--color-canvas);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -36,139 +37,204 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  --color-surface-secondary: var(--color-surface-secondary);
+  --color-surface-muted: var(--color-surface-muted);
+
+  --color-pastel-lime: var(--color-pastel-lime);
+  --color-pastel-mint: var(--color-pastel-mint);
+  --color-pastel-coral: var(--color-pastel-coral);
+  --color-pastel-lavender: var(--color-pastel-lavender);
+  --color-pastel-pink: var(--color-pastel-pink);
+  --color-pastel-neutral: var(--color-pastel-neutral);
+
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
-  --radius-xs: calc(var(--radius) - 4px);
-  --radius-sm: calc(var(--radius) - 2px);
-  --radius-md: var(--radius);
-  --radius-lg: calc(var(--radius) + 2px);
-  --radius-xl: calc(var(--radius) + 6px);
-  --radius-2xl: calc(var(--radius) + 10px);
+  --radius-xs: 8px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 24px;
+  --radius-card: 32px;
+  --radius-panel: 36px;
+  --radius-pill: 999px;
 
-  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 4px 12px -4px rgb(15 23 42 / 0.05);
-  --shadow-lift: 0 1px 3px rgb(15 23 42 / 0.04), 0 8px 20px -6px rgb(15 23 42 / 0.10);
-  --shadow-pop: 0 4px 12px rgb(15 23 42 / 0.08), 0 16px 32px -12px rgb(15 23 42 / 0.18);
+  --shadow-soft: 0 4px 20px rgba(6, 44, 47, 0.035);
+  --shadow-card: 0 4px 20px rgba(6, 44, 47, 0.035);
+  --shadow-lift: 0 8px 24px rgba(6, 44, 47, 0.06);
+  --shadow-pop: 0 12px 36px rgba(6, 44, 47, 0.09);
 
-  --animate-fade-in: fade-in 0.35s ease both;
-  --animate-slide-up: slide-up 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-scale-in: scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in: fade-in 0.25s ease both;
+  --animate-slide-up: slide-up 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-scale-in: scale-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   @keyframes fade-in {
     from { opacity: 0; }
     to { opacity: 1; }
   }
   @keyframes slide-up {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(8px); }
     to { opacity: 1; transform: translateY(0); }
   }
   @keyframes scale-in {
-    from { opacity: 0; transform: scale(0.96); }
+    from { opacity: 0; transform: scale(0.97); }
     to { opacity: 1; transform: scale(1); }
   }
 }
 
 :root {
-  /* Clinical Precision — Light */
-  --background: oklch(0.972 0.005 252);
-  --foreground: oklch(0.26 0.03 262);
+  color-scheme: light;
 
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.26 0.03 262);
+  /* Universal SaaS Tokens from DESIGN.md */
+  --color-canvas: #E4E6E5;
+  --color-background: #E9F6F6;
+  --color-surface: #EFF9F9;
+  --color-surface-secondary: #E5F4F3;
+  --color-surface-muted: #E2F0EF;
 
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.26 0.03 262);
+  --color-text-primary: #062C2F;
+  --color-text-secondary: #506867;
+  --color-text-muted: #819493;
 
-  --primary: oklch(0.53 0.22 258);
-  --primary-foreground: oklch(0.985 0.003 247);
+  --color-accent: #062C2F;
+  --color-accent-hover: #104447;
+  --color-focus: #397F7C;
 
-  --brand: oklch(0.31 0.105 262);
-  --brand-foreground: oklch(0.985 0.003 247);
+  --color-border: #D7E6E5;
+  --color-border-strong: #C4D9D7;
 
-  --secondary: oklch(0.955 0.008 255);
-  --secondary-foreground: oklch(0.3 0.06 262);
+  --color-pastel-lime: #D6EDB3;
+  --color-pastel-mint: #9CD4D2;
+  --color-pastel-coral: #EDB2B7;
+  --color-pastel-lavender: #B2BCEE;
+  --color-pastel-pink: #E5B1DB;
+  --color-pastel-neutral: #D9E7E6;
 
-  --muted: oklch(0.955 0.008 255);
-  --muted-foreground: oklch(0.5 0.032 257);
+  /* Framework semantic mappings */
+  --background: #E9F6F6;
+  --foreground: #062C2F;
 
-  --accent: oklch(0.945 0.028 256);
-  --accent-foreground: oklch(0.32 0.09 262);
+  --card: #EFF9F9;
+  --card-foreground: #062C2F;
 
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0.003 247);
+  --popover: #EFF9F9;
+  --popover-foreground: #062C2F;
 
-  --success: oklch(0.627 0.17 160);
-  --success-foreground: oklch(0.985 0.003 247);
+  --primary: #062C2F;
+  --primary-foreground: #FFFFFF;
 
-  --warning: oklch(0.8 0.14 82);
-  --warning-foreground: oklch(0.3 0.08 55);
+  --brand: #062C2F;
+  --brand-foreground: #FFFFFF;
 
-  --info: oklch(0.62 0.19 255);
-  --info-foreground: oklch(0.985 0.003 247);
+  --secondary: #E5F4F3;
+  --secondary-foreground: #062C2F;
 
-  --border: oklch(0.92 0.011 255);
-  --input: oklch(0.895 0.014 255);
-  --ring: oklch(0.53 0.22 258);
+  --muted: #E2F0EF;
+  --muted-foreground: #506867;
 
-  --radius: 0.75rem;
+  --accent: #E2F0EF;
+  --accent-foreground: #062C2F;
 
-  --chart-1: oklch(0.53 0.22 258);
-  --chart-2: oklch(0.627 0.17 160);
-  --chart-3: oklch(0.8 0.14 82);
-  --chart-4: oklch(0.577 0.245 27.325);
-  --chart-5: oklch(0.62 0.19 255);
+  --destructive: #C94A58;
+  --destructive-foreground: #FFFFFF;
+
+  --success: #3B8A74;
+  --success-foreground: #FFFFFF;
+
+  --warning: #D9822B;
+  --warning-foreground: #422204;
+
+  --info: #3F7A9B;
+  --info-foreground: #FFFFFF;
+
+  --border: #D7E6E5;
+  --input: #D7E6E5;
+  --ring: #397F7C;
+
+  --radius: 1.25rem;
+
+  --chart-1: #062C2F;
+  --chart-2: #9CD4D2;
+  --chart-3: #D6EDB3;
+  --chart-4: #EDB2B7;
+  --chart-5: #B2BCEE;
 }
 
 .dark {
-  /* Clinical Precision — Dark */
-  --background: oklch(0.17 0.028 262);
-  --foreground: oklch(0.955 0.008 255);
+  color-scheme: dark;
 
-  --card: oklch(0.205 0.032 262);
-  --card-foreground: oklch(0.955 0.008 255);
+  --color-canvas: #031315;
+  --color-background: #071E20;
+  --color-surface: #0B282A;
+  --color-surface-secondary: #0E3235;
+  --color-surface-muted: #123C3F;
 
-  --popover: oklch(0.22 0.034 262);
-  --popover-foreground: oklch(0.955 0.008 255);
+  --color-text-primary: #E9F6F6;
+  --color-text-secondary: #92ADA9;
+  --color-text-muted: #6B8B87;
 
-  --primary: oklch(0.68 0.16 255);
-  --primary-foreground: oklch(0.18 0.03 262);
+  --color-accent: #9CD4D2;
+  --color-accent-hover: #B5E4E2;
+  --color-focus: #9CD4D2;
 
-  --brand: oklch(0.75 0.1 250);
-  --brand-foreground: oklch(0.16 0.03 262);
+  --color-border: #184144;
+  --color-border-strong: #235458;
 
-  --secondary: oklch(0.27 0.036 262);
-  --secondary-foreground: oklch(0.955 0.008 255);
+  --color-pastel-lime: #1F3823;
+  --color-pastel-mint: #153839;
+  --color-pastel-coral: #3D1C20;
+  --color-pastel-lavender: #212845;
+  --color-pastel-pink: #3D1E38;
+  --color-pastel-neutral: #153638;
 
-  --muted: oklch(0.27 0.036 262);
-  --muted-foreground: oklch(0.72 0.03 255);
+  --background: #071E20;
+  --foreground: #E9F6F6;
 
-  --accent: oklch(0.3 0.06 262);
-  --accent-foreground: oklch(0.955 0.008 255);
+  --card: #0B282A;
+  --card-foreground: #E9F6F6;
 
-  --destructive: oklch(0.55 0.2 27);
-  --destructive-foreground: oklch(0.985 0.003 247);
+  --popover: #0B282A;
+  --popover-foreground: #E9F6F6;
 
-  --success: oklch(0.68 0.15 160);
-  --success-foreground: oklch(0.16 0.03 262);
+  --primary: #9CD4D2;
+  --primary-foreground: #062C2F;
 
-  --warning: oklch(0.78 0.13 82);
-  --warning-foreground: oklch(0.2 0.05 60);
+  --brand: #9CD4D2;
+  --brand-foreground: #062C2F;
 
-  --info: oklch(0.68 0.16 255);
-  --info-foreground: oklch(0.16 0.03 262);
+  --secondary: #0E3235;
+  --secondary-foreground: #E9F6F6;
 
-  --border: oklch(0.3 0.04 262);
-  --input: oklch(0.33 0.04 262);
-  --ring: oklch(0.68 0.16 255);
+  --muted: #123C3F;
+  --muted-foreground: #92ADA9;
 
-  --chart-1: oklch(0.68 0.16 255);
-  --chart-2: oklch(0.68 0.15 160);
-  --chart-3: oklch(0.78 0.13 82);
-  --chart-4: oklch(0.6 0.2 27);
-  --chart-5: oklch(0.62 0.19 300);
+  --accent: #16403F;
+  --accent-foreground: #E9F6F6;
+
+  --destructive: #E57373;
+  --destructive-foreground: #2C0B0E;
+
+  --success: #6EE7B7;
+  --success-foreground: #062C2F;
+
+  --warning: #FBBF24;
+  --warning-foreground: #2D1A00;
+
+  --info: #93C5FD;
+  --info-foreground: #082138;
+
+  --border: #184144;
+  --input: #184144;
+  --ring: #9CD4D2;
+
+  --chart-1: #9CD4D2;
+  --chart-2: #D6EDB3;
+  --chart-3: #EDB2B7;
+  --chart-4: #B2BCEE;
+  --chart-5: #E5B1DB;
 }
 
 @layer base {
@@ -178,18 +244,21 @@
 
   html {
     @apply scroll-smooth;
+    font-family: var(--font-sans);
   }
 
   body {
     @apply bg-background text-foreground antialiased font-sans;
+    font-family: var(--font-sans);
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
   ::selection {
-    background: color-mix(in oklab, var(--primary) 22%, transparent);
+    background: color-mix(in oklab, var(--primary) 20%, transparent);
+    color: var(--primary);
   }
 
-  /* Fix Chrome autofill white flash in dark mode */
+  /* Fix Chrome autofill flash */
   input:-webkit-autofill,
   input:-webkit-autofill:hover,
   input:-webkit-autofill:focus,
@@ -210,25 +279,25 @@
   /* Slim, unobtrusive scrollbars */
   * {
     scrollbar-width: thin;
-    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
+    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 30%, transparent) transparent;
   }
   *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
   *::-webkit-scrollbar-track {
     background: transparent;
   }
   *::-webkit-scrollbar-thumb {
-    background: color-mix(in oklab, var(--muted-foreground) 30%, transparent);
+    background: color-mix(in oklab, var(--muted-foreground) 25%, transparent);
     border-radius: 999px;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background: color-mix(in oklab, var(--muted-foreground) 50%, transparent);
+    background: color-mix(in oklab, var(--muted-foreground) 45%, transparent);
   }
 
   h1, h2, h3, h4 {
-    @apply font-display;
+    @apply font-display text-foreground;
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -242,13 +311,17 @@
 }
 
 @layer components {
-  /* ---------- Surfaces ---------- */
+  /* ---------- Shell & Surfaces ---------- */
   .surface-card {
-    @apply bg-card text-card-foreground border border-border rounded-xl shadow-card transition-colors duration-200;
+    @apply bg-card text-card-foreground border border-border/80 rounded-[28px] md:rounded-[32px] shadow-soft transition-all duration-200;
+  }
+
+  .content-panel {
+    @apply bg-card text-card-foreground border border-border/70 rounded-[32px] md:rounded-[36px] shadow-soft p-5 md:p-6;
   }
 
   .surface-hover {
-    @apply hover:border-border hover:shadow-sm transition-all duration-200;
+    @apply hover:border-border hover:shadow-lift transition-all duration-200;
   }
 
   /* ---------- Page header ---------- */
@@ -256,10 +329,10 @@
     @apply flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6;
   }
   .page-title {
-    @apply font-display text-[22px] md:text-2xl font-extrabold tracking-tight text-foreground;
+    @apply font-display text-[25px] md:text-[28px] font-semibold tracking-tight text-foreground;
   }
   .page-subtitle {
-    @apply text-[13px] font-medium text-muted-foreground mt-1;
+    @apply text-[13px] font-normal text-muted-foreground mt-0.5;
   }
 
   /* ---------- Tables ---------- */
@@ -267,98 +340,101 @@
     @apply w-full border-collapse;
   }
   .th {
-    @apply px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.06em] text-muted-foreground whitespace-nowrap;
+    @apply px-4 py-3.5 text-left text-[11.5px] font-semibold uppercase tracking-[0.06em] text-muted-foreground bg-secondary/50 border-b border-border whitespace-nowrap;
   }
   .td {
-    @apply px-4 py-3 text-[13.5px] text-foreground align-middle;
+    @apply px-4 py-3.5 text-[13.5px] text-foreground align-middle border-b border-border/50;
   }
   .tbody-row {
-    @apply transition-colors duration-150 hover:bg-muted/40;
+    @apply transition-colors duration-140 hover:bg-secondary/40;
   }
 
-  /* ---------- Badges ---------- */
+  /* ---------- Badges (Soft Pastel Palette) ---------- */
   .badge {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-wide whitespace-nowrap;
   }
   .badge-success {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap bg-success/12 text-emerald-700 dark:text-emerald-300 ring-1 ring-inset ring-success/25;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-wide whitespace-nowrap bg-[#D6EDB3] text-[#062C2F] ring-1 ring-inset ring-[#BEDEA0];
   }
   .badge-warning {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap bg-warning/15 text-amber-700 dark:text-amber-300 ring-1 ring-inset ring-warning/30;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-wide whitespace-nowrap bg-[#FEE9C5] text-[#5C3205] ring-1 ring-inset ring-[#F5D59A];
   }
   .badge-danger {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap bg-destructive/10 text-red-700 dark:text-red-300 ring-1 ring-inset ring-destructive/25;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-wide whitespace-nowrap bg-[#EDB2B7] text-[#5C151F] ring-1 ring-inset ring-[#E09EA5];
   }
   .badge-info {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap bg-info/12 text-blue-700 dark:text-blue-300 ring-1 ring-inset ring-info/25;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-wide whitespace-nowrap bg-[#B2BCEE] text-[#13224B] ring-1 ring-inset ring-[#9EA9E2];
   }
   .badge-neutral {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap bg-muted text-muted-foreground ring-1 ring-inset ring-border;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-wide whitespace-nowrap bg-[#D9E7E6] text-[#062C2F] ring-1 ring-inset ring-[#C5D9D7];
   }
   .badge-brand {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-bold tracking-wide whitespace-nowrap bg-brand/10 text-brand dark:text-brand ring-1 ring-inset ring-brand/20;
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-0.5 text-[11px] font-semibold tracking-wide whitespace-nowrap bg-[#9CD4D2] text-[#062C2F] ring-1 ring-inset ring-[#83BEBC];
   }
 
-  /* ---------- Buttons ---------- */
+  /* ---------- Buttons (Pill-shaped, Deep Teal Primary) ---------- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-[13px] font-semibold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98];
-    transition: transform 0.14s ease, background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98];
   }
   .btn:active:not(:disabled) {
     transform: scale(0.98);
   }
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-[13px] font-semibold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] bg-primary text-primary-foreground shadow-sm hover:bg-primary/90;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] bg-primary text-primary-foreground shadow-soft hover:bg-primary/90;
   }
   .btn-outline {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] border border-input bg-card text-foreground hover:bg-accent hover:text-accent-foreground;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] border border-border bg-card text-foreground hover:bg-muted;
   }
   .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] text-muted-foreground hover:bg-accent hover:text-accent-foreground;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] text-muted-foreground hover:bg-muted hover:text-foreground;
   }
   .btn-danger {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] bg-destructive text-destructive-foreground shadow-sm hover:brightness-110;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] bg-destructive text-destructive-foreground shadow-soft hover:brightness-105;
   }
   .btn-success {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] bg-success text-success-foreground shadow-sm hover:brightness-105;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] bg-success text-success-foreground shadow-soft hover:brightness-105;
   }
   .btn-brand {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] bg-brand text-brand-foreground shadow-sm hover:brightness-110;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] bg-brand text-brand-foreground shadow-soft hover:brightness-105;
   }
   .btn-sm {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-[12px] font-bold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] h-8 px-3;
+    @apply inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-full text-[12px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] h-8 px-3.5;
   }
   .btn-md {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-[13px] font-bold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] h-10 px-4;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] h-10 px-4.5;
   }
   .btn-lg {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-bold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] h-11 px-5;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] h-11 px-6;
   }
   .btn-icon {
-    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-[13px] font-bold transition-all duration-200 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] h-9 w-9 p-0;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-[13px] font-semibold transition-all duration-150 select-none cursor-pointer disabled:pointer-events-none disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background active:scale-[0.98] h-9 w-9 p-0;
   }
 
   /* ---------- Forms ---------- */
   .label {
-    @apply block text-[11px] font-bold uppercase tracking-[0.1em] text-muted-foreground mb-1.5;
+    @apply block text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground mb-1.5;
   }
   .input {
-    @apply flex h-10 w-full rounded-xl border border-input bg-card px-3.5 text-sm text-foreground shadow-sm transition-all placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply flex h-10 w-full rounded-full border border-border bg-card px-4 text-sm text-foreground shadow-xs transition-all placeholder:text-muted-foreground/60 focus:border-[#397F7C] focus:outline-none focus:ring-2 focus:ring-[#397F7C]/20 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  textarea.input,
+  .textarea {
+    @apply rounded-2xl py-3;
   }
   .select {
-    @apply flex h-10 w-full appearance-none cursor-pointer rounded-xl border border-input bg-card px-3.5 pr-9 text-sm text-foreground shadow-sm transition-all placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/15 disabled:cursor-not-allowed disabled:opacity-50 bg-no-repeat;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-    background-position: right 0.75rem center;
+    @apply flex h-10 w-full appearance-none cursor-pointer rounded-full border border-border bg-card px-4 pr-10 text-sm text-foreground shadow-xs transition-all placeholder:text-muted-foreground/60 focus:border-[#397F7C] focus:outline-none focus:ring-2 focus:ring-[#397F7C]/20 disabled:cursor-not-allowed disabled:opacity-50 bg-no-repeat;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23506867' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.9rem center;
   }
 
   /* ---------- Icon chip ---------- */
   .icon-chip {
-    @apply flex items-center justify-center rounded-xl shrink-0;
+    @apply flex items-center justify-center rounded-full shrink-0;
   }
 
   /* ---------- Misc ---------- */
   .skeleton {
-    @apply animate-pulse rounded-lg bg-muted/70;
+    @apply animate-pulse rounded-2xl bg-muted/60;
   }
   .empty-state {
     @apply flex flex-col items-center justify-center text-center py-14 px-6;
@@ -367,11 +443,11 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background;
   }
 
-  /* Subtle top glow for page content */
+  /* Delicate page wash */
   .page-glow {
     background:
-      radial-gradient(60rem 20rem at 20% -5%, color-mix(in oklab, var(--primary) 6%, transparent), transparent 60%),
-      radial-gradient(40rem 16rem at 90% 0%, color-mix(in oklab, var(--success) 5%, transparent), transparent 60%);
+      radial-gradient(50rem 18rem at 15% -2%, rgba(156, 212, 210, 0.12), transparent 60%),
+      radial-gradient(40rem 16rem at 85% 0%, rgba(214, 237, 179, 0.09), transparent 60%);
   }
 }
 

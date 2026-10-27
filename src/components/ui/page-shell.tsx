@@ -5,5 +5,5 @@ export function PageShell({ children, className }: { children: React.ReactNode; 
 }
 
 export function SectionCard({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("surface-card p-5", className)}>{children}</div>;
+  return <div className={cn("surface-card p-5 md:p-6", className)}>{children}</div>;
 }

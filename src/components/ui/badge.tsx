@@ -40,12 +40,12 @@ export function StatusDot({
   pulse?: boolean;
 }) {
   const dotClass: Record<BadgeVariant, string> = {
-    success: "bg-emerald-500",
-    warning: "bg-amber-500",
-    danger: "bg-red-500",
-    info: "bg-blue-500",
-    neutral: "bg-slate-400",
-    brand: "bg-blue-600",
+    success: "bg-[#3B8A74]",
+    warning: "bg-[#D9822B]",
+    danger: "bg-[#C94A58]",
+    info: "bg-[#3F7A9B]",
+    neutral: "bg-[#819493]",
+    brand: "bg-[#062C2F]",
   };
   return (
     <span

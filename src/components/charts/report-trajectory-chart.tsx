@@ -18,15 +18,16 @@ export function ReportTrajectoryChart({ dailySales }: ReportTrajectoryProps) {
     const profit = dailySales.map((d) => d.profit);
 
     return {
-      grid: { left: 8, right: 12, top: 12, bottom: 0, containLabel: true },
+      grid: { left: 8, right: 12, top: 12, bottom: 28, containLabel: true },
       tooltip: {
         trigger: "axis",
         backgroundColor: t.tooltipBg,
         borderColor: t.tooltipBorder,
         borderWidth: 1,
         padding: [10, 14],
+        extraCssText: "border-radius: 20px; box-shadow: 0 8px 24px rgba(6,44,47,0.18);",
         textStyle: { color: t.tooltipText, fontSize: 12 },
-        axisPointer: { type: "shadow", shadowStyle: { color: t.isDark ? "rgba(255,255,255,0.04)" : "rgba(0,0,0,0.03)" } },
+        axisPointer: { type: "shadow", shadowStyle: { color: "rgba(6,44,47,0.04)" } },
       },
       legend: {
         bottom: 0,
@@ -49,27 +50,30 @@ export function ReportTrajectoryChart({ dailySales }: ReportTrajectoryProps) {
         axisLine: { show: false },
         axisTick: { show: false },
         splitLine: { show: true, lineStyle: { color: t.gridColor, type: "dashed", opacity: 0.7 } },
-        axisLabel: { color: t.axisColor, fontSize: 11, formatter: (v: number) => (v >= 1000 ? `${(v/1000).toFixed(0)}k` : String(v)) },
+        axisLabel: {
+          color: t.axisColor,
+          fontSize: 11,
+          formatter: (v: number) => (v >= 1000 ? `${(v / 1000).toFixed(0)}k` : String(v)),
+        },
       },
       series: [
         {
           name: "Revenue",
           type: "bar",
           data: sales,
-          barMaxWidth: 18,
-          itemStyle: { color: t.primary, borderRadius: [6, 6, 0, 0] as any },
-          emphasis: { itemStyle: { color: t.primary } },
+          barMaxWidth: 16,
+          itemStyle: { color: t.primary, borderRadius: [999, 999, 0, 0] as any },
         },
         {
           name: "Net Profit",
           type: "bar",
           data: profit,
-          barMaxWidth: 18,
-          itemStyle: { color: t.warning, borderRadius: [6, 6, 0, 0] as any },
+          barMaxWidth: 16,
+          itemStyle: { color: t.mint, borderRadius: [999, 999, 0, 0] as any },
         },
       ],
-    } as EChartsOption;
+    };
   }, [dailySales, t]);
 
-  return <EChartsWrapper option={option} height={300} />;
+  return <EChartsWrapper option={option} height={250} />;
 }

@@ -13,16 +13,16 @@ export function ThemeToggle({ showLabel = false }: { showLabel?: boolean }) {
       onClick={toggleTheme}
       aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
       className={cn(
-        'transition-all duration-200 cursor-pointer',
+        'transition-all duration-150 cursor-pointer',
         showLabel
-          ? 'w-full flex items-center gap-3 rounded-xl text-[13.5px] font-bold text-muted-foreground hover:bg-accent/70 hover:text-foreground px-3 py-2.5'
-          : 'p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-xl border border-border flex items-center justify-center'
+          ? 'w-full flex items-center gap-2.5 rounded-full text-[13px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground px-3 py-2'
+          : 'w-8.5 h-8.5 text-muted-foreground hover:text-foreground hover:bg-muted rounded-full border border-border/80 flex items-center justify-center bg-card/50'
       )}
     >
       {isDark ? (
-        <Sun className="h-4 w-4 text-amber-400 shrink-0" strokeWidth={2.4} />
+        <Sun className="h-4 w-4 text-amber-400 shrink-0" strokeWidth={2.2} />
       ) : (
-        <Moon className="h-4 w-4 shrink-0" strokeWidth={2.4} />
+        <Moon className="h-4 w-4 text-[#506867] shrink-0" strokeWidth={2.2} />
       )}
       {showLabel && <span>{isDark ? 'Light Mode' : 'Dark Mode'}</span>}
     </button>

@@ -654,31 +654,31 @@ export default function InventoryPage() {
 
   const getCategoryStyles = (category: string) => {
     switch(category?.toLowerCase()) {
-      case "pain relief": return "bg-indigo-50 text-indigo-600";
-      case "antibiotic": return "bg-emerald-50 text-emerald-600";
-      case "antihistamine": return "bg-purple-50 text-purple-600";
-      case "wellness": return "bg-orange-50 text-orange-600";
-      case "supplements": return "bg-fuchsia-50 text-fuchsia-600";
-      case "gastric care": return "bg-teal-50 text-teal-600";
-      default: return "bg-blue-50 text-blue-600";
+      case "pain relief": return "bg-[#B2BCEE]/40 text-[#062C2F] dark:bg-[#1C2449] dark:text-[#BFDBFE]";
+      case "antibiotic": return "bg-[#D6EDB3]/50 text-[#062C2F] dark:bg-[#1E3B24] dark:text-[#A7E8B8]";
+      case "antihistamine": return "bg-[#E5B1DB]/40 text-[#062C2F] dark:bg-[#3A1835] dark:text-[#F5D0EE]";
+      case "wellness": return "bg-[#9CD4D2]/40 text-[#062C2F] dark:bg-[#143D3F] dark:text-[#9CD4D2]";
+      case "supplements": return "bg-[#EDB2B7]/40 text-[#062C2F] dark:bg-[#3D1A20] dark:text-[#FCA5A5]";
+      case "gastric care": return "bg-[#D9E7E6]/60 text-[#062C2F] dark:bg-[#133235] dark:text-[#E9F6F6]";
+      default: return "bg-muted text-muted-foreground";
     }
   };
 
   const getStatus = (stock: number, minStock: number = 10) => {
-    if (stock <= 0) return { label: "Out of Stock", bg: "bg-rose-50 text-rose-600" };
-    if (stock <= minStock) return { label: "Low Stock", bg: "bg-orange-50 text-orange-600" };
-    return { label: "In Stock", bg: "bg-emerald-50 text-emerald-600" };
+    if (stock <= 0) return { label: "Out of Stock", bg: "bg-[#EDB2B7]/40 text-[#5C151F] border border-[#E09EA5]" };
+    if (stock <= minStock) return { label: "Low Stock", bg: "bg-[#FEE9C5] text-[#5C3205] border border-[#F5D59A]" };
+    return { label: "In Stock", bg: "bg-[#D6EDB3] text-[#062C2F] border border-[#BEDEA0]" };
   };
 
   return (
     <div className="space-y-5 pb-10 max-w-[1400px] mx-auto">
       {/* Stats Cards Row */}
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
-        <StatCard title="Total Items" value={stats ? stats.totalItems : "..."} icon={Package} tone="brand" hint="All products in catalog" />
-        <StatCard title="Stock Value" value={stats ? stats.totalStockValue : "..."} icon={TrendingUp} tone="success" hint="At purchase price" decimals={2} prefix="₹" />
-        <StatCard title="Low Stock" value={stats ? stats.lowStockItems : "..."} icon={AlertTriangle} tone="warning" hint="Reorder soon" />
-        <StatCard title="Expiring Soon" value={stats ? stats.expiringSoon : "..."} icon={Clock} tone="danger" hint="Within 6 months" />
-        <StatCard title="Out of Stock" value={stats ? stats.outOfStock : "..."} icon={LayoutGrid} tone="neutral" hint="No units available" />
+        <StatCard title="Total Items" value={stats ? stats.totalItems : "..."} icon={Package} variant="mint" hint="All products in catalog" />
+        <StatCard title="Stock Value" value={stats ? stats.totalStockValue : "..."} icon={TrendingUp} variant="lime" hint="At purchase price" decimals={2} prefix="₹" />
+        <StatCard title="Low Stock" value={stats ? stats.lowStockItems : "..."} icon={AlertTriangle} variant="coral" hint="Reorder soon" />
+        <StatCard title="Expiring Soon" value={stats ? stats.expiringSoon : "..."} icon={Clock} variant="lavender" hint="Within 6 months" />
+        <StatCard title="Out of Stock" value={stats ? stats.outOfStock : "..."} icon={LayoutGrid} variant="neutral" hint="No units available" />
       </div>
 
       {message && (
