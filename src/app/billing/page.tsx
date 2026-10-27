@@ -730,15 +730,15 @@ function BillingContent() {
                   autoComplete="off"
                 />
                 {showPatientSuggestions && patientSuggestions.length > 0 && (
-                  <div className="absolute z-30 mt-1 w-full bg-card border border-border rounded-lg shadow-pop max-h-56 overflow-auto">
+                  <div className="absolute z-30 mt-1 w-full bg-card border border-border/80 rounded-2xl shadow-pop max-h-56 overflow-auto p-1.5 space-y-0.5">
                     {patientSuggestions.map((p: any) => (
                       <button
                         key={p._id || p.phone}
                         type="button"
                         onClick={() => handleSelectPatient(p)}
-                        className="w-full text-left px-3 py-2.5 hover:bg-accent transition-colors border-b last:border-0 border-border/50"
+                        className="w-full text-left px-3 py-2 hover:bg-secondary/70 focus:bg-secondary/70 transition-colors rounded-xl border-b last:border-0 border-border/40 cursor-pointer"
                       >
-                        <div className="text-[13px] font-medium text-foreground truncate">{p.name}</div>
+                        <div className="text-[13px] font-semibold text-foreground truncate">{p.name}</div>
                         <div className="text-[11px] text-muted-foreground truncate">{p.phone}{p.address ? ` • ${p.address}` : ""}{p.doctorName ? ` • Dr. ${p.doctorName}` : ""}</div>
                       </button>
                     ))}
@@ -756,7 +756,7 @@ function BillingContent() {
                   autoComplete="off"
                 />
                 {showDoctorSuggestions && doctorSuggestions.length > 0 && (
-                  <div className="absolute z-30 mt-1 w-full bg-card border border-border rounded-lg shadow-pop max-h-48 overflow-auto">
+                  <div className="absolute z-30 mt-1 w-full bg-card border border-border/80 rounded-2xl shadow-pop max-h-48 overflow-auto p-1.5 space-y-0.5">
                     {doctorSuggestions.map((d: any) => {
                       const name = typeof d === "string" ? d : d.name;
                       const key = typeof d === "string" ? d : d._id || d.name;
@@ -765,7 +765,7 @@ function BillingContent() {
                           key={key}
                           type="button"
                           onClick={() => handleSelectDoctor(d)}
-                          className="w-full text-left px-3 py-2 hover:bg-accent transition-colors text-[13px] text-foreground"
+                          className="w-full text-left px-3 py-2 hover:bg-secondary/70 focus:bg-secondary/70 transition-colors rounded-xl text-[13px] font-medium text-foreground cursor-pointer"
                         >
                           {name}
                         </button>
@@ -831,24 +831,24 @@ function BillingContent() {
                   initial={{ opacity: 0, y: 5, scale: 0.98 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 5, scale: 0.98 }}
-                  className="absolute top-full left-0 right-0 mt-2 bg-card border border-border rounded-xl shadow-pop z-20 max-h-80 overflow-y-auto p-1.5"
+                  className="absolute top-full left-0 right-0 mt-2 bg-card border border-border/80 rounded-2xl shadow-pop z-20 max-h-80 overflow-y-auto p-1.5 space-y-1"
                 >
                   {medicines.slice(0, 50).map((med) => (
                     <button
                       key={med._id}
                       onClick={() => addToCart(med)}
-                      className="w-full flex items-center gap-3 p-3 hover:bg-accent text-left transition-colors rounded-lg group/item cursor-pointer"
+                      className="w-full flex items-center gap-3 p-3 hover:bg-secondary/70 focus:bg-secondary/70 text-left transition-colors rounded-xl group/item cursor-pointer focus:outline-none"
                     >
-                      <div className="w-9 h-9 rounded-md bg-muted text-muted-foreground flex items-center justify-center shrink-0 group-hover/item:bg-primary group-hover/item:text-primary-foreground transition-colors">
-                        <Pill size={16} strokeWidth={2} />
+                      <div className="w-9 h-9 rounded-full bg-muted text-muted-foreground flex items-center justify-center shrink-0 group-hover/item:bg-primary/10 group-hover/item:text-primary transition-colors">
+                        <Pill size={16} strokeWidth={2.2} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-foreground text-[13px] truncate">{med.name}</div>
+                        <div className="font-semibold text-foreground text-[13.5px] truncate">{med.name}</div>
                         {med.composition && (
-                          <div className="text-[11px] text-muted-foreground truncate max-w-sm">{med.composition}</div>
+                          <div className="text-[11.5px] text-muted-foreground truncate max-w-sm mt-0.5">{med.composition}</div>
                         )}
-                        <div className="flex flex-wrap gap-1 mt-1.5 text-[11px]">
-                          <span className={med.stock < 10 ? "text-destructive font-medium" : "text-success font-medium"}>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1.5 text-[11.5px]">
+                          <span className={med.stock < 10 ? "text-destructive font-semibold" : "text-success font-semibold"}>
                             Stock: {med.tabletsPerStrip > 1
                               ? (() => {
                                   const totalTabs = Math.round((med.stock || 0) * med.tabletsPerStrip);
@@ -861,19 +861,19 @@ function BillingContent() {
                                 })()
                               : `${Math.round(med.stock || 0)} Units`}
                           </span>
-                          <span className="text-muted-foreground/50">•</span>
-                          <span className="text-muted-foreground">Batch {med.batchNumber || "N/A"}</span>
-                          <span className="text-muted-foreground/50">•</span>
-                          <span className="text-muted-foreground">₹{(med.sellingPricePerStrip || 0).toFixed(2)}</span>
+                          <span className="text-muted-foreground/40">•</span>
+                          <span className="text-muted-foreground font-medium">Batch {med.batchNumber || "N/A"}</span>
+                          <span className="text-muted-foreground/40">•</span>
+                          <span className="text-foreground font-semibold">₹{(med.sellingPricePerStrip || 0).toFixed(2)}</span>
                           {med.rackNumber && (
                             <>
-                              <span className="text-muted-foreground/50">•</span>
-                              <span className="text-muted-foreground">{med.rackNumber}</span>
+                              <span className="text-muted-foreground/40">•</span>
+                              <span className="text-muted-foreground">Rack: {med.rackNumber}</span>
                             </>
                           )}
                         </div>
                       </div>
-                      <div className="w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground rounded-md shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity">
+                      <div className="w-8 h-8 flex items-center justify-center bg-primary text-primary-foreground rounded-full shrink-0 opacity-0 group-hover/item:opacity-100 transition-opacity shadow-soft">
                         <Plus size={14} strokeWidth={2.5} />
                       </div>
                     </button>

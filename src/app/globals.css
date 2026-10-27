@@ -99,7 +99,7 @@
   --color-text-secondary: #506867;
   --color-text-muted: #819493;
 
-  --color-accent: #062C2F;
+  --color-accent: var(--accent);
   --color-accent-hover: #104447;
   --color-focus: #397F7C;
 
@@ -176,7 +176,7 @@
   --color-text-secondary: #92ADA9;
   --color-text-muted: #6B8B87;
 
-  --color-accent: #9CD4D2;
+  --color-accent: var(--accent);
   --color-accent-hover: #B5E4E2;
   --color-focus: #9CD4D2;
 
