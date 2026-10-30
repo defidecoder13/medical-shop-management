@@ -122,8 +122,8 @@ export const Sidebar = ({ isMobile = false, onClose }: SidebarProps) => {
               <span className="font-display font-semibold text-[15px] tracking-tight text-foreground truncate">
                 MEDSATHI
               </span>
-              <span className="text-[11px] font-medium tracking-wide text-muted-foreground truncate">
-                Pharmacy OS
+              <span className="text-[11px] font-semibold tracking-[0.08em] text-muted-foreground truncate uppercase">
+                PHARMACY
               </span>
             </div>
           )}
