@@ -67,10 +67,98 @@ export default function LoginPage() {
 
   return (
     <div className="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 overflow-hidden bg-[#E9F6F6] dark:bg-[#071E20]">
-      {/* Calm mint wash background */}
-      <div aria-hidden className="absolute inset-0 z-0 pointer-events-none select-none">
+      {/* Calm mint wash background with faint medical vector art */}
+      <div aria-hidden className="absolute inset-0 z-0 pointer-events-none select-none overflow-hidden">
+        {/* Soft atmospheric radial gradients */}
         <div className="absolute inset-0 bg-[radial-gradient(55rem_25rem_at_20%_0%,rgba(156,212,210,0.22),transparent_60%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(45rem_20rem_at_80%_100%,rgba(214,237,179,0.18),transparent_60%)]" />
+
+        {/* Soft ambient blur spots */}
+        <div className="absolute -top-32 -left-20 w-[540px] h-[540px] rounded-full bg-[#9CD4D2]/20 blur-3xl" />
+        <div className="absolute -bottom-32 -right-20 w-[500px] h-[500px] rounded-full bg-[#D6EDB3]/20 blur-3xl" />
+
+        {/* 1. Large Faint Medical Cross (Upper-Left) */}
+        <svg
+          className="absolute top-10 left-10 hidden md:block w-28 h-28 text-[#397F7C]/15 dark:text-[#9CD4D2]/10"
+          viewBox="0 0 64 64"
+          fill="currentColor"
+        >
+          <path d="M24 6h16v18h18v16H40v18H24V40H6V24h18z" />
+        </svg>
+
+        {/* 2. Floating Medium Medical Cross (Bottom-Right) */}
+        <svg
+          className="absolute bottom-16 right-16 hidden sm:block w-20 h-20 text-[#397F7C]/15 dark:text-[#9CD4D2]/10"
+          viewBox="0 0 64 64"
+          fill="currentColor"
+        >
+          <path d="M24 6h16v18h18v16H40v18H24V40H6V24h18z" />
+        </svg>
+
+        {/* 3. Floating Small Medical Cross (Top-Right) */}
+        <svg
+          className="absolute top-20 right-32 hidden lg:block w-12 h-12 text-[#9CD4D2]/30 dark:text-[#9CD4D2]/15"
+          viewBox="0 0 64 64"
+          fill="currentColor"
+        >
+          <path d="M24 6h16v18h18v16H40v18H24V40H6V24h18z" />
+        </svg>
+
+        {/* 4. Faint ECG Heartbeat Pulse Line (Lower-Left) */}
+        <svg
+          className="absolute bottom-12 left-10 hidden lg:block w-[460px] text-[#397F7C]/20 dark:text-[#9CD4D2]/15"
+          viewBox="0 0 460 70"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2.2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M0 35 L120 35 L135 35 L145 15 L155 58 L168 5 L180 62 L192 28 L200 35 L320 35 L332 20 L342 50 L354 10 L366 58 L376 35 L460 35" />
+        </svg>
+
+        {/* 5. Angled Medicine Capsule & Tablet Vector Art (Lower-Right) */}
+        <svg
+          className="absolute right-10 bottom-24 hidden xl:block w-40 h-32 text-[#397F7C]/20 dark:text-[#9CD4D2]/15"
+          viewBox="0 0 160 120"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={3}
+        >
+          <g transform="rotate(32 80 60)">
+            <rect x="52" y="14" width="48" height="92" rx="24" />
+            <line x1="52" y1="60" x2="100" y2="60" />
+            <path d="M62 30 C66 24, 76 20, 84 20" strokeLinecap="round" strokeWidth={2.5} />
+          </g>
+          <circle cx="132" cy="94" r="14" fill="currentColor" stroke="none" opacity={0.3} />
+          <line x1="126" y1="94" x2="138" y2="94" stroke="#EFF9F9" strokeWidth={2.5} strokeLinecap="round" />
+        </svg>
+
+        {/* 6. Faint Rx Prescription Symbol (Upper-Right) */}
+        <svg
+          className="absolute top-10 right-[18%] hidden xl:block w-28 h-28 text-[#397F7C]/12 dark:text-[#9CD4D2]/10"
+          viewBox="0 0 100 100"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={3.5}
+          strokeLinecap="round"
+        >
+          <path d="M25 20 L25 80 M25 20 C60 20, 60 52, 25 52 L65 80 M42 62 L68 76" />
+        </svg>
+
+        {/* 7. Dotted Matrix Patterns */}
+        <div className="absolute top-10 right-12 hidden md:block w-36 h-28 opacity-25 dark:opacity-15 bg-[radial-gradient(#397F7C_1.3px,transparent_1.3px)] bg-[size:16px_16px]" />
+        <div className="absolute bottom-16 left-14 hidden md:block w-36 h-28 opacity-20 dark:opacity-10 bg-[radial-gradient(#397F7C_1.3px,transparent_1.3px)] bg-[size:16px_16px]" />
+
+        {/* 8. Soft flowing waves at bottom */}
+        <svg
+          className="absolute -bottom-8 left-0 right-0 w-full h-32 text-[#9CD4D2]/15 dark:text-[#0E3235]/40"
+          viewBox="0 0 1440 160"
+          fill="currentColor"
+          preserveAspectRatio="none"
+        >
+          <path d="M0,80 C320,140 600,30 900,90 C1200,150 1340,60 1440,80 L1440,160 L0,160 Z" />
+        </svg>
       </div>
 
       {/* Center Auth Card — Large rounded geometry as per Universal SaaS System */}
